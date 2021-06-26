@@ -9,6 +9,10 @@ import net.minestom.server.utils.BlockPosition
 import net.minestom.server.utils.Position
 
 object PlayerUtils {
+    fun Player.eyePosition(): Position {
+        return position.clone().add(0.0, eyeHeight, 0.0)
+    }
+
     /**
      * Sends a block to a specific player (Only client-side/visual change)
      * @param player Player to send block to

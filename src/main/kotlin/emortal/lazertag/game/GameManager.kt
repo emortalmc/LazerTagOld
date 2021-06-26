@@ -17,6 +17,8 @@ object GameManager {
         val game: Game = nextGame()
         game.addPlayer(player)
         gameMap[player.uuid] = game
+
+        player.sendMessage("You were added to game ${game.id}")
     }
 
     fun removePlayer(player: Player) {
@@ -32,7 +34,7 @@ object GameManager {
 
     private fun nextGame(): Game {
         for (game in games) {
-            if (game.gameState != GameState.STARTING) continue
+            if (game.gameState != GameState.WAITING_FOR_PLAYERS) continue
             return game
         }
         return createGame()

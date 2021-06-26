@@ -1,12 +1,12 @@
 package emortal.lazertag.gun
 
-import net.minestom.server.MinecraftServer
-import net.minestom.server.event.player.PlayerUseItemEvent
+import net.minestom.server.item.ItemMetaBuilder
+import net.minestom.server.item.ItemStack
+import net.minestom.server.item.Material
 
 class a {
     init {
-        MinecraftServer.getGlobalEventHandler().addListener(
-            PlayerUseItemEvent::class.java
-        ) { e: PlayerUseItemEvent -> e.player }
+        ItemStack.builder(Material.GLASS)
+            .meta { itemMetaBuilder: ItemMetaBuilder -> itemMetaBuilder.customModelData(3) }
     }
 }
