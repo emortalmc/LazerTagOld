@@ -9,7 +9,7 @@ import net.minestom.server.command.builder.Command
 import net.minestom.server.command.builder.CommandContext
 import net.minestom.server.command.builder.CommandExecutor
 
-class LazerTagCommand : Command("lazertag") {
+object LazerTagCommand : Command("lazertag") {
     init {
         defaultExecutor =
             CommandExecutor { sender: CommandSender, context: CommandContext ->

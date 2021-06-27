@@ -42,10 +42,10 @@ dependencies {
     // import kotlinx serialization
     compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
 
-    compileOnly("com.github.Project-Cepi:KStom:1a8c13c7a0")
+    compileOnly("com.github.Project-Cepi:KStom:a060d27e39")
     implementation("net.kyori:adventure-text-minimessage:4.1.0-SNAPSHOT")
 
-    implementation(files("libs/MinestomParticles-1.0.0.jar"))
+    implementation("com.github.SLLCoding:MinestomParticles:b1c93e92ee")
 }
 tasks.withType<Test> {
     useJUnitPlatform()

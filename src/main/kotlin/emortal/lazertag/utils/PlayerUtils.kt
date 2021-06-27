@@ -1,56 +1,42 @@
 package emortal.lazertag.utils
 
+import net.kyori.adventure.sound.Sound
+import net.minestom.server.entity.Entity
 import net.minestom.server.entity.Player
+import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.network.packet.server.play.BlockChangePacket
-import net.minestom.server.particle.Particle
-import net.minestom.server.particle.ParticleCreator
 import net.minestom.server.utils.BlockPosition
 import net.minestom.server.utils.Position
 
 object PlayerUtils {
-    fun Player.eyePosition(): Position {
-        return position.clone().add(0.0, eyeHeight, 0.0)
+    /**
+     * Gets a player's position + their eye height added to their Y position
+     */
+    fun Entity.eyePosition(): Position {
+        if (this.isSneaking) return position.clone().add(0.0, 1.23, 0.0)
+        return position.clone().add(0.0, 1.53, 0.0)
+    }
+
+    fun Player.playSound(sound: Sound, position: Position) {
+        playSound(sound, position.x, position.y, position.z)
+    }
+
+    fun Instance.playSound(sound: Sound, position: Position) {
+        playSound(sound, position.x, position.y, position.z)
     }
 
     /**
      * Sends a block to a specific player (Only client-side/visual change)
-     * @param player Player to send block to
      * @param blockPos Position of the block
      * @param blockType Material of the block
      */
-    fun sendBlockChange(player: Player, blockPos: BlockPosition?, blockType: Block) {
+    fun Player.sendBlockChange(blockPos: BlockPosition, blockType: Block) {
         val packet = BlockChangePacket()
         packet.blockStateId = blockType.blockId.toInt()
         packet.blockPosition = blockPos
-        player.playerConnection.sendPacket(packet)
+        playerConnection.sendPacket(packet)
     }
 
-    /**
-     * Sends a particle to a specific player
-     * @param player Player to send particle to
-     * @param particle The type of the particle
-     * @param pos The position of the particle
-     * @param offsetX The X randomness
-     * @param offsetY The Y randomness
-     * @param offsetZ The Z randomness
-     * @param count The amount of particles to send
-     */
-    fun sendParticle(
-        player: Player,
-        particle: Particle?,
-        pos: Position,
-        offsetX: Float,
-        offsetY: Float,
-        offsetZ: Float,
-        count: Int
-    ) {
-        player.playerConnection.sendPacket(
-            ParticleCreator.createParticlePacket(
-                particle, false,
-                pos.x, pos.y, pos.z,
-                offsetX, offsetY, offsetZ, 0f, count, null
-            )
-        )
-    }
+
 }
