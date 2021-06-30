@@ -36,16 +36,15 @@ dependencies {
     // Use the Kotlin reflect library.
     compileOnly(kotlin("reflect"))
 
-    // Compile Minestom into project
-    compileOnly("com.github.Minestom:Minestom:-SNAPSHOT")
+    compileOnly("com.github.Minestom:Minestom:fbb8c1a819")
 
     // import kotlinx serialization
     compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
 
-    compileOnly("com.github.Project-Cepi:KStom:a060d27e39")
+    compileOnly("com.github.Project-Cepi:KStom:988edc9c54")
     implementation("net.kyori:adventure-text-minimessage:4.1.0-SNAPSHOT")
 
-    implementation("com.github.SLLCoding:MinestomParticles:b1c93e92ee")
+    implementation("com.github.Bloepiloepi:MinestomParticles:b2ea393e89")
 }
 tasks.withType<Test> {
     useJUnitPlatform()

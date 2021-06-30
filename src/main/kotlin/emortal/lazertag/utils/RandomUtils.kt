@@ -15,6 +15,7 @@ object RandomUtils {
 
         vec.rotateAroundX(threadLocalRandom.nextDouble(-spread, spread))
         vec.rotateAroundY(threadLocalRandom.nextDouble(-spread, spread))
+        vec.rotateAroundZ(threadLocalRandom.nextDouble(-spread, spread))
 
         return vec
     }

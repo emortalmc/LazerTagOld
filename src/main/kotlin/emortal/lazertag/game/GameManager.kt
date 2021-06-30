@@ -22,11 +22,13 @@ object GameManager {
     }
 
     fun removePlayer(player: Player) {
-        getPlayerGame(player)
+        getPlayerGame(player)?.removePlayer(player)
+
+        gameMap.remove(player.uuid)
     }
 
-    private fun createGame(): Game {
-        val newGame = Game(gameIndex)
+    private fun createGame(options: GameOptions): Game {
+        val newGame = Game(gameIndex, options)
         games.add(newGame)
         gameIndex++
         return newGame
@@ -37,7 +39,7 @@ object GameManager {
             if (game.gameState != GameState.WAITING_FOR_PLAYERS) continue
             return game
         }
-        return createGame()
+        return createGame(GameOptions())
     }
 
     fun getPlayerGame(player: Player): Game? {

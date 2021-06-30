@@ -11,7 +11,7 @@ import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
 
-class LazerShotgun : Gun("Lazer Shotgun", 2) {
+class LazerMinigun : Gun("Lazer Minigun", 1) {
 
     override val itemBuilder: ItemStackBuilder = ItemStack.builder(Material.WOODEN_HOE)
         .displayName(Component.text(name))
@@ -20,17 +20,17 @@ class LazerShotgun : Gun("Lazer Shotgun", 2) {
             meta.customModelData(id)
         }
 
-    override val damage = 2f
-    override val numberOfBullets = 25
-    override val spread = 0.15
-    override val cooldown = 500L
-    override val ammo = 5
+    override val damage = 1f
+    override val numberOfBullets = 1
+    override val cooldown = 150L
+    override val ammo = 40
     override val maxDistance = 30.0
 
-    override fun shoot(player: Player) {
-        player.instance!!.playSound(Sound.sound(SoundEvent.ZOMBIE_ATTACK_IRON_DOOR, Sound.Source.PLAYER, 1.5f, 1f), player.position)
+    override val burstAmount = 5
+    override val burstInterval = 1L
 
-        player.velocity = player.position.direction.normalize().multiply(-20)
+    override fun shoot(player: Player) {
+        player.instance!!.playSound(Sound.sound(SoundEvent.ARMOR_STAND_HIT, Sound.Source.PLAYER, 1f, 1f), player.position)
     }
 
 }
