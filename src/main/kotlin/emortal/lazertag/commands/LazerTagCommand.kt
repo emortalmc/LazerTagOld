@@ -16,9 +16,8 @@ object LazerTagCommand : Command("lazertag") {
                 GameManager.addPlayer(sender.asPlayer())
                 sender.sendMessage(
                     Component.text(
-                        "Joined lazertag!",
-                        NamedTextColor.GREEN,
-                        TextDecoration.BOLD
+                        "Joining a game of LazerTag...",
+                        NamedTextColor.GREEN
                     )
                 )
             }

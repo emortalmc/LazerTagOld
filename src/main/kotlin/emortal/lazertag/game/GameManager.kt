@@ -18,6 +18,7 @@ object GameManager {
         game.addPlayer(player)
         gameMap[player.uuid] = game
 
+        // TODO: Remove (Temporary)
         player.sendMessage("You were added to game ${game.id}")
     }
 
@@ -27,16 +28,26 @@ object GameManager {
         gameMap.remove(player.uuid)
     }
 
-    private fun createGame(options: GameOptions): Game {
+    fun createGame(options: GameOptions): Game {
         val newGame = Game(gameIndex, options)
         games.add(newGame)
         gameIndex++
         return newGame
     }
+    
+    fun deleteGame(game: Game) {
+        games.remove(game)
+        for (player in game.players) {
+            gameMap.remove(player.uuid)
+        }
+    }
+    
 
     private fun nextGame(): Game {
         for (game in games) {
-            if (game.gameState != GameState.WAITING_FOR_PLAYERS) continue
+            if (game.gameState == GameState.ENDING) continue
+            if (game.isFull()) continue
+
             return game
         }
         return createGame(GameOptions())

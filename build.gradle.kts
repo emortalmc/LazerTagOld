@@ -2,9 +2,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     // Apply the Kotlin JVM plugin to add support for Kotlin.
-    id("org.jetbrains.kotlin.jvm") version "1.5.10"
+    id("org.jetbrains.kotlin.jvm") version "1.5.20"
     // Kotlinx serialization for any data format
-    kotlin("plugin.serialization") version "1.4.21"
+    kotlin("plugin.serialization") version "1.5.20"
     // Shade the plugin
     id("com.github.johnrengelman.shadow") version "7.0.0"
     // Allow publishing
@@ -41,7 +41,7 @@ dependencies {
     // import kotlinx serialization
     compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
 
-    compileOnly("com.github.Project-Cepi:KStom:988edc9c54")
+    compileOnly("com.github.Project-Cepi:KStom:0aa11a4f4f")
     implementation("net.kyori:adventure-text-minimessage:4.1.0-SNAPSHOT")
 
     implementation("com.github.Bloepiloepi:MinestomParticles:b2ea393e89")
@@ -83,7 +83,6 @@ java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
 }
-
 
 val compileKotlin: KotlinCompile by tasks
 compileKotlin.kotlinOptions.jvmTarget = JavaVersion.VERSION_11.toString()

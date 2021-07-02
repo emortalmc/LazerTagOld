@@ -2,8 +2,8 @@ package emortal.lazertag
 
 import emortal.lazertag.commands.LazerTagCommand
 import emortal.lazertag.commands.newinst
-import emortal.lazertag.commands.pasteschem
 import emortal.lazertag.commands.saveinst
+import emortal.lazertag.game.MapManager
 import net.minestom.server.extensions.Extension
 import world.cepi.kstom.Manager
 
@@ -15,7 +15,6 @@ class LazerTagExtension : Extension() {
         MapManager.init()
 
         Manager.command.register(LazerTagCommand)
-        Manager.command.register(pasteschem)
         Manager.command.register(saveinst)
         Manager.command.register(newinst)
 

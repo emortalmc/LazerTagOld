@@ -1,8 +1,8 @@
 package emortal.lazertag
 
+import emortal.lazertag.game.DeathReason
 import emortal.lazertag.game.GameManager
 import emortal.lazertag.gun.Gun
-import emortal.lazertag.items.ItemManager
 import emortal.lazertag.utils.MinestomRunnable
 import emortal.lazertag.utils.ParticleUtils
 import emortal.lazertag.utils.PlayerUtils.eyePosition
@@ -19,6 +19,7 @@ import net.minestom.server.entity.damage.DamageType
 import net.minestom.server.entity.damage.EntityDamage
 import net.minestom.server.entity.metadata.other.ArmorStandMeta
 import net.minestom.server.event.entity.EntityDamageEvent
+import net.minestom.server.event.player.PlayerDisconnectEvent
 import net.minestom.server.event.player.PlayerMoveEvent
 import net.minestom.server.event.player.PlayerSpawnEvent
 import net.minestom.server.event.player.PlayerUseItemEvent
@@ -54,7 +55,7 @@ object EventListener {
                 return@listenOnly
             }
 
-            /*for (i in 0..20) {
+            /*for (i in 0..20) { FLAMMENWERFERR!!!
                 val newDir = eyeDir.spread(0.15)
 
                 PlayerUtils.sendParticle(e.player, Particle.FLAME, eyePos.clone().subtract(0.0, 0.25, 0.0), newDir.x.toFloat(), newDir.y.toFloat(), newDir.z.toFloat(), 0, 1f)
@@ -101,36 +102,37 @@ object EventListener {
         }
 
         eventNode.listenOnly<PlayerSpawnEvent> {
-            player.inventory.addItemStack(ItemManager.LAZER_MINIGUN.item)
-            player.inventory.addItemStack(ItemManager.LAZER_SHOTGUN.item)
-            player.inventory.addItemStack(ItemManager.RIFLE.item)
-            player.inventory.addItemStack(ItemManager.RAILGUN.item)
             player.gameMode = GameMode.CREATIVE
         }
 
+        eventNode.listenOnly<PlayerDisconnectEvent> {
+            GameManager.getPlayerGame(player)?.removePlayer(player)
+        }
+
         eventNode.listenOnly<PlayerMoveEvent> {
+            if (player.gameMode != GameMode.ADVENTURE) return@listenOnly
+
             if (newPosition.y < 35) {
-                GameManager.getPlayerGame(player)?.died(player)
+                GameManager.getPlayerGame(player)?.died(player, null, DeathReason.VOID)
             }
         }
 
         eventNode.listenOnly<EntityDamageEvent> {
             if (entity.entityType != EntityType.PLAYER) return@listenOnly
 
+            if (damageType !is EntityDamage) {
+                isCancelled = true
+                return@listenOnly
+            }
+
+            val player: Player = entity as Player
             val damager: Player = (damageType as EntityDamage).source as Player
 
             if (entity.health - damage <= 0) {
                 isCancelled = true
                 entity.health = 20f
 
-                damager.playSound(
-                    Sound.sound(
-                        SoundEvent.NOTE_BLOCK_PLING,
-                        Sound.Source.PLAYER,
-                        1f,
-                        1f
-                    )
-                )
+                GameManager.getPlayerGame(player)?.died(player, damager, DeathReason.PLAYER)
             }
 
             val rand = ThreadLocalRandom.current()
@@ -141,6 +143,7 @@ object EventListener {
             armourStand.isInvisible = true
             armourStand.customName = Component.text(damage, NamedTextColor.RED, TextDecoration.BOLD)
             armourStand.isCustomNameVisible = true
+            armourStand.setNoGravity(true)
 
             val armourStandMeta = armourStand.entityMeta as ArmorStandMeta
             armourStandMeta.setNotifyAboutChanges(false)
@@ -182,7 +185,7 @@ object EventListener {
     }
 
     private fun shoot(instance: Instance, player: Player, heldGun: Gun, eyeDir: Vector, eyePos: Position) {
-        val damageMap = HashMap<LivingEntity, Float>()
+        val damageMap = HashMap<Player, Float>()
 
         heldGun.shoot(player)
 
@@ -197,18 +200,21 @@ object EventListener {
                 direction,
                 heldGun.maxDistance,
                 0.5,
+                acceptEntity = { vec: Vector, entity: Entity ->
+                    entity.entityType == EntityType.PLAYER && (entity as Player).gameMode == GameMode.ADVENTURE
+                }, // Accept if player is in adventure mode (Prevents spectators blocking bullets)
                 margin = 0.3
             )
             val lastPos = raycast.finalPosition.toPosition()
 
             if (raycast.hitType == HitType.ENTITY) {
-                val hitEntity = raycast.hitEntity!!
+                val hitPlayer: Player = raycast.hitEntity!! as Player
 
                 val shapeOptions = ParticleUtils.getColouredShapeOptions(Color(255, 0, 0), Color(20, 20, 20), 1.5f)
                 ParticleShape.line(raycast.finalPosition.subtract(direction.multiply(6)).toPosition(), lastPos)
                     .iterator(shapeOptions).draw(instance, RandomUtils.ZERO_POS)
 
-                damageMap[hitEntity] = damageMap.getOrDefault(hitEntity, 0f) + heldGun.damage
+                damageMap[hitPlayer] = damageMap.getOrDefault(hitPlayer, 0f) + heldGun.damage
             } else {
                 val shapeOptions = ParticleUtils.getColouredShapeOptions(Color(100, 100, 100), Color(50, 50, 50), 0.2f)
                 ParticleShape.line(eyePos, lastPos)

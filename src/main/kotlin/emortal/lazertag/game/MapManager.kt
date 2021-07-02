@@ -1,4 +1,4 @@
-package emortal.lazertag
+package emortal.lazertag.game
 
 import emortal.lazertag.commands.VoidGenerator
 import emortal.lazertag.utils.Direction4
