@@ -1,9 +1,7 @@
 package emortal.lazertag.gun
 
-import emortal.lazertag.utils.PlayerUtils.playSound
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
-import net.minestom.server.entity.Player
 import net.minestom.server.item.ItemMetaBuilder
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.ItemStackBuilder
@@ -26,8 +24,6 @@ class Railgun : Gun("Railgun", 4) {
     override val ammo = 5
     override val maxDistance = 100.0
 
-    override fun shoot(player: Player) {
-        player.instance!!.playSound(Sound.sound(SoundEvent.BEACON_ACTIVATE, Sound.Source.PLAYER, 1f, 1f), player.position)
-    }
+    override val sound = Sound.sound(SoundEvent.BEACON_ACTIVATE, Sound.Source.PLAYER, 1f, 1f)
 
 }

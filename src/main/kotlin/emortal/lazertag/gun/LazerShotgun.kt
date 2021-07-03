@@ -1,6 +1,5 @@
 package emortal.lazertag.gun
 
-import emortal.lazertag.utils.PlayerUtils.playSound
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.minestom.server.entity.Player
@@ -27,9 +26,9 @@ class LazerShotgun : Gun("Lazer Shotgun", 2) {
     override val ammo = 5
     override val maxDistance = 30.0
 
-    override fun shoot(player: Player) {
-        player.instance!!.playSound(Sound.sound(SoundEvent.ZOMBIE_ATTACK_IRON_DOOR, Sound.Source.PLAYER, 1.5f, 1f), player.position)
+    override val sound = Sound.sound(SoundEvent.ZOMBIE_ATTACK_IRON_DOOR, Sound.Source.PLAYER, 1.5f, 1f)
 
+    override fun shootAfter(player: Player) {
         player.velocity = player.position.direction.normalize().multiply(-20)
     }
 

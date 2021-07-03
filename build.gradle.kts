@@ -44,7 +44,7 @@ dependencies {
     compileOnly("com.github.Project-Cepi:KStom:0aa11a4f4f")
     implementation("net.kyori:adventure-text-minimessage:4.1.0-SNAPSHOT")
 
-    implementation("com.github.Bloepiloepi:MinestomParticles:b2ea393e89")
+    compileOnly("com.github.Bloepiloepi:MinestomParticles:e6dd8e92b8")
 }
 tasks.withType<Test> {
     useJUnitPlatform()

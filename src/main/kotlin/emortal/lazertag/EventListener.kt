@@ -4,40 +4,28 @@ import emortal.lazertag.game.DeathReason
 import emortal.lazertag.game.GameManager
 import emortal.lazertag.gun.Gun
 import emortal.lazertag.utils.MinestomRunnable
-import emortal.lazertag.utils.ParticleUtils
 import emortal.lazertag.utils.PlayerUtils.eyePosition
-import emortal.lazertag.utils.RandomUtils
-import emortal.lazertag.utils.RandomUtils.spread
-import io.github.bloepiloepi.particles.shapes.ParticleShape
+import emortal.lazertag.utils.PlayerUtils.playSound
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
-import net.minestom.server.color.Color
-import net.minestom.server.entity.*
+import net.minestom.server.entity.Entity
+import net.minestom.server.entity.EntityType
+import net.minestom.server.entity.GameMode
+import net.minestom.server.entity.Player
 import net.minestom.server.entity.damage.DamageType
 import net.minestom.server.entity.damage.EntityDamage
 import net.minestom.server.entity.metadata.other.ArmorStandMeta
 import net.minestom.server.event.entity.EntityDamageEvent
-import net.minestom.server.event.player.PlayerDisconnectEvent
-import net.minestom.server.event.player.PlayerMoveEvent
-import net.minestom.server.event.player.PlayerSpawnEvent
-import net.minestom.server.event.player.PlayerUseItemEvent
+import net.minestom.server.event.player.*
 import net.minestom.server.extensions.Extension
-import net.minestom.server.instance.Instance
 import net.minestom.server.item.ItemMetaBuilder
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
-import net.minestom.server.utils.Position
-import net.minestom.server.utils.Vector
 import net.minestom.server.utils.time.TimeUnit
 import world.cepi.kstom.event.listenOnly
-import world.cepi.kstom.raycast.HitType
-import world.cepi.kstom.raycast.RayCast
 import java.util.concurrent.ThreadLocalRandom
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.set
 
 object EventListener {
 
@@ -59,45 +47,47 @@ object EventListener {
                 val newDir = eyeDir.spread(0.15)
 
                 PlayerUtils.sendParticle(e.player, Particle.FLAME, eyePos.clone().subtract(0.0, 0.25, 0.0), newDir.x.toFloat(), newDir.y.toFloat(), newDir.z.toFloat(), 0, 1f)
-            }*/
+            */
+
+            object : MinestomRunnable() {
+                var i = heldGun.burstAmount
+                val gun = Gun.registeredMap[player.inventory.itemInMainHand.meta.customModelData]!!
+
+                override fun run() {
+                    // If player swaps gun while bursting
+                    if (Gun.registeredMap[player.inventory.itemInMainHand.meta.customModelData]!! != gun) {
+                        cancel()
+                        return
+                    }
+
+                    if (i < 1) {
+                        cancel()
+                        return
+                    }
+
+                    player.instance!!.playSound(heldGun.sound, player.position)
+
+                    val damageMap = heldGun.shoot(player)
+
+                    damageMap.forEach { (hitEntity, damage) ->
+                        player.playSound(Sound.sound(SoundEvent.PLAYER_HURT, Sound.Source.PLAYER, 1f, 1f))
+
+                        player.scheduleNextTick {
+                            hitEntity.damage(DamageType.fromPlayer(player), damage)
+                        }
+                    }
+
+                    i--
+                }
+            }.repeat(heldGun.burstInterval, TimeUnit.TICK).schedule()
+
+
 
             player.itemInMainHand = heldGun.itemBuilder.meta { meta: ItemMetaBuilder ->
                 meta.damage(player.itemInMainHand.meta.damage + (heldGun.maxDurability / heldGun.ammo))
                 meta.set(Tag.Long("lastShot"), System.currentTimeMillis())
             }.build()
 
-            if (heldGun.burstAmount != 0) {
-                object : MinestomRunnable() {
-                    var i = heldGun.burstAmount
-
-                    override fun run() {
-
-                        // If player swaps gun while bursting
-                        if (Gun.registeredMap[player.inventory.itemInMainHand.meta.customModelData]!! != heldGun) {
-                            cancel()
-                            return
-                        }
-
-                        if (i < 1) {
-                            cancel()
-                            return
-                        }
-
-                        val eyePos = player.eyePosition()
-                        val eyeDir = eyePos.direction
-
-                        shoot(instance, player, heldGun, eyeDir, eyePos)
-
-                        i--
-                    }
-                }.repeat(heldGun.burstInterval, TimeUnit.TICK).schedule()
-
-                return@listenOnly
-            }
-
-            val eyePos = player.eyePosition()
-            val eyeDir = eyePos.direction
-            shoot(instance, player, heldGun, eyeDir, eyePos)
 
         }
 
@@ -115,6 +105,10 @@ object EventListener {
             if (newPosition.y < 35) {
                 GameManager.getPlayerGame(player)?.died(player, null, DeathReason.VOID)
             }
+        }
+
+        eventNode.listenOnly<PlayerDeathEvent> {
+            player.respawn()
         }
 
         eventNode.listenOnly<EntityDamageEvent> {
@@ -183,53 +177,4 @@ object EventListener {
             }.repeat(3, TimeUnit.TICK).schedule()
         }
     }
-
-    private fun shoot(instance: Instance, player: Player, heldGun: Gun, eyeDir: Vector, eyePos: Position) {
-        val damageMap = HashMap<Player, Float>()
-
-        heldGun.shoot(player)
-
-        repeat(heldGun.numberOfBullets) {
-
-            val direction = eyeDir.spread(heldGun.spread).normalize()
-
-            val raycast = RayCast.castRay(
-                instance,
-                player,
-                eyePos.toVector(),
-                direction,
-                heldGun.maxDistance,
-                0.5,
-                acceptEntity = { vec: Vector, entity: Entity ->
-                    entity.entityType == EntityType.PLAYER && (entity as Player).gameMode == GameMode.ADVENTURE
-                }, // Accept if player is in adventure mode (Prevents spectators blocking bullets)
-                margin = 0.3
-            )
-            val lastPos = raycast.finalPosition.toPosition()
-
-            if (raycast.hitType == HitType.ENTITY) {
-                val hitPlayer: Player = raycast.hitEntity!! as Player
-
-                val shapeOptions = ParticleUtils.getColouredShapeOptions(Color(255, 0, 0), Color(20, 20, 20), 1.5f)
-                ParticleShape.line(raycast.finalPosition.subtract(direction.multiply(6)).toPosition(), lastPos)
-                    .iterator(shapeOptions).draw(instance, RandomUtils.ZERO_POS)
-
-                damageMap[hitPlayer] = damageMap.getOrDefault(hitPlayer, 0f) + heldGun.damage
-            } else {
-                val shapeOptions = ParticleUtils.getColouredShapeOptions(Color(100, 100, 100), Color(50, 50, 50), 0.2f)
-                ParticleShape.line(eyePos, lastPos)
-                    .iterator(shapeOptions).draw(instance, RandomUtils.ZERO_POS)
-            }
-
-        }
-
-        damageMap.forEach { (hitEntity, damage) ->
-            player.playSound(Sound.sound(SoundEvent.PLAYER_HURT, Sound.Source.PLAYER, 1f, 1f))
-
-            hitEntity.damage(DamageType.fromPlayer(player), damage)
-        }
-    }
-
-
-
 }
