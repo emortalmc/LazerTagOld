@@ -1,6 +1,6 @@
 package emortal.lazertag.gun
 
-class Rifle : Gun("Rifle", 3) {
+object Rifle : Gun("Rifle", 3) {
 
     override val damage = 10f
     override val cooldown = 300L

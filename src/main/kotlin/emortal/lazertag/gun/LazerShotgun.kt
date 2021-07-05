@@ -6,7 +6,7 @@ import net.minestom.server.entity.Player
 import net.minestom.server.sound.SoundEvent
 import java.time.Duration
 
-class LazerShotgun : Gun("Lazer Shotgun", 2) {
+object LazerShotgun : Gun("Lazer Shotgun", 2) {
 
     override val damage = 2f
     override val numberOfBullets = 25

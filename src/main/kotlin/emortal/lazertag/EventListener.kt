@@ -3,11 +3,7 @@ package emortal.lazertag
 import emortal.lazertag.game.DeathReason
 import emortal.lazertag.game.GameManager
 import emortal.lazertag.gun.Gun
-import emortal.lazertag.items.ItemManager
-import emortal.lazertag.utils.Direction6
 import emortal.lazertag.utils.MinestomRunnable
-import emortal.lazertag.utils.PlayerUtils.eyePosition
-import emortal.lazertag.utils.PlayerUtils.playSound
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -29,11 +25,10 @@ import net.minestom.server.extensions.Extension
 import net.minestom.server.item.ItemMetaBuilder
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
+import net.minestom.server.utils.Direction
 import world.cepi.kstom.Manager
 import world.cepi.kstom.event.listenOnly
-import world.cepi.kstom.util.component1
-import world.cepi.kstom.util.component2
-import world.cepi.kstom.util.component3
+import world.cepi.kstom.util.*
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.ThreadLocalRandom
@@ -49,12 +44,6 @@ object EventListener {
 
         eventNode.listenOnly<ItemDropEvent> {
             isCancelled = true
-            if (player.inventory.getItemStack(0).material == ItemManager.KNIFE.material) {
-
-                //Manager.team.createBuilder("team").nameTagVisibility(Name)
-
-            }
-            player.inventory.setItemStack(0, ItemManager.KNIFE)
         }
 
         eventNode.listenOnly<PlayerUseItemEvent> {
@@ -293,10 +282,10 @@ object EventListener {
     private fun intersectsBlock(boundingBox: BoundingBox, entity: Entity): Boolean {
         val (x, y, z) = entity.position
 
-        for (direction in Direction6.values()) {
-            if (!entity.instance!!.getBlock((x + direction.x).toInt(), (y + direction.y).toInt(), (z + direction.z).toInt()).isSolid) continue
+        for (direction in Direction.values()) {
+            if (!entity.instance!!.getBlock((x + direction.normalX()).toInt(), (y + direction.normalY()).toInt(), (z + direction.normalZ()).toInt()).isSolid) continue
 
-            if (boundingBox.intersect(x + direction.x.toDouble(), y + direction.y.toDouble(), z + direction.z.toDouble())) {
+            if (boundingBox.intersect(x + direction.normalX().toDouble(), y + direction.normalY().toDouble(), z + direction.normalZ().toDouble())) {
                 return true
             }
         }

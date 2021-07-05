@@ -1,7 +1,6 @@
 package emortal.lazertag.gun
 
 import emortal.lazertag.utils.ParticleUtils.sendParticle
-import emortal.lazertag.utils.PlayerUtils.eyePosition
 import net.kyori.adventure.sound.Sound
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.EntityType
@@ -12,8 +11,9 @@ import net.minestom.server.entity.metadata.animal.BeeMeta
 import net.minestom.server.particle.Particle
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
+import world.cepi.kstom.util.eyePosition
 
-class BeeCannon : Gun("Rocket Launcher", 4) {
+object BeeCannon : Gun("Rocket Launcher", 4) {
 
     override val damage = 80f
     override val cooldown = 5000L

@@ -3,7 +3,7 @@ package emortal.lazertag.gun
 import net.kyori.adventure.sound.Sound
 import net.minestom.server.sound.SoundEvent
 
-class LazerMinigun : Gun("Lazer Minigun", 1) {
+object LazerMinigun : Gun("Lazer Minigun", 1) {
 
     override val damage = 1f
     override val cooldown = 150L
