@@ -1,9 +1,15 @@
 package emortal.lazertag.gun
 
 import net.kyori.adventure.sound.Sound
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextColor
+import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
 
 object LazerMinigun : Gun("Lazer Minigun", 1) {
+
+    override val material = Material.DIAMOND_SHOVEL
+    override val color = NamedTextColor.AQUA
 
     override val damage = 1f
     override val cooldown = 150L

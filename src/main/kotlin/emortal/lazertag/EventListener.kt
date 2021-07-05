@@ -92,9 +92,7 @@ object EventListener {
                         }
                     }
 
-                    player.itemInMainHand = player.itemInMainHand.withMeta { meta: ItemMetaBuilder ->
-                        meta.damage(player.itemInMainHand.meta.damage + ceil(59f / heldGun.ammo.toDouble()).toInt())
-                    }
+                    // TODO ammo
 
                     i--
                 }
@@ -169,13 +167,7 @@ object EventListener {
                         return
                     }
 
-                    player.itemInMainHand = player.itemInMainHand.withMeta { meta: ItemMetaBuilder ->
-                        meta.damage(
-                            (player.itemInMainHand.meta.damage - floor(59f / gun.ammo.toDouble()).toInt()).coerceAtMost(
-                                59
-                            )
-                        )
-                    }
+                    // TODO ammo
                     player.playSound(Sound.sound(SoundEvent.ITEM_PICKUP, Sound.Source.PLAYER, 1f, 1f))
 
                     i--

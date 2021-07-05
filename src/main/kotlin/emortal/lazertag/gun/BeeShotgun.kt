@@ -2,12 +2,14 @@ package emortal.lazertag.gun
 
 import emortal.lazertag.utils.ParticleUtils.sendParticle
 import net.kyori.adventure.sound.Sound
+import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.entity.damage.DamageType
 import net.minestom.server.entity.metadata.animal.BeeMeta
+import net.minestom.server.item.Material
 import net.minestom.server.particle.Particle
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
@@ -16,6 +18,9 @@ import world.cepi.kstom.util.spread
 import java.util.concurrent.ThreadLocalRandom
 
 object BeeShotgun : Gun("Bee Keeper", 5) {
+
+    override val material = Material.BEEHIVE
+    override val color = NamedTextColor.YELLOW
 
     override val damage = 5f
     override val numberOfBullets = 7

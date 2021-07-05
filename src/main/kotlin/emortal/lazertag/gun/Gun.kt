@@ -4,6 +4,9 @@ import emortal.lazertag.utils.ParticleUtils
 import io.github.bloepiloepi.particles.shapes.ParticleShape
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextColor
+import net.kyori.adventure.text.format.TextDecoration
 import net.minestom.server.color.Color
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
@@ -26,8 +29,11 @@ sealed class Gun(val name: String, val id: Int) {
         val registeredMap: Map<Int, Gun> = Gun::class.sealedSubclasses.map { it.objectInstance!! }.associateBy { it.id }
     }
 
-    open val item: ItemStack = ItemStack.builder(Material.WOODEN_HOE)
-        .displayName(Component.text(name))
+    open val material: Material = Material.WOODEN_HOE
+    open val color: TextColor = NamedTextColor.WHITE
+
+    open val item: ItemStack = ItemStack.builder(material)
+        .displayName(Component.text(name, color).decoration(TextDecoration.ITALIC, false))
         .meta { meta: ItemMetaBuilder ->
             meta.set(Tag.Long("lastShot"), 0)
             meta.set(Tag.Byte("reloading"), 0)

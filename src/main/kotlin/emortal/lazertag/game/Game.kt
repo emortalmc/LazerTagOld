@@ -153,7 +153,7 @@ class Game(val id: Int, val options: GameOptions) {
 
         } else {
 
-            playerAudience.sendMiniMessage(" <red>☠</red> <dark_gray>|</dark_gray> <gray><red>${player.username}</red> killed themselves")
+            playerAudience.sendMiniMessage("<red>☠</red> <dark_gray>|</dark_gray> <gray><red>${player.username}</red> killed themselves")
 
             player.showTitle(Title.title(
                 Component.text("YOU DIED!", NamedTextColor.RED, TextDecoration.BOLD),

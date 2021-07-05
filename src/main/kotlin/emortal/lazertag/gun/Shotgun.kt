@@ -2,12 +2,17 @@ package emortal.lazertag.gun
 
 import emortal.lazertag.utils.MinestomRunnable
 import net.kyori.adventure.sound.Sound
+import net.kyori.adventure.text.format.NamedTextColor
 import net.minestom.server.entity.Player
+import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.utils.time.TimeUnit
 import java.time.Duration
 
 object Shotgun : Gun("Shotgun", 2) {
+
+    override val material = Material.REPEATER
+    override val color = NamedTextColor.RED
 
     override val damage = 2f
     override val numberOfBullets = 25
