@@ -2,8 +2,7 @@ package emortal.lazertag
 
 import emortal.lazertag.commands.NewInstanceCommand
 import emortal.lazertag.commands.SaveInstanceCommand
-import emortal.lazertag.game.MapManager
-import emortal.lazertag.gun.*
+import emortal.lazertag.maps.MapManager
 import net.minestom.server.extensions.Extension
 import world.cepi.kstom.command.register
 import world.cepi.kstom.command.unregister
@@ -17,12 +16,6 @@ class LazerTagExtension : Extension() {
 
         SaveInstanceCommand.register()
         NewInstanceCommand.register()
-
-        BeeCannon
-        BeeShotgun
-        LazerMinigun
-        Rifle
-        Shotgun
 
         logger.info("[LazerTagExtension] has been enabled!")
     }

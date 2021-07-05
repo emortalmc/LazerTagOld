@@ -57,9 +57,9 @@ object EventListener {
                 return@listenOnly
             }
 
-            player.itemInMainHand = heldGun.itemBuilder.meta { meta: ItemMetaBuilder ->
+            player.itemInMainHand = heldGun.item.withMeta { meta ->
                 meta.set(Tag.Long("lastShot"), System.currentTimeMillis())
-            }.build()
+            }
 
 
 
@@ -101,9 +101,9 @@ object EventListener {
                         }
                     }
 
-                    player.itemInMainHand = heldGun.itemBuilder.meta { meta: ItemMetaBuilder ->
+                    player.itemInMainHand = heldGun.item.withMeta { meta: ItemMetaBuilder ->
                         meta.damage(player.itemInMainHand.meta.damage + ceil(59f / heldGun.ammo.toDouble()).toInt())
-                    }.build()
+                    }
 
                     i--
                 }
@@ -142,16 +142,16 @@ object EventListener {
             isCancelled = true
 
             val gun = Gun.registeredMap[offHandItem.meta.customModelData] ?: return@listenOnly
-            val game = GameManager.getPlayerGame(player) ?: return@listenOnly
+            val game = GameManager[player] ?: return@listenOnly
 
             if (player.itemInMainHand.meta.getTag(Tag.Byte("reloading"))!!.toInt() == 1 || player.itemInMainHand.meta.damage == 0) {
                 return@listenOnly
             }
 
-            player.itemInMainHand = gun.itemBuilder.meta { meta: ItemMetaBuilder ->
+            player.itemInMainHand = gun.item.withMeta { meta: ItemMetaBuilder ->
                 meta.damage(60)
                 meta.set(Tag.Byte("reloading"), 1)
-            }.build()
+            }
 
             game.reloadTasks[player] = object : MinestomRunnable() {
                 var i = gun.ammo
@@ -164,22 +164,22 @@ object EventListener {
                             player.playSound(Sound.sound(SoundEvent.IRON_GOLEM_ATTACK, Sound.Source.PLAYER, 1f, 1f))
                         }.delay(Duration.ofMillis(50 * 3L)).schedule()
 
-                        player.itemInMainHand = gun.itemBuilder.meta { meta: ItemMetaBuilder ->
+                        player.itemInMainHand = gun.item.withMeta { meta: ItemMetaBuilder ->
                             meta.damage(0)
                             meta.set(Tag.Byte("reloading"), 0)
-                        }.build()
+                        }
 
                         cancel()
                         return
                     }
 
-                    player.itemInMainHand = gun.itemBuilder.meta { meta: ItemMetaBuilder ->
+                    player.itemInMainHand = gun.item.withMeta { meta: ItemMetaBuilder ->
                         meta.damage(
                             (player.itemInMainHand.meta.damage - floor(59f / gun.ammo.toDouble()).toInt()).coerceAtMost(
                                 59
                             )
                         )
-                    }.build()
+                    }
                     player.playSound(Sound.sound(SoundEvent.ITEM_PICKUP, Sound.Source.PLAYER, 1f, 1f))
 
                     i--
@@ -203,14 +203,14 @@ object EventListener {
         }
 
         eventNode.listenOnly<PlayerDisconnectEvent> {
-            GameManager.getPlayerGame(player)?.removePlayer(player)
+            GameManager[player]?.removePlayer(player)
         }
 
         eventNode.listenOnly<PlayerMoveEvent> {
             if (player.gameMode != GameMode.ADVENTURE) return@listenOnly
 
             if (newPosition.y < 35) {
-                GameManager.getPlayerGame(player)?.died(player, null, DeathReason.VOID)
+                GameManager[player]?.kill(player, null, DeathReason.VOID)
             }
         }
 
@@ -229,7 +229,7 @@ object EventListener {
                 isCancelled = true
                 entity.health = 20f
 
-                GameManager.getPlayerGame(player)?.died(player, damager, DeathReason.PLAYER)
+                GameManager[player]?.kill(player, damager, DeathReason.PLAYER)
             }
 
             val rand = ThreadLocalRandom.current()

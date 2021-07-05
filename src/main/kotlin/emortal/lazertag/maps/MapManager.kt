@@ -1,4 +1,4 @@
-package emortal.lazertag.game
+package emortal.lazertag.maps
 
 import emortal.lazertag.commands.VoidGenerator
 import emortal.lazertag.utils.Direction4
@@ -14,9 +14,8 @@ object MapManager {
     val spawnPosBlocks = HashMap<Instance, HashMap<BlockPosition, Block>>()
     val spawnPositionMap = HashMap<String, List<Position>>()
 
-    fun init() {
-        // TODO: Multiple maps
-        val mapName = "dizzymc"
+    fun init() = LazerTagMap.maps.forEach {
+        val mapName = it.name
 
         println("Loading map '$mapName'...")
 
@@ -66,5 +65,6 @@ object MapManager {
         spawnPosBlocks[instance] = spawnPosBlocksList
         spawnPositionMap[mapName] = spawnPositionList
     }
+
 
 }

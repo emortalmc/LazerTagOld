@@ -47,13 +47,19 @@ object BeeCannon : Gun("Rocket Launcher", 4) {
         player.instance!!.playSound(Sound.sound(SoundEvent.GENERIC_EXPLODE, Sound.Source.PLAYER, 1f, 1f))
 
         val boundingBox = projectile.boundingBox.expand(8.0, 8.0, 8.0)
-        for (entity in player.instance!!.entities.filter { boundingBox.intersect(it.boundingBox) && it is Player && it.gameMode == GameMode.ADVENTURE }) {
-            entity.scheduleNextTick {
-                (entity as Player).damage(DamageType.fromPlayer(player),
-                    damage / (projectile.getDistanceSquared(entity) / 1.75).toFloat()
-                )
+
+        player.instance!!.entities
+            .filterIsInstance<Player>()
+            .filter { it.gameMode == GameMode.ADVENTURE }
+            .filter { boundingBox.intersect(it.boundingBox) }
+            .forEach { loopedPlayer ->
+                loopedPlayer.scheduleNextTick {
+                    loopedPlayer.damage(
+                        DamageType.fromPlayer(player),
+                        damage / (projectile.getDistanceSquared(loopedPlayer) / 1.75).toFloat()
+                    )
+                }
             }
-        }
 
         projectile.remove()
     }

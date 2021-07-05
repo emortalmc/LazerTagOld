@@ -7,7 +7,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 object GameManager {
-    private val gameMap: ConcurrentHashMap<UUID, Game> = ConcurrentHashMap<UUID, Game>()
+    private val gameMap: ConcurrentHashMap<Player, Game> = ConcurrentHashMap<Player, Game>()
     private val games: MutableSet<Game> = HashSet<Game>()
     private var gameIndex = 0
 
@@ -22,15 +22,15 @@ object GameManager {
         val game: Game = nextGame()
 
         game.addPlayer(player)
-        gameMap[player.uuid] = game
+        gameMap[player] = game
 
         return game
     }
 
     fun removePlayer(player: Player) {
-        getPlayerGame(player)?.removePlayer(player)
+        this[player]?.removePlayer(player)
 
-        gameMap.remove(player.uuid)
+        gameMap.remove(player)
     }
 
     fun createGame(options: GameOptions): Game {
@@ -41,10 +41,8 @@ object GameManager {
     }
     
     fun deleteGame(game: Game) {
+        game.players.forEach(gameMap::remove)
         games.remove(game)
-        for (player in game.players) {
-            gameMap.remove(player.uuid)
-        }
     }
     
 
@@ -58,8 +56,7 @@ object GameManager {
         return createGame(GameOptions())
     }
 
-    fun getPlayerGame(player: Player): Game? {
-        return gameMap[player.uuid]
-    }
+    operator fun get(player: Player) =
+        gameMap[player]
 
 }

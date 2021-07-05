@@ -45,6 +45,9 @@ dependencies {
     implementation("net.kyori:adventure-text-minimessage:4.1.0-SNAPSHOT")
 
     compileOnly("com.github.Bloepiloepi:MinestomParticles:e6dd8e92b8")
+
+    // Use the JUpiter test library.
+    testImplementation("org.junit.jupiter:junit-jupiter:5.7.2")
 }
 tasks.withType<Test> {
     useJUnitPlatform()
