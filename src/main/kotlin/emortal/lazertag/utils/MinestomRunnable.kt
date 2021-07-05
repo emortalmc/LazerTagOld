@@ -2,30 +2,26 @@ package emortal.lazertag.utils
 
 import net.minestom.server.MinecraftServer
 import net.minestom.server.timer.Task
-import net.minestom.server.utils.time.TimeUnit
+import java.time.Duration
 
 abstract class MinestomRunnable : Runnable {
     private var t: Task? = null
-    private var repeatTime: Long = 0
-    private var repeatUnit = TimeUnit.SECOND
-    private var delayTime: Long = 0
-    private var delayUnit = TimeUnit.SECOND
+    private var repeatDuration: Duration = Duration.ZERO
+    private var delayDuration: Duration = Duration.ZERO
 
-    fun delay(time: Long, unit: TimeUnit): MinestomRunnable {
-        delayTime = time
-        delayUnit = unit
+    fun delay(duration: Duration): MinestomRunnable {
+        delayDuration = duration
         return this
     }
 
-    fun repeat(time: Long, unit: TimeUnit): MinestomRunnable {
-        repeatTime = time
-        repeatUnit = unit
+    fun repeat(duration: Duration): MinestomRunnable {
+        repeatDuration = duration
         return this
     }
 
     fun schedule(): Task {
-        val t = MinecraftServer.getSchedulerManager().buildTask(this).delay(delayTime, delayUnit)
-            .repeat(repeatTime, repeatUnit).schedule()
+        val t = MinecraftServer.getSchedulerManager().buildTask(this).delay(delayDuration)
+            .repeat(repeatDuration).schedule()
         this.t = t
         return t
     }

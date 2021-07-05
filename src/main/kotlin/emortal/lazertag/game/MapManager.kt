@@ -16,7 +16,6 @@ object MapManager {
 
     fun init() {
         // TODO: Multiple maps
-
         val mapName = "dizzymc"
 
         println("Loading map '$mapName'...")
@@ -34,8 +33,6 @@ object MapManager {
             }
         }
 
-        println("Scanning for spawn locations...")
-
         val spawnPositionList = ArrayList<Position>()
         val spawnPosBlocksList = HashMap<BlockPosition, Block>()
 
@@ -47,30 +44,24 @@ object MapManager {
                         val zPos = (chunk.chunkZ * 16) + z
                         if (Block.fromStateId(chunk.getBlockStateId(xPos, y, zPos)) != Block.NETHERITE_BLOCK) continue
 
-                        println("Found netherite block")
-
                         instance.setBlock(xPos, y, zPos, Block.AIR)
                         spawnPosBlocksList[BlockPosition(xPos, y, zPos)] = Block.NETHERITE_BLOCK
 
                         for (value in Direction4.values()) {
                             if (instance.getBlock(xPos + value.x, y, zPos + value.y) != Block.BEDROCK) continue
 
-                            println("Found bedrock block")
-
-
                             instance.setBlock(xPos + value.x, y, zPos + value.y, Block.AIR)
                             spawnPosBlocksList[BlockPosition(xPos + value.x, y, zPos + value.y)] = Block.BEDROCK
 
                             spawnPositionList.add(Position(xPos.toDouble() + 0.5, y.toDouble(), zPos.toDouble() + 0.5, value.yaw, 0f))
-
-                            println(spawnPositionList.size)
                         }
                     }
                 }
             }
         }
 
-        println("Finished loading $mapName, found ${spawnPositionList.size} spawn locations!")
+        println(spawnPosBlocksList)
+        println("Loaded $mapName - found ${spawnPositionList.size} spawn locations!")
 
         spawnPosBlocks[instance] = spawnPosBlocksList
         spawnPositionMap[mapName] = spawnPositionList

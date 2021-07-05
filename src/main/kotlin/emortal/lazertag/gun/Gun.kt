@@ -2,8 +2,6 @@ package emortal.lazertag.gun
 
 import emortal.lazertag.utils.ParticleUtils
 import emortal.lazertag.utils.PlayerUtils.eyePosition
-import emortal.lazertag.utils.RandomUtils
-import emortal.lazertag.utils.RandomUtils.spread
 import io.github.bloepiloepi.particles.shapes.ParticleShape
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
@@ -22,6 +20,7 @@ import net.minestom.server.utils.Position
 import net.minestom.server.utils.Vector
 import world.cepi.kstom.raycast.HitType
 import world.cepi.kstom.raycast.RayCast
+import world.cepi.kstom.util.spread
 
 sealed class Gun(val name: String, val id: Int) {
 
@@ -33,6 +32,7 @@ sealed class Gun(val name: String, val id: Int) {
         if (registeredMap.containsKey(id)) {
             println("Duplicate gun IDs")
         }
+        println("Registered gun $name ($id)")
         registeredMap[id] = this
     }
 
@@ -40,17 +40,18 @@ sealed class Gun(val name: String, val id: Int) {
         .displayName(Component.text(name))
         .meta { meta: ItemMetaBuilder ->
             meta.set(Tag.Long("lastShot"), 0)
+            meta.set(Tag.Byte("reloading"), 0)
             meta.customModelData(id)
         }
 
     val item by lazy { itemBuilder.build() }
-    val maxDurability by lazy { item.meta.damage }
 
     open val damage: Float = 1f // PER BULLET!
     open val numberOfBullets: Int = 1
     open val spread: Double = 0.0
-    open val cooldown: Long = 1 // In millis
+    open val cooldown: Long = 1L // In millis
     open val ammo: Int = 10
+    open val reloadTime: Long = 2000L // In millis
     open val maxDistance: Double = 10.0
 
     open val burstAmount: Int = 1
@@ -77,8 +78,8 @@ sealed class Gun(val name: String, val id: Int) {
                 maxDistance,
                 0.5,
                 acceptEntity = { _: Vector, entity: Entity ->
-                    entity.entityType == EntityType.PLAYER && (entity as Player).gameMode == GameMode.ADVENTURE
-                }, // Accept if player is in adventure mode (Prevents spectators blocking bullets)
+                    entity.entityType == EntityType.PLAYER && (entity as Player).gameMode == GameMode.ADVENTURE /*&& entity.team != player.team*/
+                }, // Accept if entity is a player and is in adventure mode (prevents spectators blocking bullets) and is not on the same team
                 margin = 0.3
             )
             val lastPos = raycast.finalPosition.toPosition()
@@ -88,7 +89,7 @@ sealed class Gun(val name: String, val id: Int) {
 
                 val shapeOptions = ParticleUtils.getColouredShapeOptions(Color(255, 0, 0), Color(20, 20, 20), 1.5f)
                 ParticleShape.line(raycast.finalPosition.subtract(direction.multiply(6)).toPosition(), lastPos)
-                    .iterator(shapeOptions).draw(instance, RandomUtils.ZERO_POS)
+                    .iterator(shapeOptions).draw(instance, Position(0.0, 0.0, 0.0))
 
                 damageMap[hitPlayer] = damageMap.getOrDefault(hitPlayer, 0f) + damage
             } else {
@@ -105,6 +106,10 @@ sealed class Gun(val name: String, val id: Int) {
     }
 
     open fun shootAfter(player: Player) {
+
+    }
+
+    open fun collide(player: Player, projectile: Entity) {
 
     }
 }

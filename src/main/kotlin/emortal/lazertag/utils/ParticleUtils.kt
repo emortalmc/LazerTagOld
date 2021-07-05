@@ -8,6 +8,7 @@ import net.minestom.server.particle.Particle
 import net.minestom.server.particle.ParticleCreator
 import net.minestom.server.utils.PacketUtils
 import net.minestom.server.utils.Position
+import net.minestom.server.utils.Vector
 import net.minestom.server.utils.binary.BinaryWriter
 
 object ParticleUtils {
@@ -27,15 +28,7 @@ object ParticleUtils {
         offsetY: Float,
         offsetZ: Float,
         count: Int
-    ) {
-        playerConnection.sendPacket(
-            ParticleCreator.createParticlePacket(
-                particle, false,
-                pos.x, pos.y, pos.z,
-                offsetX, offsetY, offsetZ, 0f, count, null
-            )
-        )
-    }
+    ) = sendParticle(particle, pos, offsetX, offsetY, offsetZ, count, 0f)
 
     fun Instance.sendParticle(
         particle: Particle,
@@ -44,13 +37,7 @@ object ParticleUtils {
         offsetY: Float,
         offsetZ: Float,
         count: Int
-    ) {
-        PacketUtils.sendGroupedPacket(this.players, ParticleCreator.createParticlePacket(
-            particle, false,
-            pos.x, pos.y, pos.z,
-            offsetX, offsetY, offsetZ, 0f, count, null
-        ))
-    }
+    ) = sendParticle(particle, pos, offsetX, offsetY, offsetZ, count, 0f)
 
     fun Player.sendParticle(
         particle: Particle,
@@ -70,11 +57,27 @@ object ParticleUtils {
         )
     }
 
+    fun Instance.sendParticle(
+        particle: Particle,
+        pos: Position,
+        offsetX: Float,
+        offsetY: Float,
+        offsetZ: Float,
+        count: Int,
+        data: Float
+    ) {
+        PacketUtils.sendGroupedPacket(this.players, ParticleCreator.createParticlePacket(
+            particle, false,
+            pos.x, pos.y, pos.z,
+            offsetX, offsetY, offsetZ, data, count, null
+        ))
+    }
+
     /**
      * Sends the player a coloured particle
      * @param size A float that goes from 0.01 - 4
      */
-    fun Player.sendColouredParticle(
+    fun Player.sendColouredTransitionParticle(
         pos: Position,
         fromColour: Color,
         toColour: Color,
@@ -99,6 +102,27 @@ object ParticleUtils {
         )
     }
 
+    fun Player.sendColouredParticle(
+        pos: Position,
+        fromColour: Color,
+        size: Float
+    ) {
+        playerConnection.sendPacket(
+            ParticleCreator.createParticlePacket(
+                Particle.DUST, false,
+                pos.x, pos.y, pos.z,
+                0f, 0f, 0f, 0f, 1
+            ) { writer: BinaryWriter ->
+                run {
+                    writer.writeFloat(fromColour.red / 255f)
+                    writer.writeFloat(fromColour.green / 255f)
+                    writer.writeFloat(fromColour.blue / 255f)
+                    writer.writeFloat(size)
+                }
+            }
+        )
+    }
+
     fun getColouredShapeOptions(
         fromColour: Color,
         toColour: Color,
@@ -117,4 +141,19 @@ object ParticleUtils {
             } }
             .build()
     }
+
+    fun Player.sendMovingParticle(
+        particle: Particle,
+        pos: Position,
+        vector: Vector,
+        speed: Float
+    ) = sendParticle(particle, pos, vector.x.toFloat(), vector.y.toFloat(), vector.z.toFloat(), 0, speed)
+
+    fun Instance.sendMovingParticle(
+        particle: Particle,
+        pos: Position,
+        vector: Vector,
+        speed: Float
+    ) = sendParticle(particle, pos, vector.x.toFloat(), vector.y.toFloat(), vector.z.toFloat(), 0, speed)
+
 }

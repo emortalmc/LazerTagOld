@@ -1,11 +1,12 @@
 package emortal.lazertag
 
-import emortal.lazertag.commands.LazerTagCommand
-import emortal.lazertag.commands.newinst
-import emortal.lazertag.commands.saveinst
+import emortal.lazertag.commands.NewInstanceCommand
+import emortal.lazertag.commands.SaveInstanceCommand
 import emortal.lazertag.game.MapManager
+import emortal.lazertag.items.ItemManager
 import net.minestom.server.extensions.Extension
-import world.cepi.kstom.Manager
+import world.cepi.kstom.command.register
+import world.cepi.kstom.command.unregister
 
 class LazerTagExtension : Extension() {
 
@@ -14,14 +15,21 @@ class LazerTagExtension : Extension() {
         EventListener.init(this)
         MapManager.init()
 
-        Manager.command.register(LazerTagCommand)
-        Manager.command.register(saveinst)
-        Manager.command.register(newinst)
+        SaveInstanceCommand.register()
+        NewInstanceCommand.register()
+
+        ItemManager.LAZER_MINIGUN
+        ItemManager.LAZER_SHOTGUN
+        ItemManager.ROCKET_LAUNCHER
+        ItemManager.RIFLE
 
         logger.info("[LazerTagExtension] has been enabled!")
     }
 
     override fun terminate() {
+
+        SaveInstanceCommand.unregister()
+        NewInstanceCommand.unregister()
 
         logger.info("[LazerTagExtension] has been disabled!")
     }

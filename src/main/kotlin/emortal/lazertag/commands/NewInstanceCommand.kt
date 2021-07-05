@@ -6,7 +6,7 @@ import net.minestom.server.command.builder.CommandContext
 import net.minestom.server.command.builder.CommandExecutor
 import world.cepi.kstom.Manager
 
-object newinst : Command("newinstance") {
+object NewInstanceCommand : Command("newinstance") {
     init {
         defaultExecutor =
             CommandExecutor { sender: CommandSender, context: CommandContext ->
