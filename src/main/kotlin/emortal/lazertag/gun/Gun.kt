@@ -11,7 +11,6 @@ import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.item.ItemMetaBuilder
 import net.minestom.server.item.ItemStack
-import net.minestom.server.item.ItemStackBuilder
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
@@ -25,26 +24,16 @@ import world.cepi.kstom.util.spread
 sealed class Gun(val name: String, val id: Int) {
 
     companion object {
-        val registeredMap = HashMap<Int, Gun>()
+        val registeredMap: Map<Int, Gun> = Gun::class.sealedSubclasses.map { it.objectInstance!! }.associateBy { it.id }
     }
 
-    init {
-        if (registeredMap.containsKey(id)) {
-            println("Duplicate gun IDs")
-        }
-        println("Registered gun $name ($id)")
-        registeredMap[id] = this
-    }
-
-    open val itemBuilder: ItemStackBuilder = ItemStack.builder(Material.WOODEN_HOE)
+    open val item: ItemStack = ItemStack.builder(Material.WOODEN_HOE)
         .displayName(Component.text(name))
         .meta { meta: ItemMetaBuilder ->
             meta.set(Tag.Long("lastShot"), 0)
             meta.set(Tag.Byte("reloading"), 0)
             meta.customModelData(id)
-        }
-
-    val item by lazy { itemBuilder.build() }
+        }.build()
 
     open val damage: Float = 1f // PER BULLET!
     open val numberOfBullets: Int = 1

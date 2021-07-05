@@ -1,6 +1,7 @@
 package emortal.lazertag.game
 
 import emortal.lazertag.gun.Gun
+import emortal.lazertag.maps.MapManager
 import emortal.lazertag.utils.MinestomRunnable
 import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.sound.Sound
@@ -19,6 +20,8 @@ import net.minestom.server.utils.Position
 import net.minestom.server.utils.Vector
 import net.minestom.server.utils.time.TimeUnit
 import world.cepi.kstom.Manager
+import world.cepi.kstom.adventure.asMini
+import world.cepi.kstom.adventure.sendMiniMessage
 import world.cepi.kstom.util.component1
 import world.cepi.kstom.util.component2
 import world.cepi.kstom.util.component3
@@ -45,7 +48,7 @@ class Game(val id: Int, val options: GameOptions) {
 
     fun addPlayer(player: Player) {
         players.add(player)
-        playerAudience.sendMessage(mini.parse(" <gray>[<green><bold>+</bold></green>]</gray> ${player.username} <green>joined</green>"))
+        playerAudience.sendMiniMessage(" <gray>[<green><bold>+</bold></green>]</gray> ${player.username} <green>joined</green>")
 
         player.setTag(Tag.Integer("kills"), 0)
 
@@ -97,7 +100,7 @@ class Game(val id: Int, val options: GameOptions) {
 
     fun removePlayer(player: Player) {
         players.remove(player)
-        playerAudience.sendMessage(mini.parse(" <gray>[<red><bold>-</bold></red>]</gray> ${player.username} <red>left</red>"))
+        playerAudience.sendMiniMessage(" <gray>[<red><bold>-</bold></red>]</gray> ${player.username} <red>left</red>")
     }
 
     private fun start() {
@@ -110,7 +113,7 @@ class Game(val id: Int, val options: GameOptions) {
 
     }
 
-    fun died(player: Player, killer: Player?, reason: DeathReason) {
+    fun kill(player: Player, killer: Player?, reason: DeathReason) {
         if (gameState == GameState.ENDING) return
 
         player.inventory.clear()
@@ -134,12 +137,12 @@ class Game(val id: Int, val options: GameOptions) {
             if (currentKills >= 10) return victory(killer)
 
             killer.setTag(Tag.Integer("kills"), currentKills)
-            playerAudience.sendMessage(mini.parse(" <red>☠</red> <dark_gray>|</dark_gray> <gray><white>${killer.username}</white> killed <red>${player.username}</red>"))
+            playerAudience.sendMiniMessage(" <red>☠</red> <dark_gray>|</dark_gray> <gray><white>${killer.username}</white> killed <red>${player.username}</red>")
             killer.playSound(Sound.sound(SoundEvent.NOTE_BLOCK_PLING, Sound.Source.PLAYER, 1f, 1f))
 
             player.showTitle(Title.title(
                 Component.text("YOU DIED!", NamedTextColor.RED, TextDecoration.BOLD),
-                mini.parse("<gray>Killed by <red><bold>${killer.username}</bold></red>"),
+                "<gray>Killed by <red><bold>${killer.username}</bold></red>".asMini(),
                 Title.Times.of(
                     Duration.ZERO, Duration.ofSeconds(1), Duration.ofSeconds(1)
                 )
@@ -147,11 +150,11 @@ class Game(val id: Int, val options: GameOptions) {
 
         } else {
 
-            playerAudience.sendMessage(mini.parse(" <red>☠</red> <dark_gray>|</dark_gray> <gray><red>${player.username}</red> killed themselves"))
+            playerAudience.sendMiniMessage(" <red>☠</red> <dark_gray>|</dark_gray> <gray><red>${player.username}</red> killed themselves")
 
             player.showTitle(Title.title(
                 Component.text("YOU DIED!", NamedTextColor.RED, TextDecoration.BOLD),
-                mini.parse("<rainbow>You killed yourself!"),
+                "<rainbow>You killed yourself!".asMini(),
                 Title.Times.of(
                     Duration.ZERO, Duration.ofSeconds(1), Duration.ofSeconds(1)
                 )
@@ -214,9 +217,7 @@ class Game(val id: Int, val options: GameOptions) {
         reloadTasks.values.forEach(Task::cancel)
         reloadTasks.clear()
 
-        for (player1 in players) {
-            player1.inventory.clear()
-        }
+        players.forEach { it.inventory.clear() }
 
         val message = Component.text()
             .append(Component.text("VICTORY", NamedTextColor.GOLD, TextDecoration.BOLD))

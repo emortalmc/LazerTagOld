@@ -1,6 +1,6 @@
 package emortal.lazertag.commands
 
-import emortal.lazertag.game.MapManager
+import emortal.lazertag.maps.MapManager
 import net.minestom.server.command.CommandSender
 import net.minestom.server.command.builder.Command
 import net.minestom.server.command.builder.CommandContext

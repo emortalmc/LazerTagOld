@@ -2,7 +2,7 @@ package emortal.lazertag
 
 import emortal.lazertag.commands.NewInstanceCommand
 import emortal.lazertag.commands.SaveInstanceCommand
-import emortal.lazertag.game.MapManager
+import emortal.lazertag.maps.MapManager
 import net.minestom.server.extensions.Extension
 import world.cepi.kstom.command.register
 import world.cepi.kstom.command.unregister

@@ -4,6 +4,7 @@ import emortal.lazertag.utils.MinestomRunnable
 import net.kyori.adventure.sound.Sound
 import net.minestom.server.entity.Player
 import net.minestom.server.sound.SoundEvent
+import net.minestom.server.utils.time.TimeUnit
 import java.time.Duration
 
 object LazerShotgun : Gun("Lazer Shotgun", 2) {
@@ -34,7 +35,7 @@ object LazerShotgun : Gun("Lazer Shotgun", 2) {
 
                 i++
             }
-        }.delay(Duration.ofMillis(50 * 5L)).repeat(Duration.ofMillis(50 * 3L)).schedule()
+        }.delay(Duration.of(5L, TimeUnit.SERVER_TICK)).repeat(Duration.of(3L, TimeUnit.SERVER_TICK)).schedule()
     }
 
 }
