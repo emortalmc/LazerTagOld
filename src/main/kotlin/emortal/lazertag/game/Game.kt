@@ -106,9 +106,7 @@ class Game(val id: Int, val options: GameOptions) {
         startingTask = null
         gameState = GameState.PLAYING
 
-        for (player in players) {
-            respawn(player)
-        }
+        players.forEach(::respawn)
 
     }
 
@@ -193,29 +191,27 @@ class Game(val id: Int, val options: GameOptions) {
             }
         }.delay(Duration.ofSeconds(2)).repeat(Duration.ofSeconds(1)).schedule())
     }
-    private fun respawn(player: Player) {
-        player.inventory.clear()
-        player.health = 20f
-        player.teleport(getRandomRespawnPosition())
-        player.stopSpectating()
-        player.isInvisible = false
-        player.gameMode = GameMode.ADVENTURE
-        player.setNoGravity(false)
-        player.clearEffects()
+    private fun respawn(player: Player) = with(player) {
+        inventory.clear()
+        health = 20f
+        teleport(getRandomRespawnPosition())
+        stopSpectating()
+        isInvisible = false
+        gameMode = GameMode.ADVENTURE
+        setNoGravity(false)
+        clearEffects()
 
         if (gameState == GameState.ENDING) return
 
         // TODO: Replace with proper gun score system
-        player.inventory.setItemStack(0, Gun.registeredMap.values.random().item)
+        inventory.setItemStack(0, Gun.registeredMap.values.random().item)
     }
 
     private fun victory(player: Player) {
         if (gameState == GameState.ENDING) return
         gameState = GameState.ENDING
 
-        for (task in reloadTasks.values) {
-            task.cancel()
-        }
+        reloadTasks.values.forEach(Task::cancel)
         reloadTasks.clear()
 
         for (player1 in players) {
@@ -236,14 +232,9 @@ class Game(val id: Int, val options: GameOptions) {
     private fun destroy() {
         GameManager.deleteGame(this)
 
-        for (task in respawnTasks) {
-            task.cancel()
-        }
+        respawnTasks.forEach(Task::cancel)
         respawnTasks.clear()
-
-        for (player in players) {
-            GameManager.addPlayer(player)
-        }
+        players.forEach(GameManager::addPlayer)
         players.clear()
     }
 

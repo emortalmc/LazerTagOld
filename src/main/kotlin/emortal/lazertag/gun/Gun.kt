@@ -1,7 +1,6 @@
 package emortal.lazertag.gun
 
 import emortal.lazertag.utils.ParticleUtils
-import emortal.lazertag.utils.PlayerUtils.eyePosition
 import io.github.bloepiloepi.particles.shapes.ParticleShape
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
@@ -20,6 +19,7 @@ import net.minestom.server.utils.Position
 import net.minestom.server.utils.Vector
 import world.cepi.kstom.raycast.HitType
 import world.cepi.kstom.raycast.RayCast
+import world.cepi.kstom.util.eyePosition
 import world.cepi.kstom.util.spread
 
 sealed class Gun(val name: String, val id: Int) {

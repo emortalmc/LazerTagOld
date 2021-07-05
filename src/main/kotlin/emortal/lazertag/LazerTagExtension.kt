@@ -3,7 +3,6 @@ package emortal.lazertag
 import emortal.lazertag.commands.NewInstanceCommand
 import emortal.lazertag.commands.SaveInstanceCommand
 import emortal.lazertag.game.MapManager
-import emortal.lazertag.items.ItemManager
 import net.minestom.server.extensions.Extension
 import world.cepi.kstom.command.register
 import world.cepi.kstom.command.unregister
@@ -17,11 +16,6 @@ class LazerTagExtension : Extension() {
 
         SaveInstanceCommand.register()
         NewInstanceCommand.register()
-
-        ItemManager.LAZER_MINIGUN
-        ItemManager.LAZER_SHOTGUN
-        ItemManager.ROCKET_LAUNCHER
-        ItemManager.RIFLE
 
         logger.info("[LazerTagExtension] has been enabled!")
     }

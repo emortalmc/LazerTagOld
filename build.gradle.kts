@@ -41,7 +41,7 @@ dependencies {
     // import kotlinx serialization
     compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
 
-    compileOnly("com.github.Project-Cepi:KStom:bc27502c14")
+    compileOnly("com.github.Project-Cepi:KStom:976d8852fc")
     implementation("net.kyori:adventure-text-minimessage:4.1.0-SNAPSHOT")
 
     compileOnly("com.github.Bloepiloepi:MinestomParticles:e6dd8e92b8")
