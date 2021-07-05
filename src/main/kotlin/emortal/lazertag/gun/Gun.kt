@@ -6,7 +6,6 @@ import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.minestom.server.color.Color
 import net.minestom.server.entity.Entity
-import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.item.ItemMetaBuilder
@@ -78,7 +77,7 @@ sealed class Gun(val name: String, val id: Int) {
                 maxDistance,
                 0.5,
                 acceptEntity = { _: Vector, entity: Entity ->
-                    entity.entityType == EntityType.PLAYER && (entity as Player).gameMode == GameMode.ADVENTURE /*&& entity.team != player.team*/
+                    entity is Player && entity.gameMode == GameMode.ADVENTURE /*&& entity.team != player.team*/
                 }, // Accept if entity is a player and is in adventure mode (prevents spectators blocking bullets) and is not on the same team
                 margin = 0.3
             )

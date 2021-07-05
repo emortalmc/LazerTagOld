@@ -124,7 +124,8 @@ object EventListener {
 
             val shooter: Player = Manager.connection.getPlayer(UUID.fromString(entity.getTag(Tag.String("playerUUID"))))!!
             val gun: Int = entity.getTag(Tag.Integer("gunID"))!!
-            val boundingBox = entity.boundingBox.expand(1.5, 1.5, 1.5)
+            // Double bounding box in size
+            val boundingBox = entity.boundingBox.expand(entity.boundingBox.width, entity.boundingBox.height, entity.boundingBox.depth)
 
             if (entity.aliveTicks > 20*3) {
                 Gun.registeredMap[gun]!!.collide(shooter, entity)

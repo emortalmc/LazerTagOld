@@ -168,6 +168,7 @@ class Game(val id: Int, val options: GameOptions) {
 
             override fun run() {
                 if (i == 3) {
+                    player.velocity = Vector(0.0, 0.0, 0.0)
                     if (killer != null && !killer.isDead && killer != player) player.spectate(killer)
                 }
                 if (i <= 0) {
