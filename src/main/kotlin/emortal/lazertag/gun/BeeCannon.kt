@@ -19,7 +19,7 @@ import world.cepi.kstom.util.eyePosition
 object BeeCannon : Gun("Rocket Launcher", 4) {
 
     override val material = Material.HONEYCOMB
-    override val color = NamedTextColor.YELLOW
+    override val color: TextColor = NamedTextColor.YELLOW
 
     override val damage = 80f
     override val cooldown = 5000L

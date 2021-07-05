@@ -7,6 +7,7 @@ class GunLoadingTest {
 
     @Test
     fun `ensure all guns are loaded into the map`() {
+        println(Gun::class.sealedSubclasses)
         assertEquals(5, Gun.registeredMap.size)
     }
 

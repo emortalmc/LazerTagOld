@@ -32,8 +32,6 @@ import world.cepi.kstom.util.*
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.ThreadLocalRandom
-import kotlin.math.ceil
-import kotlin.math.floor
 
 object EventListener {
 
@@ -92,7 +90,11 @@ object EventListener {
                         }
                     }
 
-                    // TODO ammo
+                    player.itemInMainHand = player.itemInMainHand.withMeta { meta: ItemMetaBuilder ->
+                        meta.set(Tag.Integer("ammo"), (heldGun.ammo - 1).also {
+                            heldGun.renderAmmo(player, it)
+                        })
+                    }
 
                     i--
                 }
@@ -138,12 +140,12 @@ object EventListener {
             val gun = Gun.registeredMap[offHandItem.meta.customModelData] ?: return@listenOnly
             val game = GameManager[player] ?: return@listenOnly
 
-            if (player.itemInMainHand.meta.getTag(Tag.Byte("reloading"))!!.toInt() == 1 || player.itemInMainHand.meta.damage == 0) {
+            if (player.itemInMainHand.meta.getTag(Tag.Byte("reloading"))!!.toInt() == 1 || player.itemInMainHand.meta.getTag(Tag.Integer("ammo"))!! == gun.ammo) {
                 return@listenOnly
             }
 
             player.itemInMainHand = player.itemInMainHand.withMeta { meta: ItemMetaBuilder ->
-                meta.damage(60)
+                meta.set(Tag.Integer("ammo"), 0)
                 meta.set(Tag.Byte("reloading"), 1)
             }
 
@@ -159,7 +161,7 @@ object EventListener {
                         }.delay(Duration.ofMillis(50 * 3L)).schedule()
 
                         player.itemInMainHand = player.itemInMainHand.withMeta { meta: ItemMetaBuilder ->
-                            meta.damage(0)
+                            meta.set(Tag.Integer("ammo"), gun.ammo)
                             meta.set(Tag.Byte("reloading"), 0)
                         }
 
@@ -167,7 +169,10 @@ object EventListener {
                         return
                     }
 
-                    // TODO ammo
+                    gun.renderAmmo(player, gun.ammo - i)
+                    player.itemInMainHand = player.itemInMainHand.withMeta { meta: ItemMetaBuilder ->
+                        meta.set(Tag.Integer("ammo"), gun.ammo - i)
+                    }
                     player.playSound(Sound.sound(SoundEvent.ITEM_PICKUP, Sound.Source.PLAYER, 1f, 1f))
 
                     i--

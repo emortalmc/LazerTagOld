@@ -9,7 +9,7 @@ import net.minestom.server.sound.SoundEvent
 object LazerMinigun : Gun("Lazer Minigun", 1) {
 
     override val material = Material.DIAMOND_SHOVEL
-    override val color = NamedTextColor.AQUA
+    override val color: TextColor = NamedTextColor.AQUA
 
     override val damage = 1f
     override val cooldown = 150L

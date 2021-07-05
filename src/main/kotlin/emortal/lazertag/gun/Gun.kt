@@ -26,19 +26,23 @@ import world.cepi.kstom.util.spread
 sealed class Gun(val name: String, val id: Int) {
 
     companion object {
-        val registeredMap: Map<Int, Gun> = Gun::class.sealedSubclasses.map { it.objectInstance!! }.associateBy { it.id }
+        val registeredMap: Map<Int, Gun>
+            get() = Gun::class.sealedSubclasses.map { it.objectInstance }.filterNotNull().associateBy { it.id }
     }
 
     open val material: Material = Material.WOODEN_HOE
     open val color: TextColor = NamedTextColor.WHITE
 
-    open val item: ItemStack = ItemStack.builder(material)
-        .displayName(Component.text(name, color).decoration(TextDecoration.ITALIC, false))
-        .meta { meta: ItemMetaBuilder ->
-            meta.set(Tag.Long("lastShot"), 0)
-            meta.set(Tag.Byte("reloading"), 0)
-            meta.customModelData(id)
-        }.build()
+    val item by lazy {
+        ItemStack.builder(material)
+            .displayName(Component.text(name, color).decoration(TextDecoration.ITALIC, false))
+            .meta { meta: ItemMetaBuilder ->
+                meta.set(Tag.Long("lastShot"), 0)
+                meta.set(Tag.Byte("reloading"), 0)
+                meta.set(Tag.Integer("ammo"), ammo)
+                meta.customModelData(id)
+            }.build()
+    }
 
     open val damage: Float = 1f // PER BULLET!
     open val numberOfBullets: Int = 1
@@ -105,5 +109,14 @@ sealed class Gun(val name: String, val id: Int) {
 
     open fun collide(player: Player, projectile: Entity) {
 
+    }
+
+    fun renderAmmo(player: Player, currentAmmo: Int) {
+        player.sendActionBar(
+            Component.text()
+                .append(Component.text("█".repeat(currentAmmo)))
+                .append(Component.text("░".repeat(ammo - currentAmmo)))
+                .build()
+        )
     }
 }

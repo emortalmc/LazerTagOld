@@ -127,8 +127,9 @@ class Game(val id: Int, val options: GameOptions) {
         reloadTasks.remove(player)
 
         if (killer != null && killer != player) {
-
-            killer.inventory.setItemStack(0, Gun.registeredMap.values.random().item)
+            val gun = Gun.registeredMap.values.random()
+            killer.inventory.setItemStack(0, gun.item)
+            gun.renderAmmo(killer, gun.ammo)
 
             val lookAtVector = player.position.toVector().subtract(killer.position.toVector())
 
@@ -211,7 +212,11 @@ class Game(val id: Int, val options: GameOptions) {
         if (gameState == GameState.ENDING) return
 
         // TODO: Replace with proper gun score system
-        inventory.setItemStack(0, Gun.registeredMap.values.random().item)
+
+        val gun = Gun.registeredMap.values.random()
+        inventory.setItemStack(0, gun.item)
+        gun.renderAmmo(this, gun.ammo)
+
     }
 
     private fun victory(player: Player) {
