@@ -7,7 +7,7 @@ class GunLoadingTest {
 
     @Test
     fun `ensure all guns are loaded into the map`() {
-        assertEquals(4, Gun.registeredMap.size)
+        assertEquals(5, Gun.registeredMap.size)
     }
 
 }

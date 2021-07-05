@@ -10,6 +10,7 @@ import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.title.Title
+import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.instance.Instance
@@ -127,6 +128,8 @@ class Game(val id: Int, val options: GameOptions) {
 
         if (killer != null && killer != player) {
 
+            killer.inventory.setItemStack(0, Gun.registeredMap.values.random().item)
+
             val lookAtVector = player.position.toVector().subtract(killer.position.toVector())
 
             player.teleport(player.position.clone().setDirection(lookAtVector.clone().multiply(-1)))
@@ -137,7 +140,7 @@ class Game(val id: Int, val options: GameOptions) {
             if (currentKills >= 10) return victory(killer)
 
             killer.setTag(Tag.Integer("kills"), currentKills)
-            playerAudience.sendMiniMessage(" <red>☠</red> <dark_gray>|</dark_gray> <gray><white>${killer.username}</white> killed <red>${player.username}</red>")
+            playerAudience.sendMiniMessage(" <red>☠</red> <dark_gray>|</dark_gray> <gray><white>${killer.username}</white> killed <red>${player.username}</red> with ${Gun.registeredMap[killer.itemInMainHand.meta.customModelData]!!.name}")
             killer.playSound(Sound.sound(SoundEvent.NOTE_BLOCK_PLING, Sound.Source.PLAYER, 1f, 1f))
 
             player.showTitle(Title.title(
@@ -181,7 +184,7 @@ class Game(val id: Int, val options: GameOptions) {
                     return
                 }
 
-                val (x, y, z) = player.position
+                val (x, y, z) = killer?.position ?: player.position
                 player.playSound(Sound.sound(SoundEvent.WOODEN_BUTTON_CLICK_ON, Sound.Source.BLOCK, 1f, 1f), x, y, z)
                 player.showTitle(Title.title(
                     Component.text(i, NamedTextColor.GOLD, TextDecoration.BOLD),
@@ -217,6 +220,10 @@ class Game(val id: Int, val options: GameOptions) {
 
         reloadTasks.values.forEach(Task::cancel)
         reloadTasks.clear()
+
+        instance.entities
+            .filter { it !is Player }
+            .forEach(Entity::remove)
 
         players.forEach { it.inventory.clear() }
 

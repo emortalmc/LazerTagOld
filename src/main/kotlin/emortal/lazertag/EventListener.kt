@@ -57,15 +57,13 @@ object EventListener {
                 return@listenOnly
             }
 
-            player.itemInMainHand = heldGun.item.withMeta { meta ->
+            player.itemInMainHand = player.itemInMainHand.withMeta { meta ->
                 meta.set(Tag.Long("lastShot"), System.currentTimeMillis())
             }
 
 
-
             object : MinestomRunnable() {
                 var i = heldGun.burstAmount
-                val gun = Gun.registeredMap[player.inventory.itemInMainHand.meta.customModelData]!!
 
                 override fun run() {
 
@@ -74,13 +72,6 @@ object EventListener {
                         player.playSound(Sound.sound(SoundEvent.ITEM_BREAK, Sound.Source.PLAYER, 0.7f, 1.5f))
 
                         player.sendActionBar(mini.parse("<red>Press <bold><key:key.swapOffhand></bold> to reload!"))
-                        return
-                    }
-
-                    // If player swaps gun while bursting
-                    val newGun = Gun.registeredMap[player.inventory.itemInMainHand.meta.customModelData]
-                    if (newGun == null || newGun != gun) {
-                        cancel()
                         return
                     }
 
@@ -101,7 +92,7 @@ object EventListener {
                         }
                     }
 
-                    player.itemInMainHand = heldGun.item.withMeta { meta: ItemMetaBuilder ->
+                    player.itemInMainHand = player.itemInMainHand.withMeta { meta: ItemMetaBuilder ->
                         meta.damage(player.itemInMainHand.meta.damage + ceil(59f / heldGun.ammo.toDouble()).toInt())
                     }
 
@@ -138,6 +129,11 @@ object EventListener {
             }
         }
 
+        eventNode.listenOnly<PlayerChangeHeldSlotEvent> {
+            isCancelled = true
+            player.setHeldItemSlot(0)
+        }
+
         eventNode.listenOnly<PlayerSwapItemEvent> {
             isCancelled = true
 
@@ -148,7 +144,7 @@ object EventListener {
                 return@listenOnly
             }
 
-            player.itemInMainHand = gun.item.withMeta { meta: ItemMetaBuilder ->
+            player.itemInMainHand = player.itemInMainHand.withMeta { meta: ItemMetaBuilder ->
                 meta.damage(60)
                 meta.set(Tag.Byte("reloading"), 1)
             }
@@ -164,7 +160,7 @@ object EventListener {
                             player.playSound(Sound.sound(SoundEvent.IRON_GOLEM_ATTACK, Sound.Source.PLAYER, 1f, 1f))
                         }.delay(Duration.ofMillis(50 * 3L)).schedule()
 
-                        player.itemInMainHand = gun.item.withMeta { meta: ItemMetaBuilder ->
+                        player.itemInMainHand = player.itemInMainHand.withMeta { meta: ItemMetaBuilder ->
                             meta.damage(0)
                             meta.set(Tag.Byte("reloading"), 0)
                         }
@@ -173,7 +169,7 @@ object EventListener {
                         return
                     }
 
-                    player.itemInMainHand = gun.item.withMeta { meta: ItemMetaBuilder ->
+                    player.itemInMainHand = player.itemInMainHand.withMeta { meta: ItemMetaBuilder ->
                         meta.damage(
                             (player.itemInMainHand.meta.damage - floor(59f / gun.ammo.toDouble()).toInt()).coerceAtMost(
                                 59
