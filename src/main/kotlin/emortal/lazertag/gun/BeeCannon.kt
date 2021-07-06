@@ -21,10 +21,10 @@ object BeeCannon : Gun("Rocket Launcher", 4) {
     override val material = Material.HONEYCOMB
     override val color: TextColor = NamedTextColor.YELLOW
 
-    override val damage = 80f
-    override val cooldown = 5000L
+    override val damage = 100f
+    override val cooldown = 3000L
     override val ammo = 1
-    override val reloadTime = 3000L
+    override val reloadTime = 2300L
 
     override val sound = Sound.sound(SoundEvent.BEE_HURT, Sound.Source.PLAYER, 1f, 1f)
 
@@ -36,7 +36,7 @@ object BeeCannon : Gun("Rocket Launcher", 4) {
         val meta = projectile.entityMeta as BeeMeta
         meta.isAngry = true
 
-        projectile.velocity = player.position.direction.multiply(24)
+        projectile.velocity = player.position.direction.multiply(30)
 
         projectile.setNoGravity(false)
         projectile.setGravity(0.0, 0.0)

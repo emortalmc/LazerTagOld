@@ -26,7 +26,7 @@ object BeeShotgun : Gun("Bee Keeper", 5) {
     override val damage = 5f
     override val numberOfBullets = 7
     override val spread = 0.1
-    override val cooldown = 600L
+    override val cooldown = 700L
     override val ammo = 5
     override val reloadTime = 1500L
 

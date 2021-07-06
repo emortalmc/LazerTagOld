@@ -1,5 +1,6 @@
 package emortal.lazertag.gun
 
+import emortal.lazertag.utils.MathUtils
 import emortal.lazertag.utils.ParticleUtils
 import io.github.bloepiloepi.particles.shapes.ParticleShape
 import net.kyori.adventure.sound.Sound
@@ -112,10 +113,16 @@ sealed class Gun(val name: String, val id: Int) {
     }
 
     fun renderAmmo(player: Player, currentAmmo: Int) {
+        val blocks = 40
+        val ammoPercentage: Float = currentAmmo.toFloat() / ammo.toFloat()
+        val completedBlocks: Int = (ammoPercentage * blocks).toInt()
+        val incompleteBlocks: Int = blocks - completedBlocks
+
         player.sendActionBar(
             Component.text()
-                .append(Component.text("█".repeat(currentAmmo)))
-                .append(Component.text("░".repeat(ammo - currentAmmo)))
+                .append(Component.text("|".repeat(completedBlocks), NamedTextColor.GOLD))
+                .append(Component.text("|".repeat(incompleteBlocks), NamedTextColor.DARK_GRAY))
+                .append(Component.text(" ${String.format("%0${MathUtils.digitsInNumber(ammo)}d", currentAmmo)}/$ammo", NamedTextColor.DARK_GRAY))
                 .build()
         )
     }

@@ -10,6 +10,7 @@ object NewInstanceCommand : Command("newinstance") {
     init {
         defaultExecutor =
             CommandExecutor { sender: CommandSender, context: CommandContext ->
+                return@CommandExecutor
                 val player = sender.asPlayer()
                 val storageLocation = Manager.storage.getLocation("dizzymc")
                 val instance = Manager.instance.createInstanceContainer(storageLocation)

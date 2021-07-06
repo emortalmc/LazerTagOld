@@ -1,6 +1,5 @@
 package emortal.lazertag
 
-import emortal.lazertag.game.DeathReason
 import emortal.lazertag.game.GameManager
 import emortal.lazertag.gun.Gun
 import emortal.lazertag.utils.MinestomRunnable
@@ -26,22 +25,32 @@ import net.minestom.server.item.ItemMetaBuilder
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
 import net.minestom.server.utils.Direction
+import net.minestom.server.utils.time.TimeUnit
 import world.cepi.kstom.Manager
+import world.cepi.kstom.adventure.asMini
 import world.cepi.kstom.event.listenOnly
 import world.cepi.kstom.util.*
+import java.text.DecimalFormat
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.ThreadLocalRandom
 
-object EventListener {
 
-    private val mini = MiniMessage.get()
+object EventListener {
+    val mini = MiniMessage.get()
 
     fun init(extension: Extension) {
         val eventNode = extension.eventNode
 
         eventNode.listenOnly<ItemDropEvent> {
             isCancelled = true
+        }
+
+        eventNode.listenOnly<PlayerChatEvent> {
+            if (player.username != "emortl") return@listenOnly
+            this.setChatFormat {
+                "<gradient:light_purple:gold><bold>OWNER</bold></gradient> <gray>emortal: ${it.message}".asMini()
+            }
         }
 
         eventNode.listenOnly<PlayerUseItemEvent> {
@@ -65,11 +74,15 @@ object EventListener {
 
                 override fun run() {
 
-                    if (player.itemInMainHand.meta.damage > 59) {
+                    if (!player.itemInMainHand.meta.hasTag(Tag.Integer("ammo"))) {
                         cancel()
+                        return
+                    }
+                    if (player.itemInMainHand.meta.getTag(Tag.Integer("ammo"))!! <= 0) {
                         player.playSound(Sound.sound(SoundEvent.ITEM_BREAK, Sound.Source.PLAYER, 0.7f, 1.5f))
-
                         player.sendActionBar(mini.parse("<red>Press <bold><key:key.swapOffhand></bold> to reload!"))
+
+                        cancel()
                         return
                     }
 
@@ -90,15 +103,15 @@ object EventListener {
                         }
                     }
 
+                    val newAmmo = player.itemInMainHand.meta.getTag(Tag.Integer("ammo"))!! - 1
+                    heldGun.renderAmmo(player, newAmmo)
                     player.itemInMainHand = player.itemInMainHand.withMeta { meta: ItemMetaBuilder ->
-                        meta.set(Tag.Integer("ammo"), (heldGun.ammo - 1).also {
-                            heldGun.renderAmmo(player, it)
-                        })
+                        meta.set(Tag.Integer("ammo"), newAmmo)
                     }
 
                     i--
                 }
-            }.repeat(Duration.ofMillis(50 * heldGun.burstInterval)).schedule()
+            }.repeat(Duration.of(heldGun.burstInterval, TimeUnit.SERVER_TICK)).schedule()
 
         }
 
@@ -165,6 +178,8 @@ object EventListener {
                             meta.set(Tag.Byte("reloading"), 0)
                         }
 
+                        gun.renderAmmo(player, gun.ammo - i)
+
                         cancel()
                         return
                     }
@@ -203,7 +218,7 @@ object EventListener {
             if (player.gameMode != GameMode.ADVENTURE) return@listenOnly
 
             if (newPosition.y < 35) {
-                GameManager[player]?.kill(player, null, DeathReason.VOID)
+                GameManager[player]?.kill(player, null)
             }
         }
 
@@ -222,16 +237,16 @@ object EventListener {
                 isCancelled = true
                 entity.health = 20f
 
-                GameManager[player]?.kill(player, damager, DeathReason.PLAYER)
+                GameManager[player]?.kill(player, damager)
             }
 
             val rand = ThreadLocalRandom.current()
-
+            val format = DecimalFormat("0.##")
             val armourStand = Entity(EntityType.ARMOR_STAND)
 
             armourStand.isAutoViewable = false
             armourStand.isInvisible = true
-            armourStand.customName = Component.text("❤ $damage", NamedTextColor.RED, TextDecoration.BOLD)
+            armourStand.customName = Component.text("❤ ${format.format(damage)}", NamedTextColor.RED, TextDecoration.BOLD)
             armourStand.isCustomNameVisible = true
             armourStand.setNoGravity(true)
 
@@ -258,7 +273,7 @@ object EventListener {
                 var accel = 0.5
 
                 override fun run() {
-                    if (i > 7) {
+                    if (i > 10) {
                         armourStand.remove()
                         cancel()
                         return

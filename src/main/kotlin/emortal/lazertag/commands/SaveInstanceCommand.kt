@@ -10,6 +10,7 @@ object SaveInstanceCommand : Command("saveinstance") {
     init {
         defaultExecutor =
             CommandExecutor { sender: CommandSender, context: CommandContext ->
+                return@CommandExecutor
                 val player = sender.asPlayer()
                 val instance = player.instance!!
 

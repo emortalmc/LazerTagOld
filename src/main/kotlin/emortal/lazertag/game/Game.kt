@@ -8,12 +8,12 @@ import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
-import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.title.Title
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.instance.Instance
+import net.minestom.server.scoreboard.Sidebar
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
 import net.minestom.server.timer.Task
@@ -30,8 +30,6 @@ import java.time.Duration
 import kotlin.properties.Delegates
 
 class Game(val id: Int, val options: GameOptions) {
-    private val mini: MiniMessage = MiniMessage.get()
-
     val instance: Instance = MapManager.mapMap[options.map]!!
 
     val players: MutableSet<Player> = HashSet()
@@ -42,12 +40,21 @@ class Game(val id: Int, val options: GameOptions) {
     // TODO: Maps
     private var startingTask: Task? = null
 
+    val scoreboard: Sidebar = Sidebar("<gradient:gold:yellow>LazerTag".asMini())
+
     val respawnTasks: ArrayList<Task> = ArrayList()
     val reloadTasks: HashMap<Player, Task> = HashMap()
 
     var startTime by Delegates.notNull<Long>()
 
+    init {
+        scoreboard.createLine(Sidebar.ScoreboardLine("header", Component.empty(), 30))
+        scoreboard.createLine(Sidebar.ScoreboardLine("footer", Component.empty(), 0))
+        scoreboard.createLine(Sidebar.ScoreboardLine("ipLine", Component.text("mc.emortal.dev --------", NamedTextColor.DARK_GRAY), -1))
+    }
+
     fun addPlayer(player: Player) {
+        scoreboard.addViewer(player)
         players.add(player)
         playerAudience.sendMiniMessage(" <gray>[<green><bold>+</bold></green>]</gray> ${player.username} <green>joined</green>")
 
@@ -112,9 +119,10 @@ class Game(val id: Int, val options: GameOptions) {
 
         players.forEach(::respawn)
 
+        refreshScoreboard()
     }
 
-    fun kill(player: Player, killer: Player?, reason: DeathReason) {
+    fun kill(player: Player, killer: Player?) {
         if (gameState == GameState.ENDING) return
 
         player.inventory.clear()
@@ -127,10 +135,6 @@ class Game(val id: Int, val options: GameOptions) {
         reloadTasks.remove(player)
 
         if (killer != null && killer != player) {
-            val gun = Gun.registeredMap.values.random()
-            killer.inventory.setItemStack(0, gun.item)
-            gun.renderAmmo(killer, gun.ammo)
-
             val lookAtVector = player.position.toVector().subtract(killer.position.toVector())
 
             player.teleport(player.position.clone().setDirection(lookAtVector.clone().multiply(-1)))
@@ -138,26 +142,33 @@ class Game(val id: Int, val options: GameOptions) {
 
             val currentKills = killer.getTag(Tag.Integer("kills"))!! + 1
 
-            if (currentKills >= 10) return victory(killer)
+            if (currentKills >= 20) return victory(killer)
 
             killer.setTag(Tag.Integer("kills"), currentKills)
-            playerAudience.sendMiniMessage(" <red>☠</red> <dark_gray>|</dark_gray> <gray><white>${killer.username}</white> killed <red>${player.username}</red> with ${Gun.registeredMap[killer.itemInMainHand.meta.customModelData]!!.name}")
+
+            // problematic:  with ${Gun.registeredMap[killer.itemInMainHand.meta.customModelData]!!.name}
+            playerAudience.sendMiniMessage(" <red>☠</red> <dark_gray>|</dark_gray> <gray><white>${killer.username}</white> killed <red>${player.username}</red>")
             killer.playSound(Sound.sound(SoundEvent.NOTE_BLOCK_PLING, Sound.Source.PLAYER, 1f, 1f))
 
             player.showTitle(Title.title(
-                Component.text("YOU DIED!", NamedTextColor.RED, TextDecoration.BOLD),
+                Component.text("YOU DIED", NamedTextColor.RED, TextDecoration.BOLD),
                 "<gray>Killed by <red><bold>${killer.username}</bold></red>".asMini(),
                 Title.Times.of(
                     Duration.ZERO, Duration.ofSeconds(1), Duration.ofSeconds(1)
                 )
             ))
 
+            val gun = Gun.registeredMap.values.random()
+            killer.inventory.setItemStack(0, gun.item)
+            gun.renderAmmo(killer, gun.ammo)
+
+            refreshScoreboard()
         } else {
 
-            playerAudience.sendMiniMessage("<red>☠</red> <dark_gray>|</dark_gray> <gray><red>${player.username}</red> killed themselves")
+            playerAudience.sendMiniMessage(" <red>☠</red> <dark_gray>|</dark_gray> <gray><red>${player.username}</red> killed themselves")
 
             player.showTitle(Title.title(
-                Component.text("YOU DIED!", NamedTextColor.RED, TextDecoration.BOLD),
+                Component.text("YOU DIED", NamedTextColor.RED, TextDecoration.BOLD),
                 "<rainbow>You killed yourself!".asMini(),
                 Title.Times.of(
                     Duration.ZERO, Duration.ofSeconds(1), Duration.ofSeconds(1)
@@ -240,7 +251,7 @@ class Game(val id: Int, val options: GameOptions) {
         playerAudience.sendMessage(message)
 
         Manager.scheduler.buildTask { destroy() }
-            .delay(5, TimeUnit.SECOND).schedule()
+            .delay(12, TimeUnit.SECOND).schedule()
     }
 
     private fun destroy() {
@@ -248,8 +259,46 @@ class Game(val id: Int, val options: GameOptions) {
 
         respawnTasks.forEach(Task::cancel)
         respawnTasks.clear()
-        players.forEach(GameManager::addPlayer)
+        players.forEach { it ->
+            GameManager.addPlayer(it)
+            scoreboard.removeViewer(it)
+        }
         players.clear()
+    }
+
+    private fun refreshScoreboard() {
+        // Clear all scoreboard lines other than header and footer
+        for (i in 1..12) {
+            scoreboard.removeLine("line$i")
+        }
+
+        val killMap = HashMap<Player, Int>()
+
+        players.forEach {
+            killMap[it] = it.getTag(Tag.Integer("kills"))!!
+        }
+
+        val sortedKillMap = killMap.toList().sortedBy { (_, v) -> v }.reversed().take(12).toMap()
+
+        var i = 1
+        sortedKillMap.forEach { (player, kills) ->
+            if (kills == 0) return
+
+            scoreboard.createLine(Sidebar.ScoreboardLine(
+                player.uuid.toString(),
+
+                Component.text()
+                    .append(Component.text(player.username, NamedTextColor.GRAY))
+                    .append(Component.text(" - ", NamedTextColor.DARK_GRAY))
+                    .append(Component.text(kills, NamedTextColor.LIGHT_PURPLE, TextDecoration.BOLD))
+                    .build(),
+
+                kills
+            ))
+
+            i++
+        }
+
     }
 
     private fun getRandomRespawnPosition(): Position = MapManager.spawnPositionMap[options.map]!!.random()
