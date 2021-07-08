@@ -1,2 +1,2 @@
-rootProject.name = "LazerTag"
+rootProject.name = "GunGame"
 
