@@ -1,4 +1,4 @@
-package emortal.gungame.gun
+package emortal.lazertag.gun
 
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.format.NamedTextColor
@@ -20,6 +20,6 @@ object Minigun : Gun("Lazer Minigun", 1) {
     override val burstAmount = 5
     override val burstInterval = 1L
 
-    override val sound = Sound.sound(SoundEvent.ARMOR_STAND_HIT, Sound.Source.PLAYER, 1f, 1f)
+    override val sound = Sound.sound(SoundEvent.ENTITY_ARMOR_STAND_HIT, Sound.Source.PLAYER, 1f, 1f)
 
 }

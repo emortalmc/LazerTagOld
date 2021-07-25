@@ -1,6 +1,7 @@
-package emortal.gungame.gun
+package emortal.lazertag.gun
 
-import emortal.gungame.utils.ParticleUtils.sendParticle
+import emortal.immortal.particle.ParticleUtils
+import emortal.immortal.particle.shapes.sendParticle
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
@@ -26,7 +27,7 @@ object BeeCannon : Gun("Rocket Launcher", 4) {
     override val ammo = 1
     override val reloadTime = 2300L
 
-    override val sound = Sound.sound(SoundEvent.BEE_HURT, Sound.Source.PLAYER, 1f, 1f)
+    override val sound = Sound.sound(SoundEvent.ENTITY_BEE_HURT, Sound.Source.PLAYER, 1f, 1f)
 
     override fun shoot(player: Player): HashMap<Player, Float> {
         val damageMap = HashMap<Player, Float>()
@@ -36,7 +37,7 @@ object BeeCannon : Gun("Rocket Launcher", 4) {
         val meta = projectile.entityMeta as BeeMeta
         meta.isAngry = true
 
-        projectile.velocity = player.position.direction.multiply(30)
+        projectile.velocity = player.position.direction().mul(30.0)
 
         projectile.setNoGravity(false)
         projectile.setGravity(0.0, 0.0)
@@ -49,8 +50,8 @@ object BeeCannon : Gun("Rocket Launcher", 4) {
     }
 
     override fun collide(player: Player, projectile: Entity) {
-        player.instance!!.sendParticle(Particle.EXPLOSION_EMITTER, projectile.position, 0f, 0f, 0f, 1)
-        player.instance!!.playSound(Sound.sound(SoundEvent.GENERIC_EXPLODE, Sound.Source.PLAYER, 1f, 1f))
+        projectile.viewers.sendParticle(ParticleUtils.particle(Particle.EXPLOSION_EMITTER, projectile.position))
+        player.instance!!.playSound(Sound.sound(SoundEvent.ENTITY_GENERIC_EXPLODE, Sound.Source.PLAYER, 1f, 1f))
 
         val boundingBox = projectile.boundingBox.expand(8.0, 8.0, 8.0)
 

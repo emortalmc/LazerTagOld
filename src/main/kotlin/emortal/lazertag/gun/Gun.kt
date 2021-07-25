@@ -1,27 +1,29 @@
-package emortal.gungame.gun
+package emortal.lazertag.gun
 
-import emortal.gungame.utils.MathUtils
-import emortal.gungame.utils.ParticleUtils
-import io.github.bloepiloepi.particles.shapes.ParticleShape
+import emortal.immortal.particle.ParticleUtils
+import emortal.immortal.particle.shapes.sendParticle
+import emortal.lazertag.utils.MathUtils
+import emortal.lazertag.utils.sendBlockDamage
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
-import net.minestom.server.color.Color
+import net.minestom.server.coordinate.Point
+import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.item.ItemMetaBuilder
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
+import net.minestom.server.particle.Particle
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
-import net.minestom.server.utils.Position
-import net.minestom.server.utils.Vector
 import world.cepi.kstom.raycast.HitType
 import world.cepi.kstom.raycast.RayCast
 import world.cepi.kstom.util.eyePosition
+import world.cepi.kstom.util.playSound
 import world.cepi.kstom.util.spread
 
 sealed class Gun(val name: String, val id: Int) {
@@ -56,14 +58,14 @@ sealed class Gun(val name: String, val id: Int) {
     open val burstAmount: Int = 1
     open val burstInterval: Long = 0 // In ticks
 
-    open val sound: Sound = Sound.sound(SoundEvent.BLAZE_HURT, Sound.Source.PLAYER, 1f, 1f)
+    open val sound: Sound = Sound.sound(SoundEvent.ENTITY_BLAZE_HURT, Sound.Source.PLAYER, 1f, 1f)
 
     open fun shoot(player: Player): HashMap<Player, Float> {
         val damageMap = HashMap<Player, Float>()
 
         val instance = player.instance!!
         val eyePos = player.eyePosition()
-        val eyeDir = eyePos.direction
+        val eyeDir = player.position.direction()
 
         repeat(numberOfBullets) {
 
@@ -72,29 +74,26 @@ sealed class Gun(val name: String, val id: Int) {
             val raycast = RayCast.castRay(
                 instance,
                 player,
-                eyePos.toVector(),
+                eyePos,
                 direction,
                 maxDistance,
                 0.5,
-                acceptEntity = { _: Vector, entity: Entity ->
+                acceptEntity = { _: Point, entity: Entity ->
                     entity is Player && entity.gameMode == GameMode.ADVENTURE /*&& entity.team != player.team*/
                 }, // Accept if entity is a player and is in adventure mode (prevents spectators blocking bullets) and is not on the same team
                 margin = 0.3
             )
-            val lastPos = raycast.finalPosition.toPosition()
 
             if (raycast.hitType == HitType.ENTITY) {
                 val hitPlayer: Player = raycast.hitEntity!! as Player
 
-                val shapeOptions = ParticleUtils.getColouredShapeOptions(Color(255, 0, 0), Color(20, 20, 20), 1.5f)
-                ParticleShape.line(raycast.finalPosition.subtract(direction.multiply(6)).toPosition(), lastPos)
-                    .iterator(shapeOptions).draw(instance, Position(0.0, 0.0, 0.0))
-
                 damageMap[hitPlayer] = damageMap.getOrDefault(hitPlayer, 0f) + damage
-            } else {
-                val shapeOptions = ParticleUtils.getColouredShapeOptions(Color(100, 100, 100), Color(50, 50, 50), 0.2f)
-                ParticleShape.line(eyePos, lastPos)
-                    .iterator(shapeOptions).draw(instance, Position(0.0, 0.0, 0.0))
+            } else if (raycast.hitType == HitType.BLOCK) {
+                instance.sendParticle(ParticleUtils.particle(Particle.LARGE_SMOKE, raycast.finalPosition, Vec(0.25, 0.25, 0.25),1, 0f))
+                //instance.sendParticle(ParticleUtils.vibration(eyePos, raycast.finalPosition, 20))
+
+                instance.playSound(Sound.sound(SoundEvent.BLOCK_NETHERRACK_BREAK, Sound.Source.BLOCK, 2f, 1f), raycast.finalPosition)
+                instance.sendBlockDamage(1, raycast.finalPosition)
             }
 
         }

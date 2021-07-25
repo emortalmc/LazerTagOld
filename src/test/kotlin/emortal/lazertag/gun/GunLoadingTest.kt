@@ -1,4 +1,4 @@
-package emortal.gungame.gun
+package emortal.lazertag.gun
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test

@@ -1,6 +1,6 @@
-package emortal.gungame.gun
+package emortal.lazertag.gun
 
-import emortal.gungame.utils.MinestomRunnable
+import emortal.lazertag.utils.MinestomRunnable
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
@@ -23,10 +23,10 @@ object Shotgun : Gun("Shotgun", 2) {
     override val reloadTime = 2000L
     override val maxDistance = 30.0
 
-    override val sound = Sound.sound(SoundEvent.ZOMBIE_ATTACK_IRON_DOOR, Sound.Source.PLAYER, 1.5f, 1f)
+    override val sound = Sound.sound(SoundEvent.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, Sound.Source.PLAYER, 1.5f, 1f)
 
     override fun shootAfter(player: Player) {
-        player.velocity = player.position.direction.normalize().multiply(-20)
+        player.velocity = player.position.direction().normalize().mul(-20.0)
 
         object : MinestomRunnable() {
             var i = 0
@@ -37,7 +37,7 @@ object Shotgun : Gun("Shotgun", 2) {
                     return
                 }
 
-                player.playSound(Sound.sound(SoundEvent.IRON_GOLEM_ATTACK, Sound.Source.PLAYER, 1f, 1f))
+                player.playSound(Sound.sound(SoundEvent.ENTITY_IRON_GOLEM_ATTACK, Sound.Source.PLAYER, 1f, 1f))
 
                 i++
             }

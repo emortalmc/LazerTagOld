@@ -1,21 +1,21 @@
-package emortal.gungame.commands
+package emortal.lazertag.commands
 
-import emortal.gungame.utils.VoidGenerator
+import emortal.lazertag.utils.VoidGenerator
 import net.minestom.server.command.CommandSender
 import net.minestom.server.command.builder.Command
 import net.minestom.server.command.builder.CommandContext
 import net.minestom.server.command.builder.CommandExecutor
+import net.minestom.server.instance.AnvilLoader
 import world.cepi.kstom.Manager
 
 object NewInstanceCommand : Command("newinstance") {
     init {
         defaultExecutor =
             CommandExecutor { sender: CommandSender, context: CommandContext ->
-                return@CommandExecutor
                 val player = sender.asPlayer()
-                val storageLocation = Manager.storage.getLocation("dizzymc")
-                val instance = Manager.instance.createInstanceContainer(storageLocation)
+                val instance = Manager.instance.createInstanceContainer()
                 instance.chunkGenerator = VoidGenerator
+                instance.chunkLoader = AnvilLoader("dizzymc")
 
                 player.sendMessage("Created instance")
 

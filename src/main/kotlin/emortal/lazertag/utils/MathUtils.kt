@@ -1,4 +1,4 @@
-package emortal.gungame.utils
+package emortal.lazertag.utils
 
 object MathUtils {
     fun digitsInNumber(n: Int): Int {

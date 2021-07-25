@@ -1,4 +1,4 @@
-package emortal.gungame.gun
+package emortal.lazertag.gun
 
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor

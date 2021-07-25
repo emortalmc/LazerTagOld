@@ -1,4 +1,4 @@
-package emortal.gungame.utils
+package emortal.lazertag.utils
 
 import net.minestom.server.instance.ChunkGenerator
 import net.minestom.server.instance.ChunkPopulator

@@ -1,6 +1,6 @@
-package emortal.gungame.commands
+package emortal.lazertag.commands
 
-import emortal.gungame.maps.MapManager
+import emortal.lazertag.maps.MapManager
 import net.minestom.server.command.CommandSender
 import net.minestom.server.command.builder.Command
 import net.minestom.server.command.builder.CommandContext
@@ -19,9 +19,7 @@ object SaveInstanceCommand : Command("saveinstance") {
                     instance.setBlock(pos, material)
                 }
 
-                instance.saveChunksToStorage {
-                    player.sendMessage("Saved instance!")
-                }
+                instance.saveChunksToStorage()
             }
     }
 }

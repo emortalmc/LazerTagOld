@@ -36,13 +36,15 @@ dependencies {
     // Use the Kotlin reflect library.
     compileOnly(kotlin("reflect"))
 
-    compileOnly("com.github.Minestom:Minestom:30f3fdd99a")
+    compileOnly("com.github.Minestom:Minestom:7fae70ebc1")
+    compileOnly("com.github.Project-Cepi:KStom:bc4f809e6d")
+    compileOnly("com.github.EmortalMC:Immortal:7b089849f1")
 
     // import kotlinx serialization
     compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
 
-    compileOnly("com.github.Project-Cepi:KStom:976d8852fc")
     implementation("net.kyori:adventure-text-minimessage:4.1.0-SNAPSHOT")
+
 
     compileOnly("com.github.Bloepiloepi:MinestomParticles:e6dd8e92b8")
 
