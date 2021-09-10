@@ -1,12 +1,12 @@
 package emortal.lazertag.maps
 
-import emortal.lazertag.utils.Direction4
-import emortal.lazertag.utils.VoidGenerator
+import emortal.immortal.util.VoidGenerator
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.extensions.Extension
 import net.minestom.server.instance.AnvilLoader
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
+import net.minestom.server.utils.Direction
 import world.cepi.kstom.Manager
 import java.time.Duration
 
@@ -54,13 +54,21 @@ object MapManager {
                             instance.setBlock(xPos, y, zPos, Block.AIR)
                             spawnPosBlocksList[Pos(xPos.toDouble(), y.toDouble(), zPos.toDouble())] = Block.NETHERITE_BLOCK
 
-                            for (value in Direction4.values()) {
-                                if (instance.getBlock(xPos + value.x, y, zPos + value.y) != Block.BEDROCK) continue
+                            for (value in Direction.HORIZONTAL) {
+                                val yaw = when (value) {
+                                    Direction.SOUTH -> 0f
+                                    Direction.WEST -> 90f
+                                    Direction.NORTH -> 180f
+                                    Direction.EAST -> -90f
+                                    else -> 0f
+                                }
 
-                                instance.setBlock(xPos + value.x, y, zPos + value.y, Block.AIR)
-                                spawnPosBlocksList[Pos(xPos.toDouble() + value.x, y.toDouble(), zPos.toDouble() + value.y)] = Block.BEDROCK
+                                if (instance.getBlock(xPos + value.normalX(), y, zPos + value.normalZ()) != Block.BEDROCK) continue
 
-                                spawnPositionList.add(Pos(xPos.toDouble() + 0.5, y.toDouble(), zPos.toDouble() + 0.5, value.yaw, 0f))
+                                instance.setBlock(xPos + value.normalX(), y, zPos + value.normalZ(), Block.AIR)
+                                spawnPosBlocksList[Pos(xPos.toDouble() + value.normalX(), y.toDouble(), zPos.toDouble() + value.normalZ())] = Block.BEDROCK
+
+                                spawnPositionList.add(Pos(xPos.toDouble() + 0.5, y.toDouble(), zPos.toDouble() + 0.5, yaw, 0f))
                             }
                         }
                     }

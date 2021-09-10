@@ -6,15 +6,15 @@ import net.kyori.adventure.text.format.TextColor
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
 
-object Minigun : Gun("Lazer Minigun", 1) {
+object Minigun : Gun("Lazer Minigun") {
 
-    override val material = Material.DIAMOND_SHOVEL
+    override val material: Material = Material.DIAMOND_SHOVEL
     override val color: TextColor = NamedTextColor.AQUA
 
     override val damage = 1.5f
     override val cooldown = 150L
-    override val ammo = 60
-    override val reloadTime = 2000L
+    override val ammo = 50
+    override val reloadTime = 2500L
     override val maxDistance = 30.0
 
     override val burstAmount = 5

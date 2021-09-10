@@ -3,8 +3,7 @@ package emortal.lazertag
 import emortal.immortal.game.GameManager
 import emortal.immortal.game.GameOptions
 import emortal.immortal.game.GameTypeInfo
-import emortal.lazertag.commands.NewInstanceCommand
-import emortal.lazertag.commands.SaveInstanceCommand
+import emortal.lazertag.commands.GunCommand
 import emortal.lazertag.game.LazerTagGame
 import emortal.lazertag.maps.MapManager
 import net.minestom.server.extensions.Extension
@@ -14,7 +13,10 @@ import world.cepi.kstom.command.unregister
 
 class LazerTagExtension : Extension() {
 
+
+
     override fun initialize() {
+        GunCommand.register()
 
         MapManager.init(this)
         GameManager.registerGame<LazerTagGame>(
@@ -22,26 +24,21 @@ class LazerTagExtension : Extension() {
                 eventNode,
                 "lazertag",
                 "<gradient:gold:yellow><bold>LazerTag".asMini(),
+                true,
                 GameOptions(
-                    setOf(MapManager.mapMap["dizzymc"]!!),
+                    { MapManager.mapMap["dizzymc"]!! },
                     15,
-                    2,
+                    1,
                     true
                 )
             )
         )
 
-
-        SaveInstanceCommand.register()
-        NewInstanceCommand.register()
-
         logger.info("[LazerTagExtension] has been enabled!")
     }
 
     override fun terminate() {
-
-        SaveInstanceCommand.unregister()
-        NewInstanceCommand.unregister()
+        GunCommand.unregister()
 
         logger.info("[LazerTagExtension] has been disabled!")
     }
