@@ -1,18 +1,13 @@
 package emortal.lazertag.gun
 
-import emortal.immortal.particle.ParticleUtils
-import emortal.immortal.particle.shapes.sendParticle
 import emortal.lazertag.raycast.RaycastResultType
 import emortal.lazertag.raycast.RaycastUtil
-import emortal.lazertag.utils.MathUtils
 import emortal.lazertag.utils.sendBlockDamage
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
-import net.minestom.server.coordinate.Pos
-import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
@@ -20,10 +15,18 @@ import net.minestom.server.entity.Player
 import net.minestom.server.item.ItemMetaBuilder
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
-import net.minestom.server.particle.Particle
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
-import world.cepi.kstom.util.*
+import world.cepi.kstom.util.asVec
+import world.cepi.kstom.util.eyePosition
+import world.cepi.kstom.util.playSound
+import world.cepi.kstom.util.spread
+import world.cepi.particle.Particle
+import world.cepi.particle.ParticleType
+import world.cepi.particle.data.OffsetAndSpeed
+import world.cepi.particle.extra.DustTransition
+import world.cepi.particle.showParticle
+import world.cepi.particle.util.Vectors
 import kotlin.collections.set
 
 sealed class Gun(val name: String, val customMeta: (ItemMetaBuilder) -> Unit = {}) {
@@ -89,54 +92,32 @@ sealed class Gun(val name: String, val customMeta: (ItemMetaBuilder) -> Unit = {
                 it != player && it.entityType == EntityType.PLAYER && (it as Player).gameMode == GameMode.ADVENTURE
             }
 
+            instance.showParticle(
+                Particle.particle(
+                    type = ParticleType.DUST_COLOR_TRANSITION,
+                    count = 1,
+                    data = OffsetAndSpeed(0f, 0f, 0f, 0f),
+                    extraData = DustTransition(1f, 1f, 0f, 1f, 1f, 1f, scale = 1f)
+                ),
+                Vectors(
+                    eyePos.asVec(),
+                    (raycastResult.hitPosition ?: eyePos.add(eyePos.asVec().normalize().mul(maxDistance))).asVec(),
+                    1.5
+                )
+            )
+
             when (raycastResult.resultType) {
                 RaycastResultType.HIT_ENTITY -> { // Hit entity
-                    val (x, y, z) = raycastResult.hitPosition!!
-
                     val hitPlayer: Player = raycastResult.hitEntity!! as Player
 
                     damageMap[hitPlayer] = damageMap.getOrDefault(hitPlayer, 0f) + damage
-
-
-                    val particleShape = ParticleUtils.line(
-                        ParticleUtils.colored(
-                            Particle.DUST_COLOR_TRANSITION,
-                            0.0, 0.0, 0.0, 0f, 0f, 0f,
-                            NamedTextColor.YELLOW,
-                            NamedTextColor.YELLOW,
-                            0.2f,
-                            1,
-                            0f
-                        ),
-                        Vec(eyePos.x(), eyePos.y(), eyePos.z()),
-                        Vec(x, y, z),
-                        1.5
-                    )
                 }
                 RaycastResultType.HIT_BLOCK -> { // Hit block
-                    val (x, y, z) = raycastResult.hitPosition!!
-
-                    val particleShape = ParticleUtils.line(
-                        ParticleUtils.colored(
-                            Particle.DUST_COLOR_TRANSITION,
-                            0.0, 0.0, 0.0, 0f, 0f, 0f,
-                            NamedTextColor.YELLOW,
-                            NamedTextColor.YELLOW,
-                            0.2f,
-                            1,
-                            0f
-                        ),
-                        Vec(eyePos.x(), eyePos.y(), eyePos.z()),
-                        Vec(x, y, z),
-                        1.5
+                    instance.playSound(
+                        Sound.sound(SoundEvent.BLOCK_NETHERRACK_BREAK, Sound.Source.BLOCK, 2f, 1f),
+                        raycastResult.hitPosition!!
                     )
-
-                    instance.sendParticle(particleShape)
-
-
-                    instance.sendParticle(ParticleUtils.particle(Particle.LARGE_SMOKE, x, y, z, count = 1))
-                    instance.playSound(Sound.sound(SoundEvent.BLOCK_NETHERRACK_BREAK, Sound.Source.BLOCK, 2f, 1f), x, y, z)
-                    instance.sendBlockDamage(1, Pos(x, y, z))
+                    instance.sendBlockDamage(1, raycastResult.hitPosition)
                 }
                 else -> { // Hit nothing
 
@@ -174,7 +155,12 @@ sealed class Gun(val name: String, val customMeta: (ItemMetaBuilder) -> Unit = {
             Component.text()
                 .append(Component.text("|".repeat(completedBlocks), NamedTextColor.GOLD))
                 .append(Component.text("|".repeat(incompleteBlocks), NamedTextColor.DARK_GRAY))
-                .append(Component.text(" ${String.format("%0${MathUtils.digitsInNumber(ammo)}d", currentAmmo)}/$ammo", NamedTextColor.DARK_GRAY))
+                .append(
+                    Component.text(
+                        " ${String.format("%0${ammo.toString().length}d", currentAmmo)}/$ammo",
+                        NamedTextColor.DARK_GRAY
+                    )
+                )
                 .build()
         )
     }

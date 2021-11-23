@@ -12,7 +12,6 @@ import net.minestom.server.instance.Instance
 import world.cepi.kstom.util.component1
 import world.cepi.kstom.util.component2
 import world.cepi.kstom.util.component3
-import world.cepi.kstom.util.entitiesInRoughRange
 
 /**
  * Class to make Rayfast easier to use with Minestom
@@ -68,8 +67,15 @@ object RaycastUtil {
         return null
     }
 
-    fun raycastEntity(instance: Instance, startPoint: Point, direction: Vec, maxDistance: Double, hitFilter: (Entity) -> Boolean = { true }): Pair<Entity, Pos>? {
-        instance.entitiesInRoughRange(startPoint, maxDistance.toInt())
+    fun raycastEntity(
+        instance: Instance,
+        startPoint: Point,
+        direction: Vec,
+        maxDistance: Double,
+        hitFilter: (Entity) -> Boolean = { true }
+    ): Pair<Entity, Pos>? {
+        instance.entities
+            .filter { it.getDistance(startPoint) <= maxDistance }
             .filter { hitFilter.invoke(it) }
             .forEach {
                 val area = it.area3d
@@ -85,7 +91,13 @@ object RaycastUtil {
         return null
     }
 
-    fun raycast(instance: Instance, startPoint: Point, direction: Vec, maxDistance: Double, hitFilter: (Entity) -> Boolean = { true }): RaycastResult {
+    fun raycast(
+        instance: Instance,
+        startPoint: Point,
+        direction: Vec,
+        maxDistance: Double,
+        hitFilter: (Entity) -> Boolean = { true }
+    ): RaycastResult {
         val blockRaycast = raycastBlock(instance, startPoint, direction, maxDistance)
         val entityRaycast = raycastEntity(instance, startPoint, direction, maxDistance, hitFilter)
 

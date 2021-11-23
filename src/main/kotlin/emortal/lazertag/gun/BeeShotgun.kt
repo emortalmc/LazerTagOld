@@ -1,7 +1,5 @@
 package emortal.lazertag.gun
 
-import emortal.immortal.particle.ParticleUtils
-import emortal.immortal.particle.shapes.sendParticle
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
@@ -13,12 +11,16 @@ import net.minestom.server.entity.damage.DamageType
 import net.minestom.server.entity.metadata.animal.BeeMeta
 import net.minestom.server.item.ItemMetaBuilder
 import net.minestom.server.item.Material
-import net.minestom.server.particle.Particle
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
 import net.minestom.server.utils.time.TimeUnit
 import world.cepi.kstom.Manager
-import world.cepi.kstom.util.*
+import world.cepi.kstom.util.eyePosition
+import world.cepi.kstom.util.spread
+import world.cepi.particle.Particle
+import world.cepi.particle.ParticleType
+import world.cepi.particle.data.OffsetAndSpeed
+import world.cepi.particle.showParticle
 import kotlin.math.min
 
 object BeeShotgun : Gun("Bee Keeper") {
@@ -69,9 +71,14 @@ object BeeShotgun : Gun("Bee Keeper") {
     }
 
     override fun collide(player: Player, projectile: Entity) {
-        val (x, y, z) = projectile.position
-
-        projectile.viewers.sendParticle(ParticleUtils.particle(Particle.EXPLOSION, x, y, z))
+        player.instance!!.showParticle(
+            Particle.particle(
+                type = ParticleType.EXPLOSION,
+                count = 1,
+                data = OffsetAndSpeed(0f, 0f, 0f, 0f),
+            ),
+            projectile.position.asVec()
+        )
         player.instance!!.playSound(Sound.sound(SoundEvent.ENTITY_BEE_STING, Sound.Source.PLAYER, 1f, 1f))
 
         Manager.scheduler.getTask(projectile.getTag(Tag.Integer("taskID"))!!).cancel()
@@ -79,7 +86,8 @@ object BeeShotgun : Gun("Bee Keeper") {
         val boundingBox = projectile.boundingBox.expand(5.0, 5.0, 5.0)
         for (entity in player.instance!!.entities.filter { boundingBox.intersect(it.boundingBox) && it is Player && it.gameMode == GameMode.ADVENTURE }) {
             entity.scheduleNextTick {
-                (entity as Player).damage(DamageType.fromPlayer(player),
+                (entity as Player).damage(
+                    DamageType.fromPlayer(player),
                     min(damage / (projectile.getDistanceSquared(entity) / 1.75).toFloat(), damage)
                 )
             }

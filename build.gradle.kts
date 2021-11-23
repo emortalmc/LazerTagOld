@@ -2,18 +2,18 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     // Apply the Kotlin JVM plugin to add support for Kotlin.
-    id("org.jetbrains.kotlin.jvm") version "1.5.20"
+    id("org.jetbrains.kotlin.jvm") version "1.6.0"
     // Kotlinx serialization for any data format
-    kotlin("plugin.serialization") version "1.5.20"
+    kotlin("plugin.serialization") version "1.6.0"
     // Shade the plugin
-    id("com.github.johnrengelman.shadow") version "7.0.0"
+    id("com.github.johnrengelman.shadow") version "7.1.0"
     // Allow publishing
     `maven-publish`
 
     // Apply the application plugin to add support for building a jar
     java
     // Dokka documentation w/ kotlin
-    id("org.jetbrains.dokka") version "1.4.32"
+    id("org.jetbrains.dokka") version "1.5.0"
 }
 
 repositories {
@@ -37,20 +37,15 @@ dependencies {
     compileOnly(kotlin("reflect"))
 
     implementation("com.github.EmortalMC:Rayfast:07d8daf030")
-    compileOnly("com.github.Minestom:Minestom:2ef8e957a0")
-    compileOnly("com.github.Project-Cepi:KStom:d9f7795e88")
-    compileOnly("com.github.EmortalMC:Immortal:ac13706b5f")
+    compileOnly("com.github.Minestom:Minestom:cca614fea8")
+    compileOnly("com.github.EmortalMC:Immortal:ef116d2b19")
+
 
     // import kotlinx serialization
-    compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
-
-    implementation("net.kyori:adventure-text-minimessage:4.1.0-SNAPSHOT")
-
-
-    compileOnly("com.github.Bloepiloepi:MinestomParticles:e6dd8e92b8")
+    compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1")
 
     // Use the JUpiter test library.
-    testImplementation("org.junit.jupiter:junit-jupiter:5.7.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
 }
 tasks.withType<Test> {
     useJUnitPlatform()
@@ -86,13 +81,22 @@ tasks {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
 }
 
 val compileKotlin: KotlinCompile by tasks
-compileKotlin.kotlinOptions.jvmTarget = JavaVersion.VERSION_11.toString()
+compileKotlin.kotlinOptions.jvmTarget = JavaVersion.VERSION_17.toString()
 
 compileKotlin.kotlinOptions {
     freeCompilerArgs = listOf("-Xinline-classes")
+}
+
+sourceSets.create("demo") {
+    java.srcDir("src/demo/java")
+    java.srcDir("build/generated/source/apt/demo")
+    resources.srcDir("src/demo/resources")
+    compileClasspath += sourceSets.main.get().output + sourceSets.main.get().compileClasspath
+    runtimeClasspath += sourceSets.main.get().output + sourceSets.main.get().runtimeClasspath
 }

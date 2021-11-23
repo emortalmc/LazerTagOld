@@ -1,38 +1,58 @@
 package emortal.lazertag
 
-import emortal.immortal.game.GameManager
-import emortal.immortal.game.GameOptions
-import emortal.immortal.game.GameTypeInfo
+import dev.emortal.immortal.game.GameManager
+import dev.emortal.immortal.game.GameOptions
+import dev.emortal.immortal.game.WhenToRegisterEvents
 import emortal.lazertag.commands.GunCommand
+import emortal.lazertag.config.ConfigurationHelper
+import emortal.lazertag.config.LazerTagConfig
 import emortal.lazertag.game.LazerTagGame
-import emortal.lazertag.maps.MapManager
+import net.minestom.server.coordinate.Pos
 import net.minestom.server.extensions.Extension
 import world.cepi.kstom.adventure.asMini
-import world.cepi.kstom.command.register
-import world.cepi.kstom.command.unregister
+import java.nio.file.Path
+import kotlin.io.path.createDirectories
+import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.nameWithoutExtension
 
 class LazerTagExtension : Extension() {
 
+    companion object {
+        val configPath = Path.of("./lazertag.json")
+        val mapsPath = Path.of("./maps/lazertag/").also { it.createDirectories() }
+        val maps = mapsPath.listDirectoryEntries().map { it.nameWithoutExtension }
 
+        var config: LazerTagConfig = ConfigurationHelper.initConfigFile(configPath, LazerTagConfig())
+    }
 
     override fun initialize() {
-        GunCommand.register()
+        mapsPath.createDirectories()
 
-        MapManager.init(this)
+        logger.info("Found ${maps.size} maps: \n- ${maps.joinToString("\n- ")}")
+
+        maps.forEach {
+            if (config.spawnPositions.contains(it)) return@forEach
+            config.spawnPositions[it] = arrayOf(Pos.ZERO)
+
+            logger.info("Creating map config for '${it}'")
+        }
+
+        ConfigurationHelper.writeObjectToPath(configPath, config)
+
         GameManager.registerGame<LazerTagGame>(
-            GameTypeInfo(
-                eventNode,
-                "lazertag",
-                "<gradient:gold:yellow><bold>LazerTag".asMini(),
-                true,
-                GameOptions(
-                    { MapManager.mapMap["dizzymc"]!! },
-                    15,
-                    1,
-                    true
-                )
+            eventNode,
+            "lazertag",
+            "<gradient:gold:yellow><bold>LazerTag".asMini(),
+            true,
+            WhenToRegisterEvents.GAME_START,
+            GameOptions(
+                maxPlayers = 15,
+                minPlayers = 1,
+                canJoinDuringGame = true
             )
         )
+
+        GunCommand.register()
 
         logger.info("[LazerTagExtension] has been enabled!")
     }

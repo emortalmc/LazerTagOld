@@ -1,21 +1,22 @@
 package emortal.lazertag.game
 
-import emortal.immortal.game.Game
-import emortal.immortal.game.GameOptions
-import emortal.immortal.game.GameState
-import emortal.immortal.game.PvpGame
+import dev.emortal.immortal.game.EndGameQuotes
+import dev.emortal.immortal.game.GameOptions
+import dev.emortal.immortal.game.GameState
+import dev.emortal.immortal.game.PvpGame
+import dev.emortal.immortal.util.reset
+import emortal.lazertag.LazerTagExtension
 import emortal.lazertag.gun.Gun
 import emortal.lazertag.gun.Gun.Companion.ammoTag
 import emortal.lazertag.gun.Gun.Companion.heldGun
 import emortal.lazertag.gun.Gun.Companion.lastShotTag
 import emortal.lazertag.gun.Gun.Companion.reloadingTag
-import emortal.lazertag.maps.MapManager
 import emortal.lazertag.utils.setCooldown
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
-import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.title.Title
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
@@ -31,6 +32,8 @@ import net.minestom.server.event.entity.EntityTickEvent
 import net.minestom.server.event.inventory.InventoryPreClickEvent
 import net.minestom.server.event.item.ItemDropEvent
 import net.minestom.server.event.player.*
+import net.minestom.server.instance.AnvilLoader
+import net.minestom.server.instance.Instance
 import net.minestom.server.item.ItemMetaBuilder
 import net.minestom.server.scoreboard.Sidebar
 import net.minestom.server.sound.SoundEvent
@@ -38,43 +41,52 @@ import net.minestom.server.tag.Tag
 import net.minestom.server.timer.Task
 import net.minestom.server.utils.time.TimeUnit
 import world.cepi.kstom.Manager
-import world.cepi.kstom.adventure.sendMiniMessage
+import world.cepi.kstom.adventure.asMini
 import world.cepi.kstom.event.listenOnly
-import world.cepi.kstom.util.*
+import world.cepi.kstom.item.and
+import world.cepi.kstom.util.MinestomRunnable
+import world.cepi.kstom.util.playSound
 import java.text.DecimalFormat
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.ThreadLocalRandom
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.set
 
-class LazerTagGame(option: GameOptions) : Game(option), PvpGame {
+class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
 
     companion object {
         val killsTag = Tag.Integer("kills")
-
+        val killstreakTag = Tag.Integer("killstreak")
+        val deathsTag = Tag.Integer("deaths")
     }
 
-    val mini = MiniMessage.get()
-
-    val respawnTasks: ArrayList<Task> = ArrayList()
-    val reloadTasks: HashMap<Player, Task> = HashMap()
+    val cancelKillstreakTasks = hashMapOf<Player, Task>()
+    val respawnTasks = mutableListOf<Task>()
+    val reloadTasks = hashMapOf<Player, Task>()
 
     override fun playerJoin(player: Player) {
         player.gameMode = GameMode.SPECTATOR
         player.isInvisible = false
 
-        scoreboard?.createLine(Sidebar.ScoreboardLine(
-            player.uuid.toString(),
+        scoreboard?.createLine(
+            Sidebar.ScoreboardLine(
+                player.uuid.toString(),
 
-            Component.text()
-                .append(Component.text(player.username, NamedTextColor.GRAY))
-                .append(Component.text(" - ", NamedTextColor.DARK_GRAY))
-                .append(Component.text(0, NamedTextColor.LIGHT_PURPLE, TextDecoration.BOLD))
-                .build(),
+                Component.text()
+                    .append(Component.text(player.username, NamedTextColor.GRAY))
+                    .append(Component.text(" - ", NamedTextColor.DARK_GRAY))
+                    .append(Component.text(0, NamedTextColor.LIGHT_PURPLE, TextDecoration.BOLD))
+                    .build(),
 
-            0
-        ))
+                0
+            )
+        )
 
         player.setTag(killsTag, 0)
+        player.setTag(killstreakTag, 0)
+        player.setTag(deathsTag, 0)
 
         player.respawnPoint = getRandomRespawnPosition()
         if (player.instance!! != instance) player.setInstance(instance)
@@ -88,15 +100,10 @@ class LazerTagGame(option: GameOptions) : Game(option), PvpGame {
         scoreboard?.removeLine(player.uuid.toString())
     }
 
-    override fun start() {
-        startingTask = null
+    override fun gameStarted() {
         gameState = GameState.PLAYING
 
         players.forEach(::respawn)
-    }
-
-    override fun startCountdown() {
-        start()
     }
 
     override fun playerDied(player: Player, killer: Entity?) {
@@ -109,15 +116,15 @@ class LazerTagGame(option: GameOptions) : Game(option), PvpGame {
         player.sendActionBar(Component.empty())
         player.setNoGravity(true)
 
+        player.playSound(
+            Sound.sound(SoundEvent.ENTITY_VILLAGER_DEATH, Sound.Source.MASTER, 1f, 1f),
+            Sound.Emitter.self()
+        )
+
         reloadTasks[player]?.cancel()
         reloadTasks.remove(player)
 
         if (killer != null && killer != player && killer is Player) {
-            val lookAtVector = player.position.asVec().sub(killer.position.asVec())
-
-            player.teleport(player.position.withDirection(lookAtVector.mul(-1.0)))
-            player.velocity = lookAtVector.normalize().mul(15.0)
-
             val currentKills = killer.getTag(killsTag)!! + 1
 
             if (currentKills >= 20) return victory(killer)
@@ -130,38 +137,71 @@ class LazerTagGame(option: GameOptions) : Game(option), PvpGame {
                 Component.text()
                     .append(Component.text(killer.username, NamedTextColor.GRAY))
                     .append(Component.text(" - ", NamedTextColor.DARK_GRAY))
-                    .append(Component.text(0, NamedTextColor.LIGHT_PURPLE, TextDecoration.BOLD))
+                    .append(
+                        Component.text(
+                            currentKills,
+                            TextColor.lerp(currentKills / 20f, NamedTextColor.GRAY, NamedTextColor.LIGHT_PURPLE),
+                            TextDecoration.BOLD
+                        )
+                    )
                     .build()
             )
 
-            println("Scoreboard score of ${killer.uuid} should be updated to $currentKills")
+            sendMessage(
+                Component.text()
+                    .append(Component.text("☠", NamedTextColor.RED))
+                    .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
+                    .append(Component.text(killer.username, NamedTextColor.WHITE))
+                    .append(Component.text(" killed ", NamedTextColor.GRAY))
+                    .append(Component.text(player.username, NamedTextColor.RED))
+                    .append(Component.text(" with ", NamedTextColor.GRAY))
+                    .append(Component.text(killer.heldGun?.name ?: "air", NamedTextColor.GOLD))
+            )
 
-            // problematic:  with ${Gun.registeredMap[killer.itemInMainHand.meta.customModelData]!!.name}
-            playerAudience.sendMiniMessage(" <red>☠</red> <dark_gray>|</dark_gray> <gray><white>${killer.username}</white> killed <red>${player.username}</red>")
+            killer.showTitle(
+                Title.title(
+                    Component.empty(),
+                    Component.text()
+                        .append(Component.text("☠ ", NamedTextColor.RED))
+                        .append(Component.text(player.username, NamedTextColor.RED))
+                        .build(),
+                    Title.Times.of(Duration.ZERO, Duration.ofSeconds(1), Duration.ofMillis(500))
+                )
+            )
+
             killer.playSound(Sound.sound(SoundEvent.BLOCK_NOTE_BLOCK_PLING, Sound.Source.PLAYER, 1f, 1f))
 
-            player.showTitle(Title.title(
-                Component.text("YOU DIED", NamedTextColor.RED, TextDecoration.BOLD),
-                mini.parse("<gray>Killed by <red><bold>${killer.username}</bold></red>"),
-                Title.Times.of(
-                    Duration.ZERO, Duration.ofSeconds(1), Duration.ofSeconds(1)
+            player.showTitle(
+                Title.title(
+                    Component.text("YOU DIED", NamedTextColor.RED, TextDecoration.BOLD),
+                    "<gray>Killed by <red><bold>${killer.username}</bold></red>".asMini(),
+                    Title.Times.of(
+                        Duration.ZERO, Duration.ofSeconds(1), Duration.ofSeconds(1)
+                    )
                 )
-            ))
+            )
 
             val gun = Gun.registeredMap.values.random()
             killer.inventory.setItemStack(0, gun.item)
             gun.renderAmmo(killer, gun.ammo)
         } else {
+            sendMessage(
+                Component.text()
+                    .append(Component.text("☠", NamedTextColor.RED))
+                    .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
+                    .append(Component.text(player.username, NamedTextColor.RED))
+                    .append(Component.text(" killed themselves", NamedTextColor.GRAY))
+            )
 
-            playerAudience.sendMiniMessage(" <red>☠</red> <dark_gray>|</dark_gray> <gray><red>${player.username}</red> killed themselves")
-
-            player.showTitle(Title.title(
-                Component.text("YOU DIED", NamedTextColor.RED, TextDecoration.BOLD),
-                mini.parse("<rainbow>You killed yourself!"),
-                Title.Times.of(
-                    Duration.ZERO, Duration.ofSeconds(1), Duration.ofSeconds(1)
+            player.showTitle(
+                Title.title(
+                    Component.text("YOU DIED", NamedTextColor.RED, TextDecoration.BOLD),
+                    "<rainbow>You killed yourself!".asMini(),
+                    Title.Times.of(
+                        Duration.ZERO, Duration.ofSeconds(1), Duration.ofSeconds(1)
+                    )
                 )
-            ))
+            )
 
             val currentKills = player.getTag(killsTag)!! - 1
 
@@ -185,10 +225,6 @@ class LazerTagGame(option: GameOptions) : Game(option), PvpGame {
             var i = 3
 
             override fun run() {
-                if (i == 3) {
-                    player.velocity = Vec(0.0, 0.0, 0.0)
-                    if (killer != null && !(killer as Player).isDead && killer != player) player.spectate(killer)
-                }
                 if (i <= 0) {
                     respawn(player)
 
@@ -196,15 +232,19 @@ class LazerTagGame(option: GameOptions) : Game(option), PvpGame {
                     return
                 }
 
-                val (x, y, z) = killer?.position ?: player.position
-                player.playSound(Sound.sound(SoundEvent.BLOCK_WOODEN_BUTTON_CLICK_ON, Sound.Source.BLOCK, 1f, 1f), x, y, z)
-                player.showTitle(Title.title(
-                    Component.text(i, NamedTextColor.GOLD, TextDecoration.BOLD),
-                    Component.empty(),
-                    Title.Times.of(
-                        Duration.ZERO, Duration.ofSeconds(1), Duration.ofSeconds(1)
+                player.playSound(
+                    Sound.sound(SoundEvent.BLOCK_WOODEN_BUTTON_CLICK_ON, Sound.Source.BLOCK, 1f, 1f),
+                    Sound.Emitter.self()
+                )
+                player.showTitle(
+                    Title.title(
+                        Component.text(i, NamedTextColor.GOLD, TextDecoration.BOLD),
+                        Component.empty(),
+                        Title.Times.of(
+                            Duration.ZERO, Duration.ofSeconds(1), Duration.ofSeconds(1)
+                        )
                     )
-                ))
+                )
 
                 i--
             }
@@ -212,14 +252,13 @@ class LazerTagGame(option: GameOptions) : Game(option), PvpGame {
     }
 
     override fun respawn(player: Player) = with(player) {
-        inventory.clear()
-        health = 20f
         teleport(getRandomRespawnPosition())
-        stopSpectating()
-        isInvisible = false
-        gameMode = GameMode.ADVENTURE
-        setNoGravity(false)
-        clearEffects()
+        reset()
+
+        player.playSound(
+            Sound.sound(SoundEvent.BLOCK_BEACON_ACTIVATE, Sound.Source.MASTER, 1f, 1f),
+            Sound.Emitter.self()
+        )
 
         if (gameState == GameState.ENDING) return
 
@@ -241,39 +280,38 @@ class LazerTagGame(option: GameOptions) : Game(option), PvpGame {
             .filter { it !is Player }
             .forEach(Entity::remove)
 
-        players.forEach { it.inventory.clear() }
+        val victoryTitle = Title.title(
+            Component.text("VICTORY!", NamedTextColor.GOLD, TextDecoration.BOLD),
+            Component.text(EndGameQuotes.victory.random(), NamedTextColor.GRAY),
+            Title.Times.of(Duration.ZERO, Duration.ofSeconds(3), Duration.ofSeconds(3))
+        )
+        val defeatTitle = Title.title(
+            Component.text("DEFEAT!", NamedTextColor.RED, TextDecoration.BOLD),
+            Component.text(EndGameQuotes.defeat.random(), NamedTextColor.GRAY),
+            Title.Times.of(Duration.ZERO, Duration.ofSeconds(3), Duration.ofSeconds(3))
+        )
 
-        val message = Component.text()
-            .append(Component.text("VICTORY", NamedTextColor.GOLD, TextDecoration.BOLD))
-            .append(Component.text("\n${player.username} won the game", NamedTextColor.WHITE))
-            .build()
+        players.forEach {
+            it.inventory.clear()
 
-        playerAudience.sendMessage(message)
+            if (it == player) it.showTitle(victoryTitle)
+            else it.showTitle(defeatTitle)
+
+        }
 
         Manager.scheduler.buildTask { destroy() }
-            .delay(12, TimeUnit.SECOND).schedule()
+            .delay(5, TimeUnit.SECOND)
+            .schedule()
     }
 
-    override fun postDestroy() {
+    override fun gameDestroyed() {
         respawnTasks.forEach(Task::cancel)
         respawnTasks.clear()
     }
 
     override fun registerEvents() = with(eventNode) {
-        listenOnly<PlayerChatEvent> {
-            if (entity.instance!! != instance) return@listenOnly
-
-            if (player.username == "emortl") {
-                setChatFormat {
-                    mini.parse("<gradient:light_purple:gold><bold>OWNER</bold></gradient> <gray>emortal: ${it.message}")
-                }
-            }
-
-        }
-
         listenOnly<PlayerUseItemEvent> {
             isCancelled = true
-            if (entity.instance!! != instance) return@listenOnly
             if (hand != Player.Hand.MAIN) return@listenOnly
 
             val heldGun = player.heldGun ?: return@listenOnly
@@ -284,8 +322,8 @@ class LazerTagGame(option: GameOptions) : Game(option), PvpGame {
                 return@listenOnly
             }
 
-            player.itemInMainHand = player.itemInMainHand.withMeta { meta ->
-                meta.set(lastShotTag, System.currentTimeMillis())
+            player.itemInMainHand = player.itemInMainHand.and {
+                setTag(lastShotTag, System.currentTimeMillis())
             }
 
             object : MinestomRunnable() {
@@ -299,7 +337,7 @@ class LazerTagGame(option: GameOptions) : Game(option), PvpGame {
                     }
                     if (player.itemInMainHand.meta.getTag(ammoTag)!! <= 0) {
                         player.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_BREAK, Sound.Source.PLAYER, 0.7f, 1.5f))
-                        player.sendActionBar(mini.parse("<red>Press <bold><key:key.swapOffhand></bold> to reload!"))
+                        player.sendActionBar("<red>Press <bold><key:key.swapOffhand></bold> to reload!".asMini())
 
                         cancel()
                         return
@@ -331,7 +369,6 @@ class LazerTagGame(option: GameOptions) : Game(option), PvpGame {
         }
 
         listenOnly<EntityTickEvent> {
-            if (entity.instance!! != instance) return@listenOnly
             if (entity.entityType == EntityType.PLAYER) return@listenOnly
 
             if (!entity.hasTag(Gun.playerUUIDTag)) return@listenOnly
@@ -344,53 +381,48 @@ class LazerTagGame(option: GameOptions) : Game(option), PvpGame {
             if (entity.velocity.x() == 0.0 || entity.velocity.y() == 0.0 || entity.velocity.z() == 0.0) {
                 gun.collide(shooter, entity)
             }
-            if (entity.aliveTicks > 20*3) {
+            if (entity.aliveTicks > 20 * 3) {
                 gun.collide(shooter, entity)
             }
         }
 
         listenOnly<PlayerBlockBreakEvent> {
-            if (entity.instance!! != instance) return@listenOnly
             isCancelled = true
         }
 
         listenOnly<PlayerChangeHeldSlotEvent> {
-            if (entity.instance!! != instance) return@listenOnly
             isCancelled = true
             player.setHeldItemSlot(0)
         }
         listenOnly<InventoryPreClickEvent> {
-            if (entity.instance!! != instance) return@listenOnly
             isCancelled = true
         }
         listenOnly<PlayerBlockBreakEvent> {
-            if (entity.instance!! != instance) return@listenOnly
             isCancelled = true
         }
         listenOnly<PlayerBlockPlaceEvent> {
-            println("abc")
-            if (entity.instance!! != instance) return@listenOnly
             println("cancelled!")
             isCancelled = true
         }
         listenOnly<ItemDropEvent> {
-            if (entity.instance!! != instance) return@listenOnly
             isCancelled = true
         }
 
         listenOnly<PlayerSwapItemEvent> {
-            if (entity.instance!! != instance) return@listenOnly
             isCancelled = true
 
             val gun = Gun.registeredMap[offHandItem.getTag(Gun.gunIdTag)] ?: return@listenOnly
 
-            if (player.itemInMainHand.meta.getTag(reloadingTag)!!.toInt() == 1 || player.itemInMainHand.meta.getTag(ammoTag)!! == gun.ammo) {
+            if (player.itemInMainHand.meta.getTag(reloadingTag)!!.toInt() == 1 || player.itemInMainHand.meta.getTag(
+                    ammoTag
+                ) == gun.ammo
+            ) {
                 return@listenOnly
             }
 
-            player.itemInMainHand = player.itemInMainHand.withMeta { meta: ItemMetaBuilder ->
-                meta.set(ammoTag, 0)
-                meta.set(reloadingTag, 1)
+            player.itemInMainHand = player.itemInMainHand.withMeta<ItemMetaBuilder> {
+                it.set(ammoTag, 0)
+                it.set(reloadingTag, 1)
             }
 
             player.setCooldown(player.itemInMainHand.material, gun.reloadTime.toInt() / 50, true)
@@ -403,7 +435,14 @@ class LazerTagGame(option: GameOptions) : Game(option), PvpGame {
                     if (i <= 0) {
                         player.playSound(Sound.sound(SoundEvent.ENTITY_IRON_GOLEM_ATTACK, Sound.Source.PLAYER, 1f, 1f))
                         Manager.scheduler.buildTask {
-                            player.playSound(Sound.sound(SoundEvent.ENTITY_IRON_GOLEM_ATTACK, Sound.Source.PLAYER, 1f, 1f))
+                            player.playSound(
+                                Sound.sound(
+                                    SoundEvent.ENTITY_IRON_GOLEM_ATTACK,
+                                    Sound.Source.PLAYER,
+                                    1f,
+                                    1f
+                                )
+                            )
                         }.delay(Duration.ofMillis(50 * 3L)).schedule()
 
                         player.itemInMainHand = player.itemInMainHand.withMeta { meta: ItemMetaBuilder ->
@@ -429,7 +468,6 @@ class LazerTagGame(option: GameOptions) : Game(option), PvpGame {
         }
 
         listenOnly<PlayerMoveEvent> {
-            if (entity.instance!! != instance) return@listenOnly
             if (player.gameMode != GameMode.ADVENTURE) return@listenOnly
 
             if (newPosition.y() < 5) {
@@ -438,7 +476,6 @@ class LazerTagGame(option: GameOptions) : Game(option), PvpGame {
         }
 
         listenOnly<EntityDamageEvent> {
-            if (entity.instance!! != instance) return@listenOnly
             if (entity.entityType != EntityType.PLAYER) return@listenOnly
 
             if (damageType !is EntityDamage) {
@@ -458,31 +495,32 @@ class LazerTagGame(option: GameOptions) : Game(option), PvpGame {
 
             val rand = ThreadLocalRandom.current()
             val format = DecimalFormat("0.##")
-            val armourStand = Entity(EntityType.ARMOR_STAND)
 
-            armourStand.isAutoViewable = false
-            armourStand.isInvisible = true
-            armourStand.customName = Component.text("❤ ${format.format(damage)}", NamedTextColor.RED, TextDecoration.BOLD)
-            armourStand.isCustomNameVisible = true
-            armourStand.setNoGravity(true)
+            val healthEntity = Entity(EntityType.ARMOR_STAND)
+            val healthEntityMeta = healthEntity.entityMeta as ArmorStandMeta
 
-            val armourStandMeta = armourStand.entityMeta as ArmorStandMeta
-            armourStandMeta.setNotifyAboutChanges(false)
-            armourStandMeta.isMarker = true
-            armourStandMeta.isSmall = true
-            armourStandMeta.isHasNoBasePlate = true
-            armourStandMeta.setNotifyAboutChanges(true)
+            healthEntity.isAutoViewable = false
+            healthEntity.isInvisible = true
+            healthEntity.customName =
+                Component.text(
+                    "❤ ${format.format(damage)}",
+                    TextColor.lerp(damage / 20f, TextColor.color(255, 150, 150), NamedTextColor.DARK_RED),
+                    TextDecoration.BOLD
+                )
+            healthEntity.isCustomNameVisible = true
+            healthEntity.setNoGravity(true)
+            //healthEntityMeta.radius = 0f
 
-            armourStand.setInstance(
+            healthEntity.setInstance(
                 entity.instance!!,
-                entity.eyePosition().sub(
+                entity.position.sub(
                     rand.nextDouble(-0.5, 0.5),
-                    rand.nextDouble(0.5),
+                    rand.nextDouble(0.5) - 1,
                     rand.nextDouble(-0.5, 0.5)
                 )
             )
 
-            armourStand.addViewer(damager)
+            healthEntity.addViewer(damager)
 
             object : MinestomRunnable() {
                 var i = 1
@@ -490,19 +528,31 @@ class LazerTagGame(option: GameOptions) : Game(option), PvpGame {
 
                 override fun run() {
                     if (i > 10) {
-                        armourStand.remove()
+                        healthEntity.remove()
                         cancel()
                         return
                     }
 
-                    armourStand.position.add(0.0, accel, 0.0)
+                    healthEntity.teleport(healthEntity.position.add(0.0, accel, 0.0))
                     accel *= 0.60
 
                     i++
                 }
-            }.repeat(Duration.ofMillis(50 * 3L)).schedule()
+            }.repeat(Duration.ofMillis(50 * 3)).schedule()
         }
     }
 
-    private fun getRandomRespawnPosition(): Pos = MapManager.spawnPositionMap["dizzymc"]!!.random()
+    private fun getRandomRespawnPosition(): Pos {
+        return LazerTagExtension.config.spawnPositions["dizzymc"]?.random() ?: Pos(0.5, 10.0, 0.5)
+    }
+
+    override fun instanceCreate(): Instance {
+        val instance = Manager.instance.createInstanceContainer(
+            //Manager.dimensionType.getDimension(NamespaceID.from("fullbright"))!!
+        )
+        instance.chunkLoader = AnvilLoader("./maps/lazertag/dizzymc")
+
+        return instance
+    }
+
 }
