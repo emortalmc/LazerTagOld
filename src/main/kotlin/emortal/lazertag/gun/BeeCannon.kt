@@ -27,9 +27,9 @@ object BeeCannon : Gun("Bee Launcher") {
     override val color: TextColor = NamedTextColor.YELLOW
 
     override val damage = 100f
-    override val cooldown = 3000L
     override val ammo = 1
     override val reloadTime = 2300L
+    override val cooldown = reloadTime
 
     override val sound = Sound.sound(SoundEvent.ENTITY_BEE_HURT, Sound.Source.PLAYER, 1f, 1f)
 

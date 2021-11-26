@@ -21,7 +21,6 @@ import world.cepi.particle.Particle
 import world.cepi.particle.ParticleType
 import world.cepi.particle.data.OffsetAndSpeed
 import world.cepi.particle.showParticle
-import kotlin.math.min
 
 object BeeShotgun : Gun("Bee Keeper") {
 
@@ -88,7 +87,7 @@ object BeeShotgun : Gun("Bee Keeper") {
             entity.scheduleNextTick {
                 (entity as Player).damage(
                     DamageType.fromPlayer(player),
-                    min(damage / (projectile.getDistanceSquared(entity) / 1.75).toFloat(), damage)
+                    (damage / (projectile.getDistanceSquared(entity) / 1.75).toFloat()).coerceAtMost(damage)
                 )
             }
         }

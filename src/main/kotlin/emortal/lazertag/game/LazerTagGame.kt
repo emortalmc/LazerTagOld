@@ -502,25 +502,31 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
             healthEntity.isAutoViewable = false
             healthEntity.isInvisible = true
             healthEntity.customName =
-                Component.text(
-                    "❤ ${format.format(damage)}",
-                    TextColor.lerp(damage / 20f, TextColor.color(255, 150, 150), NamedTextColor.DARK_RED),
-                    TextDecoration.BOLD
-                )
+                Component.text()
+                    .append(Component.text("❤ "))
+                    .append(Component.text(format.format(damage), NamedTextColor.WHITE, TextDecoration.BOLD))
+                    .color(TextColor.lerp(damage / 20f, TextColor.color(255, 150, 150), NamedTextColor.DARK_RED))
+                    .build()
             healthEntity.isCustomNameVisible = true
             healthEntity.setNoGravity(true)
-            //healthEntityMeta.radius = 0f
+            healthEntityMeta.setNotifyAboutChanges(false)
+            healthEntityMeta.isMarker = true
+            healthEntityMeta.isSmall = true
+            healthEntityMeta.isHasNoBasePlate = true
+            healthEntityMeta.setNotifyAboutChanges(true)
 
             healthEntity.setInstance(
                 entity.instance!!,
                 entity.position.sub(
                     rand.nextDouble(-0.5, 0.5),
-                    rand.nextDouble(0.5) - 1,
+                    rand.nextDouble(0.5) - 0.5,
                     rand.nextDouble(-0.5, 0.5)
                 )
             )
 
             healthEntity.addViewer(damager)
+
+            healthEntity.scheduleRemove(Duration.ofSeconds(2))
 
             object : MinestomRunnable() {
                 var i = 1
@@ -528,10 +534,11 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
 
                 override fun run() {
                     if (i > 10) {
-                        healthEntity.remove()
                         cancel()
                         return
                     }
+
+                    player.sendMessage("$i")
 
                     healthEntity.teleport(healthEntity.position.add(0.0, accel, 0.0))
                     accel *= 0.60

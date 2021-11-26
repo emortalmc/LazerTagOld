@@ -24,7 +24,7 @@ import world.cepi.kstom.util.spread
 import world.cepi.particle.Particle
 import world.cepi.particle.ParticleType
 import world.cepi.particle.data.OffsetAndSpeed
-import world.cepi.particle.extra.DustTransition
+import world.cepi.particle.extra.Dust
 import world.cepi.particle.showParticle
 import world.cepi.particle.util.Vectors
 import kotlin.collections.set
@@ -94,10 +94,12 @@ sealed class Gun(val name: String, val customMeta: (ItemMetaBuilder) -> Unit = {
 
             instance.showParticle(
                 Particle.particle(
-                    type = ParticleType.DUST_COLOR_TRANSITION,
+                    type = ParticleType.DUST,
                     count = 1,
                     data = OffsetAndSpeed(0f, 0f, 0f, 0f),
-                    extraData = DustTransition(1f, 1f, 0f, 1f, 1f, 1f, scale = 1f)
+                    extraData = if (raycastResult.resultType != RaycastResultType.HIT_ENTITY)
+                        Dust(1f, 1f, 0f, scale = 0.4f)
+                    else Dust(1f, 0f, 0f, scale = 1f)
                 ),
                 Vectors(
                     eyePos.asVec(),
