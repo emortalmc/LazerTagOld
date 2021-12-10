@@ -48,19 +48,20 @@ class LazerTagExtension : Extension() {
             GameOptions(
                 maxPlayers = 15,
                 minPlayers = 1,
-                canJoinDuringGame = true
+                canJoinDuringGame = true,
+                showScoreboard = false,
             )
         )
 
         GunCommand.register()
 
-        logger.info("[LazerTagExtension] has been enabled!")
+        logger.info("[LazerTag] has been enabled!")
     }
 
     override fun terminate() {
         GunCommand.unregister()
 
-        logger.info("[LazerTagExtension] has been disabled!")
+        logger.info("[LazerTag] has been disabled!")
     }
 
 }

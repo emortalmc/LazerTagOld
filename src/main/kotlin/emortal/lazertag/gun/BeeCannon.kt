@@ -11,7 +11,6 @@ import net.minestom.server.entity.damage.DamageType
 import net.minestom.server.item.ItemMetaBuilder
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
-import net.minestom.server.tag.Tag
 import net.minestom.server.utils.time.TimeUnit
 import world.cepi.kstom.Manager
 import world.cepi.kstom.util.eyePosition
@@ -21,7 +20,7 @@ import world.cepi.particle.data.OffsetAndSpeed
 import world.cepi.particle.showParticle
 import kotlin.math.min
 
-object BeeCannon : Gun("Bee Launcher") {
+object BeeCannon : ProjectileGun("Bee Launcher") {
 
     override val material: Material = Material.HONEYCOMB
     override val color: TextColor = NamedTextColor.YELLOW
@@ -60,7 +59,7 @@ object BeeCannon : Gun("Bee Launcher") {
             )
         }.repeat(1, TimeUnit.SERVER_TICK).schedule()
 
-        projectile.setTag(Tag.Integer("taskID"), tickTask.id)
+        projectile.setTag(taskIdTag, tickTask.id)
 
         val newAmmo = player.itemInMainHand.meta.getTag(ammoTag)!! - 1
         renderAmmo(player, newAmmo)
@@ -71,8 +70,8 @@ object BeeCannon : Gun("Bee Launcher") {
         return damageMap
     }
 
-    override fun collide(player: Player, projectile: Entity) {
-        player.instance!!.showParticle(
+    override fun collide(shooter: Player, projectile: Entity) {
+        shooter.instance!!.showParticle(
             Particle.particle(
                 type = ParticleType.EXPLOSION_EMITTER,
                 count = 1,
@@ -80,13 +79,13 @@ object BeeCannon : Gun("Bee Launcher") {
             ),
             projectile.position.asVec()
         )
-        player.instance!!.playSound(Sound.sound(SoundEvent.ENTITY_GENERIC_EXPLODE, Sound.Source.PLAYER, 1f, 1f))
+        shooter.instance!!.playSound(Sound.sound(SoundEvent.ENTITY_GENERIC_EXPLODE, Sound.Source.PLAYER, 1f, 1f))
 
         val boundingBox = projectile.boundingBox.expand(8.0, 8.0, 8.0)
 
-        Manager.scheduler.getTask(projectile.getTag(Tag.Integer("taskID"))!!).cancel()
+        Manager.scheduler.getTask(projectile.getTag(taskIdTag)!!).cancel()
 
-        player.instance!!.entities
+        shooter.instance!!.entities
             .filterIsInstance<Player>()
             .filter { it.gameMode == GameMode.ADVENTURE }
             .filter { boundingBox.intersect(it.boundingBox) }
@@ -96,11 +95,11 @@ object BeeCannon : Gun("Bee Launcher") {
 
                 loopedPlayer.scheduleNextTick {
                     loopedPlayer.damage(
-                        DamageType.fromPlayer(player),
+                        DamageType.fromPlayer(shooter),
                         min(
                             damage / (projectile.getDistance(loopedPlayer) / 1.75).toFloat(),
                             damage
-                        ).coerceAtMost(if (loopedPlayer == player) 5f else 20f)
+                        ).coerceAtMost(if (loopedPlayer == shooter) 5f else 20f)
                     )
                 }
             }

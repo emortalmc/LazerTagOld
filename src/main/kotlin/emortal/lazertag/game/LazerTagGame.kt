@@ -11,6 +11,8 @@ import emortal.lazertag.gun.Gun.Companion.ammoTag
 import emortal.lazertag.gun.Gun.Companion.heldGun
 import emortal.lazertag.gun.Gun.Companion.lastShotTag
 import emortal.lazertag.gun.Gun.Companion.reloadingTag
+import emortal.lazertag.gun.ProjectileGun
+import emortal.lazertag.utils.cancel
 import emortal.lazertag.utils.setCooldown
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
@@ -35,6 +37,7 @@ import net.minestom.server.event.player.*
 import net.minestom.server.instance.AnvilLoader
 import net.minestom.server.instance.Instance
 import net.minestom.server.item.ItemMetaBuilder
+import net.minestom.server.message.Messenger.sendMessage
 import net.minestom.server.scoreboard.Sidebar
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
@@ -45,6 +48,7 @@ import world.cepi.kstom.adventure.asMini
 import world.cepi.kstom.event.listenOnly
 import world.cepi.kstom.item.and
 import world.cepi.kstom.util.MinestomRunnable
+import world.cepi.kstom.util.intersectAny
 import world.cepi.kstom.util.playSound
 import java.text.DecimalFormat
 import java.time.Duration
@@ -89,7 +93,6 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
         player.setTag(deathsTag, 0)
 
         player.respawnPoint = getRandomRespawnPosition()
-        if (player.instance!! != instance) player.setInstance(instance)
 
     }
 
@@ -377,35 +380,36 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
             val shooter: Player = Manager.connection.getPlayer(UUID.fromString(entity.getTag(Gun.playerUUIDTag)))!!
             val gun = Gun.registeredMap[entity.getTag(Gun.gunIdTag)!!] ?: return@listenOnly
 
+            if (gun !is ProjectileGun) return@listenOnly
+
             // TODO: Better collisions
-            if (entity.velocity.x() == 0.0 || entity.velocity.y() == 0.0 || entity.velocity.z() == 0.0) {
+
+            if (entity.velocity.x == 0.0 || entity.velocity.y == 0.0 || entity.velocity.z == 0.0) {
                 gun.collide(shooter, entity)
+                return@listenOnly
             }
             if (entity.aliveTicks > 20 * 3) {
                 gun.collide(shooter, entity)
+                return@listenOnly
             }
+
+            val intersectingPlayers = players
+                .filter { entity.boundingBox.intersect(it.boundingBox) && it.gameMode == GameMode.ADVENTURE }
+                // TODO: Make shooter not collide for first second .filter { it != shooter &&  }
+            if (intersectingPlayers.isEmpty()) return@listenOnly
+
+            gun.collideEntity(shooter, entity, intersectingPlayers)
         }
 
-        listenOnly<PlayerBlockBreakEvent> {
-            isCancelled = true
-        }
+        cancel<PlayerBlockBreakEvent>()
+        cancel<InventoryPreClickEvent>()
+        cancel<PlayerBlockBreakEvent>()
+        cancel<PlayerBlockPlaceEvent>()
+        cancel<ItemDropEvent>()
 
         listenOnly<PlayerChangeHeldSlotEvent> {
             isCancelled = true
             player.setHeldItemSlot(0)
-        }
-        listenOnly<InventoryPreClickEvent> {
-            isCancelled = true
-        }
-        listenOnly<PlayerBlockBreakEvent> {
-            isCancelled = true
-        }
-        listenOnly<PlayerBlockPlaceEvent> {
-            println("cancelled!")
-            isCancelled = true
-        }
-        listenOnly<ItemDropEvent> {
-            isCancelled = true
         }
 
         listenOnly<PlayerSwapItemEvent> {
@@ -441,7 +445,8 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                                     Sound.Source.PLAYER,
                                     1f,
                                     1f
-                                )
+                                ),
+                                Sound.Emitter.self()
                             )
                         }.delay(Duration.ofMillis(50 * 3L)).schedule()
 
@@ -457,10 +462,10 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                     }
 
                     gun.renderAmmo(player, gun.ammo - i)
-                    player.itemInMainHand = player.itemInMainHand.withMeta { meta: ItemMetaBuilder ->
-                        meta.set(ammoTag, gun.ammo - i)
+                    player.itemInMainHand = player.itemInMainHand.and {
+                        this.set(ammoTag, gun.ammo - i)
                     }
-                    player.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.PLAYER, 1f, 1f))
+                    player.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.PLAYER, 1f, 1f), Sound.Emitter.self())
 
                     i--
                 }

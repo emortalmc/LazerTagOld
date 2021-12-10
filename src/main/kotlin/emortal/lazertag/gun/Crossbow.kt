@@ -6,6 +6,8 @@ import net.kyori.adventure.text.format.TextColor
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.Player
+import net.minestom.server.entity.damage.DamageType
+import net.minestom.server.entity.metadata.arrow.ArrowMeta
 import net.minestom.server.entity.metadata.arrow.SpectralArrowMeta
 import net.minestom.server.item.ItemMetaBuilder
 import net.minestom.server.item.Material
@@ -17,7 +19,7 @@ import world.cepi.particle.ParticleType
 import world.cepi.particle.data.OffsetAndSpeed
 import world.cepi.particle.showParticle
 
-object Crossbow : Gun("Crossbow") {
+object Crossbow : ProjectileGun("Crossbow") {
 
     override val material: Material = Material.BOW
     override val color: TextColor = NamedTextColor.GOLD
@@ -32,8 +34,8 @@ object Crossbow : Gun("Crossbow") {
     override fun shoot(player: Player): HashMap<Player, Float> {
         val damageMap = HashMap<Player, Float>()
 
-        val projectile = Entity(EntityType.SPECTRAL_ARROW)
-        val projectilemeta = projectile.entityMeta as SpectralArrowMeta
+        val projectile = Entity(EntityType.ARROW)
+        val projectilemeta = projectile.entityMeta as ArrowMeta
 
         val velocity = player.position.direction().mul(50.0)
         projectile.velocity = velocity
@@ -52,8 +54,8 @@ object Crossbow : Gun("Crossbow") {
         return damageMap
     }
 
-    override fun collide(player: Player, projectile: Entity) {
-        player.instance!!.showParticle(
+    override fun collide(shooter: Player, projectile: Entity) {
+        shooter.instance!!.showParticle(
             Particle.particle(
                 type = ParticleType.EXPLOSION,
                 count = 1,
@@ -61,12 +63,24 @@ object Crossbow : Gun("Crossbow") {
             ),
             projectile.position.asVec()
         )
-        player.instance!!.playSound(
+        shooter.instance!!.playSound(
             Sound.sound(SoundEvent.ENTITY_ARROW_HIT, Sound.Source.PLAYER, 1f, 1f),
             projectile.position
         )
 
         projectile.remove()
+    }
+
+    override fun collideEntity(shooter: Player, projectile: Entity, hitPlayers: Collection<Player>) {
+
+        hitPlayers.forEach {
+            it.scheduleNextTick { _ ->
+                it.damage(DamageType.fromPlayer(shooter), damage)
+            }
+        }
+
+        projectile.remove()
+
     }
 
 }

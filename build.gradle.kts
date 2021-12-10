@@ -36,16 +36,17 @@ dependencies {
     // Use the Kotlin reflect library.
     compileOnly(kotlin("reflect"))
 
+    implementation("com.github.emortaldev:particable:e98f138cda")
     implementation("com.github.EmortalMC:Rayfast:07d8daf030")
-    compileOnly("com.github.Minestom:Minestom:cca614fea8")
-    compileOnly("com.github.EmortalMC:Immortal:ef116d2b19")
+    compileOnly("com.github.Minestom:Minestom:3843cacef5")
+    compileOnly("com.github.EmortalMC:Immortal:0fc8d6d833")
 
 
     // import kotlinx serialization
     compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1")
 
     // Use the JUpiter test library.
-    testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
 }
 tasks.withType<Test> {
     useJUnitPlatform()

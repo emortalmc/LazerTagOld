@@ -16,20 +16,22 @@ import net.minestom.server.tag.Tag
 import net.minestom.server.utils.time.TimeUnit
 import world.cepi.kstom.Manager
 import world.cepi.kstom.util.eyePosition
+import world.cepi.kstom.util.playSound
 import world.cepi.kstom.util.spread
 import world.cepi.particle.Particle
 import world.cepi.particle.ParticleType
 import world.cepi.particle.data.OffsetAndSpeed
 import world.cepi.particle.showParticle
+import kotlin.math.min
 
-object BeeShotgun : Gun("Bee Keeper") {
+object BeeShotgun : ProjectileGun("Bee Keeper") {
 
     override val material: Material = Material.BEEHIVE
     override val color: TextColor = NamedTextColor.YELLOW
 
     override val damage = 6f
     override val numberOfBullets = 7
-    override val spread = 0.2
+    override val spread = 0.15
     override val cooldown = 700L
     override val ammo = 4
     override val reloadTime = 1500L
@@ -46,6 +48,8 @@ object BeeShotgun : Gun("Bee Keeper") {
             val velocity = player.position.direction().spread(spread).mul(24.0)
             projectile.velocity = velocity
 
+            projectile.boundingBox = projectile.boundingBox.expand(0.5, 0.5, 0.5)
+
             projectile.setNoGravity(true)
             projectile.setInstance(player.instance!!, player.eyePosition())
 
@@ -57,7 +61,7 @@ object BeeShotgun : Gun("Bee Keeper") {
                 //player.instance!!.sendParticle(ParticleUtils.particle(Particle.LARGE_SMOKE, projectile.position, Vec.ZERO, 1, 0f))
             }.repeat(1, TimeUnit.SERVER_TICK).schedule()
 
-            projectile.setTag(Tag.Integer("taskID"), tickTask.id)
+            projectile.setTag(taskIdTag, tickTask.id)
         }
 
         val newAmmo = player.itemInMainHand.meta.getTag(ammoTag)!! - 1
@@ -69,8 +73,8 @@ object BeeShotgun : Gun("Bee Keeper") {
         return HashMap()
     }
 
-    override fun collide(player: Player, projectile: Entity) {
-        player.instance!!.showParticle(
+    override fun collide(shooter: Player, projectile: Entity) {
+        shooter.instance!!.showParticle(
             Particle.particle(
                 type = ParticleType.EXPLOSION,
                 count = 1,
@@ -78,19 +82,25 @@ object BeeShotgun : Gun("Bee Keeper") {
             ),
             projectile.position.asVec()
         )
-        player.instance!!.playSound(Sound.sound(SoundEvent.ENTITY_BEE_STING, Sound.Source.PLAYER, 1f, 1f))
+        shooter.instance!!.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.PLAYER, 0.25f, 1.5f), projectile.position)
 
-        Manager.scheduler.getTask(projectile.getTag(Tag.Integer("taskID"))!!).cancel()
+        Manager.scheduler.getTask(projectile.getTag(taskIdTag)!!).cancel()
 
-        val boundingBox = projectile.boundingBox.expand(5.0, 5.0, 5.0)
-        for (entity in player.instance!!.entities.filter { boundingBox.intersect(it.boundingBox) && it is Player && it.gameMode == GameMode.ADVENTURE }) {
-            entity.scheduleNextTick {
-                (entity as Player).damage(
-                    DamageType.fromPlayer(player),
-                    (damage / (projectile.getDistanceSquared(entity) / 1.75).toFloat()).coerceAtMost(damage)
-                )
+        shooter.instance!!.players
+            .filter { it.gameMode == GameMode.ADVENTURE }
+            .filter { projectile.boundingBox.intersect(it.boundingBox) }
+            .forEach { loopedPlayer ->
+                if (loopedPlayer == shooter && projectile.aliveTicks < 20) return@forEach
+
+                shooter.instance!!.playSound(Sound.sound(SoundEvent.ENTITY_BEE_STING, Sound.Source.PLAYER, 1f, 1f), projectile.position)
+
+                loopedPlayer.scheduleNextTick {
+                    loopedPlayer.damage(
+                        DamageType.fromPlayer(shooter),
+                        (damage / (projectile.getDistanceSquared(it) / 1.75).toFloat()).coerceAtMost(damage)
+                    )
+                }
             }
-        }
 
         projectile.remove()
     }

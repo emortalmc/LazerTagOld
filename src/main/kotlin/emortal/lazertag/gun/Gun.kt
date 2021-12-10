@@ -29,17 +29,19 @@ import world.cepi.particle.showParticle
 import world.cepi.particle.util.Vectors
 import kotlin.collections.set
 
-sealed class Gun(val name: String, val customMeta: (ItemMetaBuilder) -> Unit = {}) {
+sealed class Gun(val name: String, private val customMeta: (ItemMetaBuilder) -> Unit = {}) {
 
     companion object {
         val gunIdTag = Tag.String("gunID")
+        val taskIdTag = Tag.Integer("taskID")
         val playerUUIDTag = Tag.String("playerUUID")
         val lastShotTag = Tag.Long("lastShot")
         val reloadingTag = Tag.Byte("reloading")
         val ammoTag = Tag.Integer("ammo")
 
         val registeredMap: Map<String, Gun>
-            get() = Gun::class.sealedSubclasses.mapNotNull { it.objectInstance }.associateBy { it.name }
+            get() = Gun::class.sealedSubclasses.mapNotNull { it.objectInstance }.associateBy { it.name } +
+                    ProjectileGun::class.sealedSubclasses.mapNotNull { it.objectInstance }.associateBy { it.name }
 
         var Player.heldGun: Gun?
             get() = registeredMap.get(this.itemInMainHand.getTag(gunIdTag))
@@ -140,10 +142,6 @@ sealed class Gun(val name: String, val customMeta: (ItemMetaBuilder) -> Unit = {
     }
 
     open fun shootAfter(player: Player) {
-
-    }
-
-    open fun collide(player: Player, projectile: Entity) {
 
     }
 
