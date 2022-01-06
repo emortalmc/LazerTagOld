@@ -1,4 +1,4 @@
-package emortal.lazertag.gun
+package dev.emortal.lazertag.gun
 
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.format.NamedTextColor
@@ -12,7 +12,7 @@ object Rifle : Gun("Rifle") {
     override val color: TextColor = NamedTextColor.GRAY
 
     override val damage = 6.9f
-    override val cooldown = 300L
+    override val cooldown = 5
     override val ammo = 30
     override val maxDistance = 75.0
 

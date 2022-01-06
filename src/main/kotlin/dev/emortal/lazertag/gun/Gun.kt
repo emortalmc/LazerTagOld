@@ -1,14 +1,14 @@
-package emortal.lazertag.gun
+package dev.emortal.lazertag.gun
 
-import emortal.lazertag.raycast.RaycastResultType
-import emortal.lazertag.raycast.RaycastUtil
-import emortal.lazertag.utils.sendBlockDamage
+import dev.emortal.immortal.util.progressBar
+import dev.emortal.lazertag.raycast.RaycastResultType
+import dev.emortal.lazertag.raycast.RaycastUtil
+import dev.emortal.lazertag.utils.sendBlockDamage
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
-import net.minestom.server.entity.Entity
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
@@ -44,7 +44,7 @@ sealed class Gun(val name: String, private val customMeta: (ItemMetaBuilder) -> 
                     ProjectileGun::class.sealedSubclasses.mapNotNull { it.objectInstance }.associateBy { it.name }
 
         var Player.heldGun: Gun?
-            get() = registeredMap.get(this.itemInMainHand.getTag(gunIdTag))
+            get() = registeredMap[itemInMainHand.getTag(gunIdTag)]
             set(value) {
                 this.itemInMainHand = value?.item ?: ItemStack.AIR
             }
@@ -69,13 +69,13 @@ sealed class Gun(val name: String, private val customMeta: (ItemMetaBuilder) -> 
     open val damage: Float = 1f // PER BULLET!
     open val numberOfBullets: Int = 1
     open val spread: Double = 0.0
-    open val cooldown: Long = 1L // In millis
+    open val cooldown: Int = 1 // In ticks
     open val ammo: Int = 10
-    open val reloadTime: Long = 2000L // In millis
+    open val reloadTime: Int = 40 // In ticks
     open val maxDistance: Double = 10.0
 
     open val burstAmount: Int = 1
-    open val burstInterval: Long = 0 // In ticks
+    open val burstInterval: Int = 0 // In ticks
 
     open val sound: Sound = Sound.sound(SoundEvent.ENTITY_BLAZE_HURT, Sound.Source.PLAYER, 1f, 1f)
 
@@ -99,9 +99,7 @@ sealed class Gun(val name: String, private val customMeta: (ItemMetaBuilder) -> 
                     type = ParticleType.DUST,
                     count = 1,
                     data = OffsetAndSpeed(0f, 0f, 0f, 0f),
-                    extraData = if (raycastResult.resultType != RaycastResultType.HIT_ENTITY)
-                        Dust(1f, 1f, 0f, scale = 0.4f)
-                    else Dust(1f, 0f, 0f, scale = 1f)
+                    extraData = Dust(1f, 1f, 0f, scale = 0.4f)
                 ),
                 Vectors(
                     eyePos.asVec(),
@@ -146,22 +144,16 @@ sealed class Gun(val name: String, private val customMeta: (ItemMetaBuilder) -> 
     }
 
     open fun renderAmmo(player: Player, currentAmmo: Int) {
-        val blocks = 40
-        val ammoPercentage: Float = currentAmmo.toFloat() / ammo.toFloat()
-        val completedBlocks: Int = (ammoPercentage * blocks).toInt()
-        val incompleteBlocks: Int = blocks - completedBlocks
+        val progressBar =
+            progressBar(currentAmmo.toFloat() / ammo.toFloat(), 40, "|", NamedTextColor.GOLD, NamedTextColor.DARK_GRAY)
 
         player.sendActionBar(
-            Component.text()
-                .append(Component.text("|".repeat(completedBlocks), NamedTextColor.GOLD))
-                .append(Component.text("|".repeat(incompleteBlocks), NamedTextColor.DARK_GRAY))
-                .append(
-                    Component.text(
-                        " ${String.format("%0${ammo.toString().length}d", currentAmmo)}/$ammo",
-                        NamedTextColor.DARK_GRAY
-                    )
+            progressBar.append(
+                Component.text(
+                    " ${String.format("%0${ammo.toString().length}d", currentAmmo)}/$ammo",
+                    NamedTextColor.DARK_GRAY
                 )
-                .build()
+            )
         )
     }
 }

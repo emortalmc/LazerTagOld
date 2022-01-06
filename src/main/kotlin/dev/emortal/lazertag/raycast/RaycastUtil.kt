@@ -1,4 +1,4 @@
-package emortal.lazertag.raycast
+package dev.emortal.lazertag.raycast
 
 import dev.emortal.rayfast.area.area3d.Area3d
 import dev.emortal.rayfast.area.area3d.Area3dRectangularPrism

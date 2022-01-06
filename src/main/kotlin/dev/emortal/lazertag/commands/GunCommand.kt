@@ -1,8 +1,7 @@
-package emortal.lazertag.commands
+package dev.emortal.lazertag.commands
 
-import emortal.lazertag.gun.Gun
-import emortal.lazertag.gun.Gun.Companion.heldGun
-import emortal.lazertag.gun.ProjectileGun
+import dev.emortal.lazertag.gun.Gun
+import dev.emortal.lazertag.gun.Gun.Companion.heldGun
 import net.minestom.server.command.builder.arguments.ArgumentType
 import world.cepi.kstom.command.arguments.suggest
 import world.cepi.kstom.command.kommand.Kommand

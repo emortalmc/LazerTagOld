@@ -1,4 +1,4 @@
-package emortal.lazertag.gun
+package dev.emortal.lazertag.gun
 
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.format.NamedTextColor
@@ -20,14 +20,14 @@ import world.cepi.particle.data.OffsetAndSpeed
 import world.cepi.particle.showParticle
 import kotlin.math.min
 
-object BeeCannon : ProjectileGun("Bee Launcher") {
+object RocketLauncher : ProjectileGun("Bee Gun") {
 
     override val material: Material = Material.HONEYCOMB
     override val color: TextColor = NamedTextColor.YELLOW
 
     override val damage = 100f
     override val ammo = 1
-    override val reloadTime = 2300L
+    override val reloadTime = 50
     override val cooldown = reloadTime
 
     override val sound = Sound.sound(SoundEvent.ENTITY_BEE_HURT, Sound.Source.PLAYER, 1f, 1f)
@@ -59,7 +59,7 @@ object BeeCannon : ProjectileGun("Bee Launcher") {
             )
         }.repeat(1, TimeUnit.SERVER_TICK).schedule()
 
-        projectile.setTag(taskIdTag, tickTask.id)
+        entityTaskMap[projectile] = tickTask
 
         val newAmmo = player.itemInMainHand.meta.getTag(ammoTag)!! - 1
         renderAmmo(player, newAmmo)
@@ -83,7 +83,7 @@ object BeeCannon : ProjectileGun("Bee Launcher") {
 
         val boundingBox = projectile.boundingBox.expand(8.0, 8.0, 8.0)
 
-        Manager.scheduler.getTask(projectile.getTag(taskIdTag)!!).cancel()
+        entityTaskMap[projectile]?.cancel()
 
         shooter.instance!!.entities
             .filterIsInstance<Player>()

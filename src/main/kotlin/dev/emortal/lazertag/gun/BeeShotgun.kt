@@ -1,4 +1,4 @@
-package emortal.lazertag.gun
+package dev.emortal.lazertag.gun
 
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.format.NamedTextColor
@@ -12,7 +12,6 @@ import net.minestom.server.entity.metadata.animal.BeeMeta
 import net.minestom.server.item.ItemMetaBuilder
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
-import net.minestom.server.tag.Tag
 import net.minestom.server.utils.time.TimeUnit
 import world.cepi.kstom.Manager
 import world.cepi.kstom.util.eyePosition
@@ -22,7 +21,6 @@ import world.cepi.particle.Particle
 import world.cepi.particle.ParticleType
 import world.cepi.particle.data.OffsetAndSpeed
 import world.cepi.particle.showParticle
-import kotlin.math.min
 
 object BeeShotgun : ProjectileGun("Bee Keeper") {
 
@@ -32,9 +30,9 @@ object BeeShotgun : ProjectileGun("Bee Keeper") {
     override val damage = 6f
     override val numberOfBullets = 7
     override val spread = 0.15
-    override val cooldown = 700L
+    override val cooldown = 15
     override val ammo = 4
-    override val reloadTime = 1500L
+    override val reloadTime = 30
 
     override val sound = Sound.sound(SoundEvent.ENTITY_BEE_HURT, Sound.Source.PLAYER, 1f, 1f)
 
@@ -61,7 +59,7 @@ object BeeShotgun : ProjectileGun("Bee Keeper") {
                 //player.instance!!.sendParticle(ParticleUtils.particle(Particle.LARGE_SMOKE, projectile.position, Vec.ZERO, 1, 0f))
             }.repeat(1, TimeUnit.SERVER_TICK).schedule()
 
-            projectile.setTag(taskIdTag, tickTask.id)
+            entityTaskMap[projectile] = tickTask
         }
 
         val newAmmo = player.itemInMainHand.meta.getTag(ammoTag)!! - 1
@@ -82,9 +80,12 @@ object BeeShotgun : ProjectileGun("Bee Keeper") {
             ),
             projectile.position.asVec()
         )
-        shooter.instance!!.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.PLAYER, 0.25f, 1.5f), projectile.position)
+        shooter.instance!!.playSound(
+            Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.PLAYER, 0.25f, 1.5f),
+            projectile.position
+        )
 
-        Manager.scheduler.getTask(projectile.getTag(taskIdTag)!!).cancel()
+        entityTaskMap[projectile]?.cancel()
 
         shooter.instance!!.players
             .filter { it.gameMode == GameMode.ADVENTURE }
@@ -92,7 +93,10 @@ object BeeShotgun : ProjectileGun("Bee Keeper") {
             .forEach { loopedPlayer ->
                 if (loopedPlayer == shooter && projectile.aliveTicks < 20) return@forEach
 
-                shooter.instance!!.playSound(Sound.sound(SoundEvent.ENTITY_BEE_STING, Sound.Source.PLAYER, 1f, 1f), projectile.position)
+                shooter.instance!!.playSound(
+                    Sound.sound(SoundEvent.ENTITY_BEE_STING, Sound.Source.PLAYER, 1f, 1f),
+                    projectile.position
+                )
 
                 loopedPlayer.scheduleNextTick {
                     loopedPlayer.damage(

@@ -1,4 +1,4 @@
-package emortal.lazertag.config
+package dev.emortal.lazertag.config
 
 import kotlinx.serialization.Serializable
 import net.minestom.server.coordinate.Pos

@@ -1,12 +1,12 @@
-package emortal.lazertag
+package dev.emortal.lazertag
 
 import dev.emortal.immortal.game.GameManager
 import dev.emortal.immortal.game.GameOptions
 import dev.emortal.immortal.game.WhenToRegisterEvents
-import emortal.lazertag.commands.GunCommand
-import emortal.lazertag.config.ConfigurationHelper
-import emortal.lazertag.config.LazerTagConfig
-import emortal.lazertag.game.LazerTagGame
+import dev.emortal.lazertag.commands.GunCommand
+import dev.emortal.lazertag.config.ConfigurationHelper
+import dev.emortal.lazertag.config.LazerTagConfig
+import dev.emortal.lazertag.game.LazerTagGame
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.extensions.Extension
 import world.cepi.kstom.adventure.asMini
@@ -49,7 +49,7 @@ class LazerTagExtension : Extension() {
                 maxPlayers = 15,
                 minPlayers = 1,
                 canJoinDuringGame = true,
-                showScoreboard = false,
+                showScoreboard = true,
             )
         )
 

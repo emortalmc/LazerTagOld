@@ -1,4 +1,4 @@
-package emortal.lazertag.game
+package dev.emortal.lazertag.game
 
 enum class TeamType {
     TWO_TEAMS,

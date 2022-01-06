@@ -1,4 +1,4 @@
-package emortal.lazertag.utils
+package dev.emortal.lazertag.utils
 
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode

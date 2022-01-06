@@ -2,11 +2,11 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     // Apply the Kotlin JVM plugin to add support for Kotlin.
-    id("org.jetbrains.kotlin.jvm") version "1.6.0"
+    id("org.jetbrains.kotlin.jvm") version "1.6.10"
     // Kotlinx serialization for any data format
-    kotlin("plugin.serialization") version "1.6.0"
+    kotlin("plugin.serialization") version "1.6.10"
     // Shade the plugin
-    id("com.github.johnrengelman.shadow") version "7.1.0"
+    id("com.github.johnrengelman.shadow") version "7.1.1"
     // Allow publishing
     `maven-publish`
 
@@ -38,12 +38,12 @@ dependencies {
 
     implementation("com.github.emortaldev:particable:e98f138cda")
     implementation("com.github.EmortalMC:Rayfast:07d8daf030")
-    compileOnly("com.github.Minestom:Minestom:3843cacef5")
-    compileOnly("com.github.EmortalMC:Immortal:0fc8d6d833")
+    compileOnly("com.github.emortaldev:Minestom:78aaa3e629")
+    compileOnly("com.github.EmortalMC:Immortal:5133ba4779")
 
 
     // import kotlinx serialization
-    compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1")
+    compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
 
     // Use the JUpiter test library.
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")

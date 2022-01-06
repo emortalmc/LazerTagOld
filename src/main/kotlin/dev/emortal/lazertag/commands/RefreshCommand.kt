@@ -1,14 +1,15 @@
-package emortal.lazertag.commands
+package dev.emortal.lazertag.commands
 
-import emortal.lazertag.LazerTagExtension
-import emortal.lazertag.config.ConfigurationHelper
-import emortal.lazertag.config.LazerTagConfig
+import dev.emortal.lazertag.LazerTagExtension
+import dev.emortal.lazertag.config.ConfigurationHelper
+import dev.emortal.lazertag.config.LazerTagConfig
 import net.minestom.server.coordinate.Pos
 import world.cepi.kstom.command.kommand.Kommand
 
 object RefreshCommand : Kommand({
     default {
-        LazerTagExtension.config = ConfigurationHelper.initConfigFile(LazerTagExtension.configPath, LazerTagConfig())
+        LazerTagExtension.config =
+            ConfigurationHelper.initConfigFile(LazerTagExtension.configPath, LazerTagConfig())
 
         LazerTagExtension.maps.forEach {
             if (LazerTagExtension.config.spawnPositions.contains(it)) return@forEach
@@ -17,7 +18,10 @@ object RefreshCommand : Kommand({
             sender.sendMessage("Creating map config for '${it}'")
         }
 
-        ConfigurationHelper.writeObjectToPath(LazerTagExtension.configPath, LazerTagExtension.config)
+        ConfigurationHelper.writeObjectToPath(
+            LazerTagExtension.configPath,
+            LazerTagExtension.config
+        )
 
         sender.sendMessage("Refreshed spawn locations")
     }

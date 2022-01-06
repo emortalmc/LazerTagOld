@@ -1,4 +1,4 @@
-package emortal.lazertag.gun
+package dev.emortal.lazertag.gun
 
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.format.NamedTextColor
@@ -8,7 +8,6 @@ import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.Player
 import net.minestom.server.entity.damage.DamageType
 import net.minestom.server.entity.metadata.arrow.ArrowMeta
-import net.minestom.server.entity.metadata.arrow.SpectralArrowMeta
 import net.minestom.server.item.ItemMetaBuilder
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
@@ -18,18 +17,19 @@ import world.cepi.particle.Particle
 import world.cepi.particle.ParticleType
 import world.cepi.particle.data.OffsetAndSpeed
 import world.cepi.particle.showParticle
+import java.time.Duration
 
-object Crossbow : ProjectileGun("Crossbow") {
+object Bow : ProjectileGun("The Bee's Knees") {
 
     override val material: Material = Material.BOW
     override val color: TextColor = NamedTextColor.GOLD
 
     override val damage = 999f
     override val ammo = 1
-    override val reloadTime = 500L
+    override val reloadTime = 10
     override val cooldown = reloadTime
 
-    override val sound = Sound.sound(SoundEvent.ITEM_CROSSBOW_SHOOT, Sound.Source.PLAYER, 1f, 1f)
+    override val sound = Sound.sound(SoundEvent.ENTITY_ARROW_SHOOT, Sound.Source.PLAYER, 1f, 1f)
 
     override fun shoot(player: Player): HashMap<Player, Float> {
         val damageMap = HashMap<Player, Float>()
@@ -37,10 +37,17 @@ object Crossbow : ProjectileGun("Crossbow") {
         val projectile = Entity(EntityType.ARROW)
         val projectilemeta = projectile.entityMeta as ArrowMeta
 
+        projectilemeta.isCritical = true
+
         val velocity = player.position.direction().mul(50.0)
         projectile.velocity = velocity
+        projectile.boundingBox = projectile.boundingBox.expand(0.75, 0.75, 0.75)
 
         projectile.setInstance(player.instance!!, player.eyePosition())
+        projectile.askSynchronization()
+
+
+        projectile.scheduleRemove(Duration.ofSeconds(3))
 
         projectile.setTag(playerUUIDTag, player.uuid.toString())
         projectile.setTag(gunIdTag, this.name)
