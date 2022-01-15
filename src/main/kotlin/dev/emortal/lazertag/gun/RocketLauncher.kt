@@ -37,7 +37,6 @@ object RocketLauncher : ProjectileGun("Bee Gun") {
 
         val projectile = Entity(EntityType.BEE)
 
-
         val velocity = player.position.direction().mul(30.0)
         projectile.velocity = velocity
 

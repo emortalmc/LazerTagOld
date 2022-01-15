@@ -38,7 +38,7 @@ object RaycastUtil {
     val Entity.area3d: Area3d
         get() = Area3d.CONVERTER.from(boundingBox)
 
-    fun Entity.hasLineOfSight(entity: Entity, maxDistance: Double = 100.0): Boolean {
+    fun Entity.fastHasLineOfSight(entity: Entity): Boolean {
         val (x, y, z) = this
 
         val direction = this.position.asVec().sub(entity.position.asVec()).normalize()

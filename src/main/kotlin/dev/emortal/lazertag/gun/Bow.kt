@@ -26,7 +26,7 @@ object Bow : ProjectileGun("The Bee's Knees") {
 
     override val damage = 999f
     override val ammo = 1
-    override val reloadTime = 10
+    override val reloadTime = 40
     override val cooldown = reloadTime
 
     override val sound = Sound.sound(SoundEvent.ENTITY_ARROW_SHOOT, Sound.Source.PLAYER, 1f, 1f)
@@ -44,9 +44,6 @@ object Bow : ProjectileGun("The Bee's Knees") {
         projectile.boundingBox = projectile.boundingBox.expand(0.75, 0.75, 0.75)
 
         projectile.setInstance(player.instance!!, player.eyePosition())
-        projectile.askSynchronization()
-
-
         projectile.scheduleRemove(Duration.ofSeconds(3))
 
         projectile.setTag(playerUUIDTag, player.uuid.toString())
@@ -81,6 +78,14 @@ object Bow : ProjectileGun("The Bee's Knees") {
     override fun collideEntity(shooter: Player, projectile: Entity, hitPlayers: Collection<Player>) {
 
         hitPlayers.forEach {
+            val headshot = (it.position.y + 1.25) < projectile.position.y()
+
+            if (headshot) {
+                shooter.playSound(
+                    Sound.sound(SoundEvent.BLOCK_GLASS_BREAK, Sound.Source.BLOCK, 1.5f, 0.8f)
+                )
+            }
+
             it.scheduleNextTick { _ ->
                 it.damage(DamageType.fromPlayer(shooter), damage)
             }

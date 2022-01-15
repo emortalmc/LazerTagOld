@@ -15,10 +15,12 @@ object Minigun : Gun("Lazer Minigun") {
     override val cooldown = 3
     override val ammo = 50
     override val reloadTime = 50
-    override val maxDistance = 30.0
+    override val maxDistance = 40.0
 
     override val burstAmount = 5
     override val burstInterval = 1
+
+    override val spread = 0.03
 
     override val sound = Sound.sound(SoundEvent.ENTITY_ARMOR_STAND_HIT, Sound.Source.PLAYER, 1f, 1f)
 
