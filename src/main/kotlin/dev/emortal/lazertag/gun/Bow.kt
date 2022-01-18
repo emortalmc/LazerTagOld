@@ -41,7 +41,6 @@ object Bow : ProjectileGun("The Bee's Knees") {
 
         val velocity = player.position.direction().mul(50.0)
         projectile.velocity = velocity
-        projectile.boundingBox = projectile.boundingBox.expand(0.75, 0.75, 0.75)
 
         projectile.setInstance(player.instance!!, player.eyePosition())
         projectile.scheduleRemove(Duration.ofSeconds(3))
@@ -76,6 +75,8 @@ object Bow : ProjectileGun("The Bee's Knees") {
     }
 
     override fun collideEntity(shooter: Player, projectile: Entity, hitPlayers: Collection<Player>) {
+
+        projectile.boundingBox = projectile.boundingBox.expand(0.75, 0.75, 0.75)
 
         hitPlayers.forEach {
             val headshot = (it.position.y + 1.25) < projectile.position.y()

@@ -11,10 +11,11 @@ object Rifle : Gun("Rifle") {
     override val material: Material = Material.STONE_HOE
     override val color: TextColor = NamedTextColor.GRAY
 
-    override val damage = 6.9f
+    override val damage = 5f
     override val cooldown = 5
-    override val ammo = 30
-    override val maxDistance = 75.0
+    override val ammo = 15
+    override val reloadTime = 50
+    override val maxDistance = 100.0
 
     override val sound = Sound.sound(SoundEvent.ENTITY_PLAYER_BIG_FALL, Sound.Source.PLAYER, 1f, 0.75f)
 

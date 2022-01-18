@@ -1,5 +1,7 @@
 package dev.emortal.lazertag.raycast
 
+import dev.emortal.lazertag.game.LazerTagGame
+import dev.emortal.lazertag.utils.breakBlock
 import dev.emortal.rayfast.area.area3d.Area3d
 import dev.emortal.rayfast.area.area3d.Area3dRectangularPrism
 import dev.emortal.rayfast.grid.GridCast
@@ -9,6 +11,7 @@ import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
 import net.minestom.server.instance.Instance
+import net.minestom.server.instance.block.Block
 import world.cepi.kstom.util.component1
 import world.cepi.kstom.util.component2
 import world.cepi.kstom.util.component3
@@ -58,9 +61,16 @@ object RaycastUtil {
 
         while (gridIterator.hasNext()) {
             val gridUnit = gridIterator.next()
-            val hitBlock = instance.getBlock(gridUnit[0].toInt(), gridUnit[1].toInt(), gridUnit[2].toInt())
-            if (hitBlock.isSolid) {
-                return Pos(gridUnit[0], gridUnit[1], gridUnit[2])
+            val pos = Pos(gridUnit[0], gridUnit[1], gridUnit[2])
+            val hitBlock = instance.getBlock(pos)
+
+            if (LazerTagGame.destructableBlocks.contains(hitBlock.id())) {
+                instance.setBlock(pos, Block.AIR)
+                instance.breakBlock(pos, hitBlock)
+            }
+
+            if (LazerTagGame.collidableBlocks.contains(hitBlock.id())) {
+                return pos
             }
         }
 

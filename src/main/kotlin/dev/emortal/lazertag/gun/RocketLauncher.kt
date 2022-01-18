@@ -1,5 +1,6 @@
 package dev.emortal.lazertag.gun
 
+import dev.emortal.immortal.util.MinestomRunnable
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
@@ -18,6 +19,7 @@ import world.cepi.particle.Particle
 import world.cepi.particle.ParticleType
 import world.cepi.particle.data.OffsetAndSpeed
 import world.cepi.particle.showParticle
+import java.time.Duration
 import kotlin.math.min
 
 object RocketLauncher : ProjectileGun("Bee Gun") {
@@ -46,17 +48,19 @@ object RocketLauncher : ProjectileGun("Bee Gun") {
         projectile.setTag(playerUUIDTag, player.uuid.toString())
         projectile.setTag(gunIdTag, this.name)
 
-        val tickTask = Manager.scheduler.buildTask {
-            projectile.velocity = velocity
-            player.instance!!.showParticle(
-                Particle.particle(
-                    type = ParticleType.LARGE_SMOKE,
-                    count = 1,
-                    data = OffsetAndSpeed(0.2f, 0.2f, 0.2f, 0.01f),
-                ),
-                projectile.position.asVec()
-            )
-        }.repeat(1, TimeUnit.SERVER_TICK).schedule()
+        val tickTask = object : MinestomRunnable(repeat = Duration.ofMillis(50)) {
+            override fun run() {
+                projectile.velocity = velocity
+                player.instance!!.showParticle(
+                    Particle.particle(
+                        type = ParticleType.LARGE_SMOKE,
+                        count = 1,
+                        data = OffsetAndSpeed()
+                    ),
+                    projectile.position.asVec()
+                )
+            }
+        }
 
         entityTaskMap[projectile] = tickTask
 

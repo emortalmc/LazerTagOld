@@ -1,5 +1,6 @@
 package dev.emortal.lazertag.gun
 
+import dev.emortal.immortal.util.MinestomRunnable
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
@@ -12,8 +13,6 @@ import net.minestom.server.entity.metadata.animal.BeeMeta
 import net.minestom.server.item.ItemMetaBuilder
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
-import net.minestom.server.utils.time.TimeUnit
-import world.cepi.kstom.Manager
 import world.cepi.kstom.util.eyePosition
 import world.cepi.kstom.util.playSound
 import world.cepi.kstom.util.spread
@@ -21,18 +20,20 @@ import world.cepi.particle.Particle
 import world.cepi.particle.ParticleType
 import world.cepi.particle.data.OffsetAndSpeed
 import world.cepi.particle.showParticle
+import java.time.Duration
 
 object BeeShotgun : ProjectileGun("Bee Keeper") {
 
     override val material: Material = Material.BEEHIVE
     override val color: TextColor = NamedTextColor.YELLOW
 
-    override val damage = 6f
-    override val numberOfBullets = 7
-    override val spread = 0.15
+    override val damage = 3f
+    override val numberOfBullets = 15
+    override val spread = 0.07
     override val cooldown = 15
     override val ammo = 4
     override val reloadTime = 30
+    override val freshReload = false
 
     override val sound = Sound.sound(SoundEvent.ENTITY_BEE_HURT, Sound.Source.PLAYER, 1f, 1f)
 
@@ -46,7 +47,7 @@ object BeeShotgun : ProjectileGun("Bee Keeper") {
             val velocity = player.position.direction().spread(spread).mul(24.0)
             projectile.velocity = velocity
 
-            projectile.boundingBox = projectile.boundingBox.expand(0.5, 0.5, 0.5)
+            projectile.boundingBox = projectile.boundingBox.expand(1.0, 1.0, 1.0)
 
             projectile.setNoGravity(true)
             projectile.setInstance(player.instance!!, player.eyePosition())
@@ -54,10 +55,11 @@ object BeeShotgun : ProjectileGun("Bee Keeper") {
             projectile.setTag(playerUUIDTag, player.uuid.toString())
             projectile.setTag(gunIdTag, this.name)
 
-            val tickTask = Manager.scheduler.buildTask {
-                projectile.velocity = velocity
-                //player.instance!!.sendParticle(ParticleUtils.particle(Particle.LARGE_SMOKE, projectile.position, Vec.ZERO, 1, 0f))
-            }.repeat(1, TimeUnit.SERVER_TICK).schedule()
+            val tickTask = object : MinestomRunnable(repeat = Duration.ofMillis(50)) {
+                override fun run() {
+                    projectile.velocity = velocity
+                }
+            }
 
             entityTaskMap[projectile] = tickTask
         }
@@ -87,12 +89,12 @@ object BeeShotgun : ProjectileGun("Bee Keeper") {
 
         entityTaskMap[projectile]?.cancel()
 
+        projectile.boundingBox = projectile.boundingBox.expand(1.0, 1.0, 1.0)
+
         shooter.instance!!.players
             .filter { it.gameMode == GameMode.ADVENTURE }
             .filter { projectile.boundingBox.intersect(it.boundingBox) }
             .forEach { loopedPlayer ->
-                if (loopedPlayer == shooter && projectile.aliveTicks < 20) return@forEach
-
                 shooter.instance!!.playSound(
                     Sound.sound(SoundEvent.ENTITY_BEE_STING, Sound.Source.PLAYER, 1f, 1f),
                     projectile.position

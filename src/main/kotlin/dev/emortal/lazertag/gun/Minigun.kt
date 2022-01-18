@@ -11,10 +11,10 @@ object Minigun : Gun("Lazer Minigun") {
     override val material: Material = Material.DIAMOND_SHOVEL
     override val color: TextColor = NamedTextColor.AQUA
 
-    override val damage = 1.5f
+    override val damage = 0.75f
     override val cooldown = 3
     override val ammo = 50
-    override val reloadTime = 50
+    override val reloadTime = 80
     override val maxDistance = 40.0
 
     override val burstAmount = 5

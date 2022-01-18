@@ -18,6 +18,7 @@ import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
+import world.cepi.kstom.item.item
 import world.cepi.kstom.util.asVec
 import world.cepi.kstom.util.eyePosition
 import world.cepi.kstom.util.playSound
@@ -25,10 +26,9 @@ import world.cepi.kstom.util.spread
 import world.cepi.particle.Particle
 import world.cepi.particle.ParticleType
 import world.cepi.particle.data.OffsetAndSpeed
-import world.cepi.particle.extra.Dust
+import world.cepi.particle.extra.DustTransition
 import world.cepi.particle.showParticle
 import world.cepi.particle.util.Vectors
-import java.time.Duration
 import kotlin.collections.set
 
 sealed class Gun(val name: String, private val customMeta: (ItemMetaBuilder) -> Unit = {}) {
@@ -56,15 +56,14 @@ sealed class Gun(val name: String, private val customMeta: (ItemMetaBuilder) -> 
     open val color: TextColor = NamedTextColor.WHITE
 
     val item by lazy {
-        ItemStack.builder(material)
-            .displayName(Component.text(name, color).decoration(TextDecoration.ITALIC, false))
-            .meta { meta: ItemMetaBuilder ->
-                meta.set(gunIdTag, name)
-                meta.set(lastShotTag, 0)
-                meta.set(ammoTag, ammo)
-                customMeta.invoke(meta)
-                meta
-            }.build()
+        item(material) {
+            displayName(Component.text(name, color).decoration(TextDecoration.ITALIC, false))
+            set(gunIdTag, name)
+            set(lastShotTag, 0)
+            set(ammoTag, ammo)
+            hideFlag()
+            customMeta.invoke(this)
+        }
     }
 
     open val damage: Float = 1f // PER BULLET!
@@ -99,7 +98,7 @@ sealed class Gun(val name: String, private val customMeta: (ItemMetaBuilder) -> 
 
         repeat(numberOfBullets) {
 
-            val direction = eyeDir.spread(spread).normalize()
+            val direction = eyeDir.spread(spread)//.normalize()
 
             val raycastResult = RaycastUtil.raycast(instance, eyePos, direction, maxDistance) {
                 it != player && it.entityType == EntityType.PLAYER && (it as Player).gameMode == GameMode.ADVENTURE
@@ -107,14 +106,15 @@ sealed class Gun(val name: String, private val customMeta: (ItemMetaBuilder) -> 
 
             instance.showParticle(
                 Particle.particle(
-                    type = ParticleType.DUST,
+                    type = ParticleType.DUST_COLOR_TRANSITION,
                     count = 1,
-                    data = OffsetAndSpeed(0f, 0f, 0f, 0f),
-                    extraData = Dust(1f, 1f, 0f, 0.3f)
+                    data = OffsetAndSpeed(),
+                    extraData = DustTransition(1f, 1f, 0f, 0f, 0f, 0f, 0.7f),
+                    longDistance = true
                 ),
                 Vectors(
                     eyePos.asVec(),
-                    (raycastResult.hitPosition ?: eyePos.add(eyeDir.normalize().mul(maxDistance))).asVec(),
+                    (raycastResult.hitPosition ?: eyePos.add(direction.mul(maxDistance))).asVec(),
                     1.5
                 )
             )
@@ -131,17 +131,15 @@ sealed class Gun(val name: String, private val customMeta: (ItemMetaBuilder) -> 
                         )
                     }
 
-                    damageMap[hitPlayer] = damageMap.getOrDefault(hitPlayer, 0f) + damage
-                        .also {
-                            if (headshot) it * 1.5
-                        }
+                    damageMap[hitPlayer] = damageMap.getOrDefault(hitPlayer, 0f) + (damage * (if (headshot) 2f else 1f))
                 }
                 RaycastResultType.HIT_BLOCK -> { // Hit block
                     instance.playSound(
                         Sound.sound(SoundEvent.BLOCK_NETHERRACK_BREAK, Sound.Source.BLOCK, 2f, 1f),
                         raycastResult.hitPosition!!
                     )
-                    instance.breakBlock(raycastResult.hitPosition, instance.getBlock(raycastResult.hitPosition))
+                    val blockType = instance.getBlock(raycastResult.hitPosition)
+                    instance.breakBlock(raycastResult.hitPosition, blockType)
                     instance.sendBlockDamage(1, raycastResult.hitPosition)
                 }
                 else -> { // Hit nothing
@@ -151,7 +149,7 @@ sealed class Gun(val name: String, private val customMeta: (ItemMetaBuilder) -> 
 
         }
 
-        val newAmmo = player.itemInMainHand.meta.getTag(ammoTag)!! - 1
+        val newAmmo = (player.itemInMainHand.meta.getTag(ammoTag) ?: 1) - 1
         renderAmmo(player, newAmmo)
         player.itemInMainHand = player.itemInMainHand.withMeta { meta: ItemMetaBuilder ->
             meta.set(ammoTag, newAmmo)
@@ -164,13 +162,24 @@ sealed class Gun(val name: String, private val customMeta: (ItemMetaBuilder) -> 
 
     open fun shootAfter(player: Player) {}
 
-    open fun renderAmmo(player: Player, currentAmmo: Int, percentage: Float = currentAmmo.toFloat() / ammo.toFloat(), reloading: Boolean = false) {
+    open fun renderAmmo(
+        player: Player,
+        currentAmmo: Int,
+        percentage: Float = currentAmmo.toFloat() / ammo.toFloat(),
+        reloading: Boolean = false
+    ) {
         val component = Component.text()
 
         if (reloading) component.append(Component.text("RELOADING ", NamedTextColor.RED, TextDecoration.BOLD))
 
         component.append(
-                progressBar(percentage, 40, "|", if (reloading) NamedTextColor.RED else NamedTextColor.GOLD, NamedTextColor.DARK_GRAY)
+            progressBar(
+                percentage,
+                40,
+                "|",
+                if (reloading) NamedTextColor.RED else NamedTextColor.GOLD,
+                NamedTextColor.DARK_GRAY
+            )
         )
 
         component.append(
