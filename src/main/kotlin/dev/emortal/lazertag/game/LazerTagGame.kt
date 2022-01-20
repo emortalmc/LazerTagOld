@@ -16,10 +16,8 @@ import dev.emortal.lazertag.gun.Gun.Companion.ammoTag
 import dev.emortal.lazertag.gun.Gun.Companion.heldGun
 import dev.emortal.lazertag.gun.Gun.Companion.lastShotTag
 import dev.emortal.lazertag.gun.Gun.Companion.reloadingTag
-import dev.emortal.lazertag.gun.ProjectileGun
 import dev.emortal.lazertag.utils.cancel
 import dev.emortal.lazertag.utils.setCooldown
-import net.kyori.adventure.bossbar.BossBar
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -37,7 +35,6 @@ import net.minestom.server.entity.damage.EntityDamage
 import net.minestom.server.entity.metadata.item.ItemEntityMeta
 import net.minestom.server.entity.metadata.other.ArmorStandMeta
 import net.minestom.server.event.entity.EntityDamageEvent
-import net.minestom.server.event.entity.EntityTickEvent
 import net.minestom.server.event.inventory.InventoryPreClickEvent
 import net.minestom.server.event.item.ItemDropEvent
 import net.minestom.server.event.player.*
@@ -55,10 +52,8 @@ import world.cepi.kstom.adventure.asMini
 import world.cepi.kstom.event.listenOnly
 import world.cepi.kstom.item.and
 import world.cepi.kstom.item.item
-import world.cepi.kstom.util.playSound
 import java.text.DecimalFormat
 import java.time.Duration
-import java.util.*
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.collections.component1
 import kotlin.collections.component2
@@ -80,8 +75,6 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
 
     //TODO: Replace with LazerTag game options?
     val killsToWin = 25
-
-    val bossBarsMap = hashMapOf<Player, Pair<Player, BossBar>>()
 
     val respawnTasks = mutableListOf<MinestomRunnable>()
     val reloadTasks = hashMapOf<Player, MinestomRunnable>()
@@ -115,7 +108,7 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
     }
 
     override fun gameStarted() {
-        scoreboard?.removeLine("InfoLine")
+        scoreboard?.removeLine("infoLine")
         gameState = GameState.PLAYING
 
         players.forEach(::respawn)
@@ -166,6 +159,8 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                     .build()
             )
 
+            val gunName = killer.heldGun?.name ?: "nothing apparently"
+
             sendMessage(
                 Component.text()
                     .append(Component.text("☠", NamedTextColor.RED))
@@ -174,7 +169,7 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                     .append(Component.text(" killed ", NamedTextColor.GRAY))
                     .append(Component.text(player.username, NamedTextColor.RED))
                     .append(Component.text(" with ", NamedTextColor.GRAY))
-                    .append(Component.text(killer.heldGun?.name ?: "nothing apparently", NamedTextColor.GOLD))
+                    .append(Component.text(gunName, NamedTextColor.GOLD))
             )
 
             killer.showTitle(
@@ -393,9 +388,7 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                         return
                     }
 
-                    playSound(heldGun.sound, player.position)
-
-                    val damageMap = heldGun.shoot(player)
+                    val damageMap = heldGun.shoot(this@LazerTagGame, player)
 
                     damageMap.forEach { (hitEntity, damage) ->
                         player.playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_HURT, Sound.Source.PLAYER, 1f, 1f))
@@ -414,41 +407,6 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
             if (activeRegenEffects != null && player.aliveTicks % (50 / (activeRegenEffects.potion.amplifier + 1)) == 0L) {
                 player.health += 1f
             }
-        }
-
-        listenOnly<EntityTickEvent> {
-            if (entity.entityType == EntityType.PLAYER) return@listenOnly
-
-            if (entity.position.y <= 0 || entity.chunk == null) {
-                entity.remove()
-                return@listenOnly
-            }
-
-            if (!entity.hasTag(Gun.playerUUIDTag)) return@listenOnly
-
-
-            val shooter: Player = Manager.connection.getPlayer(UUID.fromString(entity.getTag(Gun.playerUUIDTag)))!!
-            val gun = Gun.registeredMap[entity.getTag(Gun.gunIdTag)!!] ?: return@listenOnly
-
-            if (gun !is ProjectileGun) return@listenOnly
-
-            // TODO: Better collisions
-
-            if (entity.velocity.x == 0.0 || entity.velocity.y == 0.0 || entity.velocity.z == 0.0) {
-                gun.collide(shooter, entity)
-                return@listenOnly
-            }
-            if (entity.aliveTicks > 20 * 3) {
-                gun.collide(shooter, entity)
-                return@listenOnly
-            }
-
-            val intersectingPlayers = players
-                .filter { entity.boundingBox.intersect(it.boundingBox) && it.gameMode == GameMode.ADVENTURE }
-                .filter { if (entity.aliveTicks < 20) it != shooter else true }
-            if (intersectingPlayers.isEmpty()) return@listenOnly
-
-            gun.collideEntity(shooter, entity, intersectingPlayers)
         }
 
         cancel<PlayerBlockBreakEvent>()
@@ -561,10 +519,6 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                 isCancelled = true
                 entity.health = 20f
 
-                if (player != damager) {
-                    bossBarsMap[damager]?.let { damager.hideBossBar(it.second) }
-                }
-
                 kill(player, damager)
                 return@listenOnly
             }
@@ -572,23 +526,6 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
             if (player == damager) {
                 return@listenOnly
             }
-
-            val bossBar: BossBar = if (bossBarsMap[damager] == null || bossBarsMap[damager]?.first != player) {
-                bossBarsMap[damager]?.let { damager.hideBossBar(it.second) }
-                val bb = BossBar.bossBar(
-                    Component.text(player.username, NamedTextColor.GRAY),
-                    1f,
-                    BossBar.Color.RED,
-                    BossBar.Overlay.NOTCHED_10
-                )
-                bossBarsMap[damager] = Pair(player, bb)
-                bb
-            } else {
-                bossBarsMap[damager]!!.second
-            }
-
-            damager.showBossBar(bossBar)
-            bossBar.progress((player.health - damage) / player.maxHealth)
 
             val rand = ThreadLocalRandom.current()
             val format = DecimalFormat("0.##")

@@ -1,6 +1,7 @@
 package dev.emortal.lazertag.gun
 
 import dev.emortal.immortal.util.progressBar
+import dev.emortal.lazertag.game.LazerTagGame
 import dev.emortal.lazertag.raycast.RaycastResultType
 import dev.emortal.lazertag.raycast.RaycastUtil
 import dev.emortal.lazertag.utils.breakBlock
@@ -18,6 +19,7 @@ import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
+import world.cepi.kstom.item.and
 import world.cepi.kstom.item.item
 import world.cepi.kstom.util.asVec
 import world.cepi.kstom.util.eyePosition
@@ -36,7 +38,6 @@ sealed class Gun(val name: String, private val customMeta: (ItemMetaBuilder) -> 
     companion object {
         val gunIdTag = Tag.String("gunID")
         val taskIdTag = Tag.Integer("taskID")
-        val playerUUIDTag = Tag.String("playerUUID")
         val lastShotTag = Tag.Long("lastShot")
         val reloadingTag = Tag.Byte("reloading")
         val ammoTag = Tag.Integer("ammo")
@@ -52,8 +53,8 @@ sealed class Gun(val name: String, private val customMeta: (ItemMetaBuilder) -> 
             }
     }
 
-    open val material: Material = Material.WOODEN_HOE
-    open val color: TextColor = NamedTextColor.WHITE
+    abstract val material: Material
+    abstract val color: TextColor
 
     val item by lazy {
         item(material) {
@@ -66,12 +67,12 @@ sealed class Gun(val name: String, private val customMeta: (ItemMetaBuilder) -> 
         }
     }
 
-    open val damage: Float = 1f // PER BULLET!
+    abstract val damage: Float // PER BULLET!
     open val numberOfBullets: Int = 1
     open val spread: Double = 0.0
-    open val cooldown: Int = 1 // In ticks
-    open val ammo: Int = 10
-    open val reloadTime: Int = 40 // In ticks
+    abstract val cooldown: Int // In ticks
+    abstract val ammo: Int
+    abstract val reloadTime: Int // In ticks
     open val freshReload: Boolean = true
     open val shootMidReload: Boolean = false
     open val maxDistance: Double = 10.0
@@ -79,7 +80,7 @@ sealed class Gun(val name: String, private val customMeta: (ItemMetaBuilder) -> 
     open val burstAmount: Int = 1
     open val burstInterval: Int = 0 // In ticks
 
-    open val sound: Sound = Sound.sound(SoundEvent.ENTITY_BLAZE_HURT, Sound.Source.PLAYER, 1f, 1f)
+    open val sound: Sound? = Sound.sound(SoundEvent.ENTITY_BLAZE_HURT, Sound.Source.PLAYER, 1f, 1f)
 
     fun getReloadTicks(currentAmmo: Int): Int {
         return if (freshReload) {
@@ -89,7 +90,19 @@ sealed class Gun(val name: String, private val customMeta: (ItemMetaBuilder) -> 
         }
     }
 
-    open fun shoot(player: Player): HashMap<Player, Float> {
+    open fun shoot(game: LazerTagGame, player: Player): HashMap<Player, Float> {
+        sound?.let { game.playSound(it, player.position) }
+
+        val newAmmo = (player.itemInMainHand.meta.getTag(ammoTag) ?: 1) - 1
+        renderAmmo(player, newAmmo)
+        player.itemInMainHand = player.itemInMainHand.and {
+            setTag(ammoTag, newAmmo)
+        }
+
+        return gunShot(game, player)
+    }
+
+    protected open fun gunShot(game: LazerTagGame, player: Player): HashMap<Player, Float> {
         val damageMap = HashMap<Player, Float>()
 
         val instance = player.instance!!
@@ -149,18 +162,12 @@ sealed class Gun(val name: String, private val customMeta: (ItemMetaBuilder) -> 
 
         }
 
-        val newAmmo = (player.itemInMainHand.meta.getTag(ammoTag) ?: 1) - 1
-        renderAmmo(player, newAmmo)
-        player.itemInMainHand = player.itemInMainHand.withMeta { meta: ItemMetaBuilder ->
-            meta.set(ammoTag, newAmmo)
-        }
-
         shootAfter(player)
 
         return damageMap
     }
 
-    open fun shootAfter(player: Player) {}
+    protected open fun shootAfter(player: Player) {}
 
     open fun renderAmmo(
         player: Player,

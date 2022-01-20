@@ -16,13 +16,13 @@ object Shotgun : Gun("Shotgun") {
 
     override val damage = 2f
     override val numberOfBullets = 13
-    override val spread = 0.07
+    override val spread = 0.12
     override val cooldown = 10
     override val ammo = 6
     override val reloadTime = 80
     override val freshReload = false
     override val shootMidReload = true
-    override val maxDistance = 30.0
+    override val maxDistance = 25.0
 
     override val sound = Sound.sound(SoundEvent.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, Sound.Source.PLAYER, 1.5f, 1f)
 
