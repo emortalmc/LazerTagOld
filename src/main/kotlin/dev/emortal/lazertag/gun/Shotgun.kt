@@ -14,9 +14,9 @@ object Shotgun : Gun("Shotgun") {
     override val material = Material.REPEATER
     override val color: TextColor = NamedTextColor.RED
 
-    override val damage = 2f
-    override val numberOfBullets = 13
-    override val spread = 0.12
+    override val damage = 1.5f
+    override val numberOfBullets = 15
+    override val spread = 0.15
     override val cooldown = 10
     override val ammo = 6
     override val reloadTime = 80
@@ -27,7 +27,7 @@ object Shotgun : Gun("Shotgun") {
     override val sound = Sound.sound(SoundEvent.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, Sound.Source.PLAYER, 1.5f, 1f)
 
     override fun shootAfter(player: Player) {
-        player.velocity = player.position.direction().normalize().mul(-20.0).withY { it.coerceAtMost(15.0) }
+        player.velocity = player.position.direction().normalize().mul(-15.0).withY { it.coerceAtMost(13.0) }
 
         object : MinestomRunnable(
             delay = Duration.ofMillis(250),

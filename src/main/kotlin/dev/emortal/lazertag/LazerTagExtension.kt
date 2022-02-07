@@ -43,23 +43,28 @@ class LazerTagExtension : Extension() {
             eventNode,
             "lazertag",
             "<gradient:gold:yellow><bold>LazerTag".asMini(),
-            true,
+            showsInSlashPlay = true,
+            canSpectate = true,
             WhenToRegisterEvents.GAME_START,
             GameOptions(
                 maxPlayers = 15,
-                minPlayers = 1,
-                canJoinDuringGame = true,
+                minPlayers = 2,
+                canJoinDuringGame = false,
                 showScoreboard = true,
             )
         )
 
         GunCommand.register()
+        //FlyCommand.register()
+        //RGBCommand.register()
 
         logger.info("[LazerTag] has been enabled!")
     }
 
     override fun terminate() {
         GunCommand.unregister()
+        //FlyCommand.unregister()
+        //RGBCommand.unregister()
 
         logger.info("[LazerTag] has been disabled!")
     }

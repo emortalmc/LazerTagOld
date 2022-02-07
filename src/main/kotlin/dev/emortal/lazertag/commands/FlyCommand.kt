@@ -1,14 +1,12 @@
 package dev.emortal.lazertag.commands
 
-import dev.emortal.immortal.game.GameManager.game
 import dev.emortal.immortal.util.PermissionUtils.hasLuckPermission
-import dev.emortal.lazertag.game.LazerTagGame
 import dev.emortal.lazertag.gun.Gun
 import net.minestom.server.command.builder.arguments.ArgumentType
 import world.cepi.kstom.command.arguments.suggest
 import world.cepi.kstom.command.kommand.Kommand
 
-object GunCommand : Kommand({
+object FlyCommand : Kommand({
     onlyPlayers
 
     val gunArg = ArgumentType.StringArray("gun").suggest {
@@ -16,12 +14,10 @@ object GunCommand : Kommand({
     }
 
     syntax(gunArg) {
-        if (!player.hasLuckPermission("lazertag.gun")) {
+        if (!player.hasLuckPermission("lazertag.fly")) {
             return@syntax
         }
 
-        val gun = context.get(gunArg).joinToString(separator = " ")
-        val gunobject = Gun.registeredMap[gun] ?: return@syntax
-        (player.game as LazerTagGame).setGun(player, gunobject)
+        player.isAllowFlying = !player.isAllowFlying
     }
-}, "gun")
+}, "lazertagfly")

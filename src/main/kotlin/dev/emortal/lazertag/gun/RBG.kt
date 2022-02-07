@@ -1,32 +1,16 @@
 package dev.emortal.lazertag.gun
 
-import dev.emortal.lazertag.game.LazerTagGame
-import net.kyori.adventure.sound.Sound
-import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.format.TextColor
-import net.minestom.server.entity.Entity
-import net.minestom.server.entity.EntityType
-import net.minestom.server.entity.GameMode
-import net.minestom.server.entity.Player
-import net.minestom.server.entity.damage.DamageType
-import net.minestom.server.item.Material
-import net.minestom.server.sound.SoundEvent
-import world.cepi.kstom.util.eyePosition
-import world.cepi.kstom.util.playSound
-import world.cepi.particle.Particle
-import world.cepi.particle.ParticleType
-import world.cepi.particle.data.OffsetAndSpeed
-import world.cepi.particle.showParticle
+/*object RBG : ProjectileGun("RGB") {
 
-object BeeBlaster : ProjectileGun("Bee Blaster") {
+    override val material: Material = Material.TNT
+    override val color: TextColor = NamedTextColor.RED
 
-    override val material: Material = Material.HONEYCOMB
-    override val color: TextColor = NamedTextColor.YELLOW
-
-    override val damage = 50f
-    override val ammo = 1
+    override val damage = 9999f
+    override val ammo = 9999
     override val reloadTime = 35
-    override val cooldown = reloadTime
+    override val cooldown = 5
+    override val burstInterval = 1
+    override val burstAmount = 5
 
     override val sound = Sound.sound(SoundEvent.ENTITY_BEE_HURT, Sound.Source.PLAYER, 1f, 1f)
 
@@ -66,17 +50,15 @@ object BeeBlaster : ProjectileGun("Bee Blaster") {
 
         shooter.instance!!.players
             .filter { it.gameMode == GameMode.ADVENTURE }
-            .filter { it.getDistanceSquared(projectile) < 8 * 8 }
+            .filter { it.getDistanceSquared(projectile) < 5 * 5 }
             .forEach { loopedPlayer ->
                 loopedPlayer.velocity =
-                    loopedPlayer.position.sub(projectile.position.sub(.0, .5, .0)).asVec().normalize().mul(60.0)
+                    loopedPlayer.position.sub(projectile.position.sub(.0, .5, .0)).asVec().normalize().mul(80.0)
 
                 loopedPlayer.scheduleNextTick {
                     loopedPlayer.damage(
                         DamageType.fromPlayer(shooter),
-                        if (loopedPlayer == shooter) 5f else (damage / (projectile.getDistance(loopedPlayer)).toFloat()
-                                )
-                            .coerceAtMost(damage)
+                        if (loopedPlayer == shooter) 0f else damage
                     )
                 }
             }
@@ -96,4 +78,4 @@ object BeeBlaster : ProjectileGun("Bee Blaster") {
         return projectile
     }
 
-}
+}*/

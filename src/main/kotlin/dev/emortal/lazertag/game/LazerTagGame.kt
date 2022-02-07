@@ -1,6 +1,5 @@
 package dev.emortal.lazertag.game
 
-import dev.emortal.immortal.game.EndGameQuotes
 import dev.emortal.immortal.game.GameOptions
 import dev.emortal.immortal.game.GameState
 import dev.emortal.immortal.game.PvpGame
@@ -46,7 +45,6 @@ import net.minestom.server.potion.Potion
 import net.minestom.server.potion.PotionEffect
 import net.minestom.server.scoreboard.Sidebar
 import net.minestom.server.sound.SoundEvent
-import net.minestom.server.utils.time.TimeUnit
 import world.cepi.kstom.Manager
 import world.cepi.kstom.adventure.asMini
 import world.cepi.kstom.event.listenOnly
@@ -76,8 +74,11 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
     //TODO: Replace with LazerTag game options?
     val killsToWin = 25
 
-    val respawnTasks = mutableListOf<MinestomRunnable>()
+    val respawnTasks = mutableMapOf<Player, MinestomRunnable>()
+    val burstTasks = mutableMapOf<Player, MinestomRunnable>()
     val reloadTasks = hashMapOf<Player, MinestomRunnable>()
+
+    var gunRandomizing = true
 
     override var spawnPosition = Pos(29.5, 15.5, -6.5)
 
@@ -86,30 +87,40 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
         player.isInvisible = false
         player.setCanPickupItem(false)
 
-        scoreboard?.createLine(
-            Sidebar.ScoreboardLine(
-                player.uuid.toString(),
-
-                Component.text()
-                    .append(Component.text(player.username, NamedTextColor.GRAY))
-                    .append(Component.text(" - ", NamedTextColor.DARK_GRAY))
-                    .append(Component.text(0, NamedTextColor.GRAY, TextDecoration.BOLD))
-                    .build(),
-
-                0
-            )
-        )
-
     }
 
     override fun playerLeave(player: Player) {
         player.cleanup()
         scoreboard?.removeLine(player.uuid.toString())
+
+        reloadTasks[player]?.cancel()
+        burstTasks[player]?.cancel()
+        respawnTasks[player]?.cancel()
+        reloadTasks.remove(player)
+        burstTasks.remove(player)
+        respawnTasks.remove(player)
     }
 
     override fun gameStarted() {
         scoreboard?.removeLine("infoLine")
         gameState = GameState.PLAYING
+
+        players.forEach {
+            scoreboard?.createLine(
+                Sidebar.ScoreboardLine(
+                    it.uuid.toString(),
+
+                    Component.text()
+                        .append(Component.text(it.username, NamedTextColor.GRAY))
+                        .append(Component.text(" - ", NamedTextColor.DARK_GRAY))
+                        .append(Component.text(0, NamedTextColor.GRAY, TextDecoration.BOLD))
+                        .build(),
+
+                    0
+                )
+            )
+        }
+
 
         players.forEach(::respawn)
     }
@@ -130,10 +141,12 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
         )
 
         reloadTasks[player]?.cancel()
+        burstTasks[player]?.cancel()
         reloadTasks.remove(player)
+        burstTasks.remove(player)
 
         if (killer != null && killer != player && killer is Player) {
-            val kills = ++player.kills
+            val kills = ++killer.kills
 
             if (kills >= killsToWin) return victory(killer)
 
@@ -202,7 +215,6 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                 val meta = entity.entityMeta as ItemEntityMeta
                 meta.item = coinItem
 
-
                 entity.velocity = Vec(
                     random.nextDouble(-1.0, 1.0) * 5,
                     random.nextDouble(0.5, 1.0) * 10,
@@ -215,7 +227,7 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                 entity.addViewer(killer)
             }
 
-            randomizeGun(killer)
+            if (gunRandomizing) setGun(killer)
         } else {
             sendMessage(
                 Component.text()
@@ -250,7 +262,7 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
             }
         }
 
-        respawnTasks.add(object : MinestomRunnable(
+        respawnTasks[player] = object : MinestomRunnable(
             delay = Duration.ofSeconds(2),
             repeat = Duration.ofSeconds(1),
             iterations = 3,
@@ -275,11 +287,11 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
             override fun cancelled() {
                 respawn(player)
             }
-        })
+        }
     }
 
     override fun respawn(player: Player) = with(player) {
-        player.spawnProtectionMillis = 3500
+        spawnProtectionMillis = 3500
         teleport(getRandomRespawnPosition())
         reset()
 
@@ -292,46 +304,22 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
 
         // TODO: Replace with proper gun score system for other modes
 
-        randomizeGun(player)
+        if (gunRandomizing) setGun(player)
+        else setGun(player/*, RBG*/)
     }
 
-    private fun victory(player: Player) {
-        if (gameState == GameState.ENDING) return
-        gameState = GameState.ENDING
-
+    override fun gameWon(winningPlayers: Collection<Player>) {
         reloadTasks.values.forEach(MinestomRunnable::cancel)
         reloadTasks.clear()
-
-        instance.entities
-            .filter { it !is Player }
-            .forEach(Entity::remove)
-
-        val victoryTitle = Title.title(
-            Component.text("VICTORY!", NamedTextColor.GOLD, TextDecoration.BOLD),
-            Component.text(EndGameQuotes.victory.random(), NamedTextColor.GRAY),
-            Title.Times.of(Duration.ZERO, Duration.ofSeconds(3), Duration.ofSeconds(3))
-        )
-        val defeatTitle = Title.title(
-            Component.text("DEFEAT!", NamedTextColor.RED, TextDecoration.BOLD),
-            Component.text(EndGameQuotes.defeat.random(), NamedTextColor.GRAY),
-            Title.Times.of(Duration.ZERO, Duration.ofSeconds(3), Duration.ofSeconds(3))
-        )
-
         players.forEach {
             it.inventory.clear()
-
-            if (it == player) it.showTitle(victoryTitle)
-            else it.showTitle(defeatTitle)
-
+            it.cleanup()
         }
-
-        Manager.scheduler.buildTask { destroy() }
-            .delay(5, TimeUnit.SECOND)
-            .schedule()
     }
 
     override fun gameDestroyed() {
-        respawnTasks.forEach(MinestomRunnable::cancel)
+        reloadTasks.clear()
+        burstTasks.clear()
         respawnTasks.clear()
     }
 
@@ -370,7 +358,7 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                 setTag(lastShotTag, System.currentTimeMillis())
             }
 
-            object : MinestomRunnable(
+            burstTasks[player] = object : MinestomRunnable(
                 repeat = Duration.ofMillis((50 * heldGun.burstInterval).toLong()),
                 iterations = heldGun.burstAmount,
                 timer = timer
@@ -378,6 +366,7 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                 override fun run() {
                     if (!player.itemInMainHand.meta.hasTag(ammoTag)) {
                         cancel()
+                        burstTasks.remove(player)
                         return
                     }
                     if (player.itemInMainHand.meta.getTag(ammoTag)!! <= 0) {
@@ -385,6 +374,7 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                         player.sendActionBar("<red>Press <bold><key:key.swapOffhand></bold> to reload!".asMini())
 
                         cancel()
+                        burstTasks.remove(player)
                         return
                     }
 
@@ -573,9 +563,7 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
         }
     }
 
-
-    private fun randomizeGun(player: Player) {
-        val gun = Gun.registeredMap.values.random()
+    fun setGun(player: Player, gun: Gun = Gun.registeredMap.values.random()) {
         player.inventory.setItemStack(4, gun.item)
         gun.renderAmmo(player, gun.ammo)
         player.setHeldItemSlot(4)

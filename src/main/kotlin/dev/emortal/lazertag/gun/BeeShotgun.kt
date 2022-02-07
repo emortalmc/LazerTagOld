@@ -25,7 +25,7 @@ object BeeShotgun : ProjectileGun("Bee Keeper") {
     override val material: Material = Material.BEEHIVE
     override val color: TextColor = NamedTextColor.YELLOW
 
-    override val damage = 1.5f
+    override val damage = 1.25f
     override val numberOfBullets = 15
     override val spread = 0.12
     override val cooldown = 15
