@@ -2,6 +2,7 @@ package dev.emortal.lazertag.gun
 
 import dev.emortal.immortal.util.MinestomRunnable
 import dev.emortal.lazertag.game.LazerTagGame
+import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
@@ -13,6 +14,7 @@ import java.time.Duration
 sealed class ProjectileGun(name: String, customMeta: (ItemMetaBuilder) -> Unit = {}) : Gun(name, customMeta) {
 
     open val maxDuration: Int = 5 * 20
+    open val boundingBoxExpand: Vec = Vec.ZERO
 
     companion object {
         private val entityTaskMap = hashMapOf<Entity, MinestomRunnable>()
@@ -26,12 +28,13 @@ sealed class ProjectileGun(name: String, customMeta: (ItemMetaBuilder) -> Unit =
             projectile
         )
 
+        val expandedBox = projectile.boundingBox.expand(boundingBoxExpand.x, boundingBoxExpand.y, boundingBoxExpand.z)
         val intersectingPlayers = game.players
-            .filter { it.gameMode == GameMode.ADVENTURE && projectile.boundingBox.intersect(it.boundingBox) }
+            .filter { it.gameMode == GameMode.ADVENTURE && expandedBox.intersect(it.boundingBox) }
             .filter { if (projectile.aliveTicks < 30) it != shooter else true }
         if (intersectingPlayers.isEmpty()) return
 
-        collidedWithEntity(shooter, projectile, intersectingPlayers)
+        collideEntity(shooter, projectile, intersectingPlayers)
     }
 
     open fun tick(game: LazerTagGame, projectile: Entity) {}

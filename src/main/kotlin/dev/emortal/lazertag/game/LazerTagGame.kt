@@ -37,7 +37,6 @@ import net.minestom.server.event.entity.EntityDamageEvent
 import net.minestom.server.event.inventory.InventoryPreClickEvent
 import net.minestom.server.event.item.ItemDropEvent
 import net.minestom.server.event.player.*
-import net.minestom.server.instance.AnvilLoader
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.Material
@@ -246,20 +245,6 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                     )
                 )
             )
-
-            if (player.kills > 1) {
-                val kills = --player.kills
-
-                scoreboard?.updateLineScore(player.uuid.toString(), kills)
-                scoreboard?.updateLineContent(
-                    player.uuid.toString(),
-                    Component.text()
-                        .append(Component.text(player.username, NamedTextColor.GRAY))
-                        .append(Component.text(" - ", NamedTextColor.DARK_GRAY))
-                        .append(Component.text(kills, NamedTextColor.LIGHT_PURPLE, TextDecoration.BOLD))
-                        .build()
-                )
-            }
         }
 
         respawnTasks[player] = object : MinestomRunnable(
@@ -577,12 +562,10 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
     }
 
     override fun instanceCreate(): Instance {
-        val instance = Manager.instance.createInstanceContainer(
-            //Manager.dimensionType.getDimension(NamespaceID.from("fullbright"))!!
-        )
-        instance.chunkLoader = AnvilLoader("./maps/lazertag/dizzymc/")
-
-        return instance
+        //val lazertagInstance = Manager.instance.createInstanceContainer()
+        //lazertagInstance.chunkLoader = AnvilLoader("./maps/lazertag/dizzymc/")
+        //return lazertagInstance
+        return Manager.instance.createSharedInstance(LazerTagExtension.lazertagInstance)
     }
 
 }

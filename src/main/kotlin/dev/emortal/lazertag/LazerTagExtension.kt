@@ -9,6 +9,9 @@ import dev.emortal.lazertag.config.LazerTagConfig
 import dev.emortal.lazertag.game.LazerTagGame
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.extensions.Extension
+import net.minestom.server.instance.AnvilLoader
+import net.minestom.server.instance.InstanceContainer
+import world.cepi.kstom.Manager
 import world.cepi.kstom.adventure.asMini
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
@@ -23,9 +26,14 @@ class LazerTagExtension : Extension() {
         val maps = mapsPath.listDirectoryEntries().map { it.nameWithoutExtension }
 
         var config: LazerTagConfig = ConfigurationHelper.initConfigFile(configPath, LazerTagConfig())
+
+        lateinit var lazertagInstance: InstanceContainer
     }
 
     override fun initialize() {
+        lazertagInstance = Manager.instance.createInstanceContainer()
+        lazertagInstance.chunkLoader = AnvilLoader("./maps/lazertag/dizzymc/")
+
         mapsPath.createDirectories()
 
         logger.info("Found ${maps.size} maps: \n- ${maps.joinToString("\n- ")}")

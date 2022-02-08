@@ -12,7 +12,7 @@ object Minigun : Gun("Lazer Minigun") {
     override val color: TextColor = NamedTextColor.AQUA
 
     override val damage = 0.75f
-    override val cooldown = 3
+    override val cooldown = 4
     override val ammo = 70
     override val reloadTime = 50
     override val maxDistance = 40.0

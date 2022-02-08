@@ -12,7 +12,7 @@ object Rifle : Gun("Rifle") {
     override val color: TextColor = NamedTextColor.GRAY
 
     override val damage = 5f
-    override val cooldown = 5
+    override val cooldown = 7
     override val ammo = 15
     override val reloadTime = 50
     override val maxDistance = 100.0
