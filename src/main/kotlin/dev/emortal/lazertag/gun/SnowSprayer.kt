@@ -8,7 +8,6 @@ import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.Player
-import net.minestom.server.entity.damage.DamageType
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
 import world.cepi.kstom.util.eyePosition
@@ -23,13 +22,13 @@ object SnowSprayer : ProjectileGun("Snow Sprayer") {
     override val material: Material = Material.SNOW_BLOCK
     override val color: TextColor = NamedTextColor.WHITE
 
-    override val damage: Float = 2f
-    override val ammo: Int = 30
-    override val reloadTime: Int = 50
-    override val cooldown: Int = 7
+    override val damage = 2f
+    override val ammo = 30
+    override val reloadTime = 2500L
+    override val cooldown = 350L
 
-    override val burstAmount: Int = 5
-    override val burstInterval = 1
+    override val burstAmount = 5
+    override val burstInterval = 50L
 
     override val sound = Sound.sound(SoundEvent.ENTITY_SNOWBALL_THROW, Sound.Source.MASTER, 1f, 1.5f)
 
@@ -41,7 +40,7 @@ object SnowSprayer : ProjectileGun("Snow Sprayer") {
         return damageMap
     }
 
-    override fun collided(shooter: Player, projectile: Entity) {
+    override fun collided(game: LazerTagGame, shooter: Player, projectile: Entity) {
         shooter.instance!!.showParticle(
             Particle.particle(
                 type = ParticleType.SNOWFLAKE,
@@ -56,11 +55,14 @@ object SnowSprayer : ProjectileGun("Snow Sprayer") {
         )
     }
 
-    override fun collidedWithEntity(shooter: Player, projectile: Entity, hitPlayers: Collection<Player>) {
+    override fun collidedWithEntity(
+        game: LazerTagGame,
+        shooter: Player,
+        projectile: Entity,
+        hitPlayers: Collection<Player>
+    ) {
         hitPlayers.forEach { loopedPlayer ->
-            loopedPlayer.scheduleNextTick {
-                loopedPlayer.damage(DamageType.fromPlayer(shooter), damage)
-            }
+            game.damage(shooter, loopedPlayer, false, damage)
         }
     }
 

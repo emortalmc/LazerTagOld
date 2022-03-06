@@ -3,15 +3,13 @@ package dev.emortal.lazertag
 import dev.emortal.immortal.game.GameManager
 import dev.emortal.immortal.game.GameOptions
 import dev.emortal.immortal.game.WhenToRegisterEvents
+import dev.emortal.lazertag.commands.EventCommand
 import dev.emortal.lazertag.commands.GunCommand
 import dev.emortal.lazertag.config.ConfigurationHelper
 import dev.emortal.lazertag.config.LazerTagConfig
 import dev.emortal.lazertag.game.LazerTagGame
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.extensions.Extension
-import net.minestom.server.instance.AnvilLoader
-import net.minestom.server.instance.InstanceContainer
-import world.cepi.kstom.Manager
 import world.cepi.kstom.adventure.asMini
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
@@ -27,12 +25,12 @@ class LazerTagExtension : Extension() {
 
         var config: LazerTagConfig = ConfigurationHelper.initConfigFile(configPath, LazerTagConfig())
 
-        lateinit var lazertagInstance: InstanceContainer
+        //lateinit var lazertagInstance: InstanceContainer
     }
 
     override fun initialize() {
-        lazertagInstance = Manager.instance.createInstanceContainer()
-        lazertagInstance.chunkLoader = AnvilLoader("./maps/lazertag/dizzymc/")
+        //lazertagInstance = Manager.instance.createInstanceContainer()
+        //lazertagInstance.chunkLoader = AnvilLoader("./maps/lazertag/dizzymc/")
 
         mapsPath.createDirectories()
 
@@ -58,23 +56,21 @@ class LazerTagExtension : Extension() {
                 maxPlayers = 15,
                 minPlayers = 2,
                 canJoinDuringGame = false,
-                showScoreboard = true,
+                showScoreboard = true
             )
         )
 
         GunCommand.register()
-        //FlyCommand.register()
-        //RGBCommand.register()
+        EventCommand.register()
 
-        logger.info("[LazerTag] has been enabled!")
+        logger.info("[${origin.name}] Initialized!")
     }
 
     override fun terminate() {
         GunCommand.unregister()
-        //FlyCommand.unregister()
-        //RGBCommand.unregister()
+        EventCommand.unregister()
 
-        logger.info("[LazerTag] has been disabled!")
+        logger.info("[${origin.name}] Terminated!")
     }
 
 }

@@ -10,7 +10,6 @@ import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
-import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import world.cepi.kstom.util.component1
 import world.cepi.kstom.util.component2
@@ -52,7 +51,7 @@ object RaycastUtil {
         )
     }
 
-    fun raycastBlock(instance: Instance, startPoint: Point, direction: Vec, maxDistance: Double): Pos? {
+    fun raycastBlock(game: LazerTagGame, startPoint: Point, direction: Vec, maxDistance: Double): Pos? {
         val gridIterator = GridCast.createExactGridIterator(
             startPoint.x(), startPoint.y(), startPoint.z(),
             direction.x(), direction.y(), direction.z(),
@@ -62,15 +61,21 @@ object RaycastUtil {
         while (gridIterator.hasNext()) {
             val gridUnit = gridIterator.next()
             val pos = Pos(gridUnit[0], gridUnit[1], gridUnit[2])
-            val hitBlock = instance.getBlock(pos)
 
-            if (LazerTagGame.destructableBlocks.contains(hitBlock.id())) {
-                instance.setBlock(pos, Block.AIR)
-                instance.breakBlock(pos, hitBlock)
-            }
+            try {
+                val hitBlock = game.instance.getBlock(pos)
 
-            if (LazerTagGame.collidableBlocks.contains(hitBlock.id())) {
-                return pos
+                if (LazerTagGame.destructableBlocks.contains(hitBlock.id())) {
+                    game.instance.setBlock(pos, Block.AIR)
+                    game.instance.breakBlock(pos, hitBlock)
+                }
+
+                if (LazerTagGame.collidableBlocks.contains(hitBlock.id())) {
+                    return pos
+                }
+            } catch (e: NullPointerException) {
+                // catch if chunk is not loaded
+                break
             }
         }
 
@@ -78,15 +83,16 @@ object RaycastUtil {
     }
 
     fun raycastEntity(
-        instance: Instance,
+        game: LazerTagGame,
         startPoint: Point,
         direction: Vec,
         maxDistance: Double,
         hitFilter: (Entity) -> Boolean = { true }
     ): Pair<Entity, Pos>? {
-        instance.entities
-            .filter { it.getDistance(startPoint) <= maxDistance }
+        
+        game.instance.entities
             .filter { hitFilter.invoke(it) }
+            .filter { it.position.distanceSquared(startPoint) <= maxDistance * maxDistance }
             .forEach {
                 val area = it.area3d
                 val intersection = area.lineIntersection(
@@ -102,14 +108,14 @@ object RaycastUtil {
     }
 
     fun raycast(
-        instance: Instance,
+        game: LazerTagGame,
         startPoint: Point,
         direction: Vec,
         maxDistance: Double,
         hitFilter: (Entity) -> Boolean = { true }
     ): RaycastResult {
-        val blockRaycast = raycastBlock(instance, startPoint, direction, maxDistance)
-        val entityRaycast = raycastEntity(instance, startPoint, direction, maxDistance, hitFilter)
+        val blockRaycast = raycastBlock(game, startPoint, direction, maxDistance)
+        val entityRaycast = raycastEntity(game, startPoint, direction, maxDistance, hitFilter)
 
         if (entityRaycast == null && blockRaycast == null) {
             return RaycastResult(RaycastResultType.HIT_NOTHING, null, null)

@@ -13,8 +13,9 @@ fun Player.setCooldown(material: Material, ticks: Int, lagCompensation: Boolean 
 
     if (!lagCompensation) return
 
+    val lagCompensatePacket = SetCooldownPacket(material.id(), 0)
     Manager.scheduler.buildTask {
-        val lagCompensatePacket = SetCooldownPacket(material.id(), 0)
+
         this.sendPacket(lagCompensatePacket)
     }.delay(ticks.toLong(), TimeUnit.CLIENT_TICK).schedule()
 }

@@ -1,7 +1,7 @@
 package dev.emortal.lazertag.commands
 
 import dev.emortal.immortal.game.GameManager.game
-import dev.emortal.immortal.util.PermissionUtils.hasLuckPermission
+import dev.emortal.immortal.luckperms.PermissionUtils.hasLuckPermission
 import dev.emortal.lazertag.game.LazerTagGame
 import dev.emortal.lazertag.gun.Gun
 import net.minestom.server.command.builder.arguments.ArgumentType

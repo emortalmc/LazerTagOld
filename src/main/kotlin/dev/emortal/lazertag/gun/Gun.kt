@@ -31,9 +31,14 @@ import world.cepi.particle.data.OffsetAndSpeed
 import world.cepi.particle.extra.DustTransition
 import world.cepi.particle.showParticle
 import world.cepi.particle.util.Vectors
+import java.util.concurrent.ThreadLocalRandom
 import kotlin.collections.set
 
-sealed class Gun(val name: String, private val customMeta: (ItemMetaBuilder) -> Unit = {}) {
+sealed class Gun(
+    val name: String,
+    val rarity: Rarity = Rarity.COMMON,
+    private val customMeta: (ItemMetaBuilder) -> Unit = {}
+) {
 
     companion object {
         val gunIdTag = Tag.String("gunID")
@@ -51,6 +56,23 @@ sealed class Gun(val name: String, private val customMeta: (ItemMetaBuilder) -> 
             set(value) {
                 this.itemInMainHand = value?.item ?: ItemStack.AIR
             }
+
+        fun randomWithRarity(): Gun {
+            val possibleGuns =
+                registeredMap.values.filter { it.rarity != Rarity.IMPOSSIBLE }
+            val totalWeight = possibleGuns.sumOf { it.rarity.weight }
+
+            var idx = 0
+
+            var r = ThreadLocalRandom.current().nextInt(totalWeight)
+            while (idx < possibleGuns.size - 1) {
+                r -= possibleGuns[idx].rarity.weight
+                if (r <= 0.0) break
+                ++idx
+            }
+
+            return possibleGuns[idx]
+        }
     }
 
     abstract val material: Material
@@ -70,33 +92,35 @@ sealed class Gun(val name: String, private val customMeta: (ItemMetaBuilder) -> 
     abstract val damage: Float // PER BULLET!
     open val numberOfBullets: Int = 1
     open val spread: Double = 0.0
-    abstract val cooldown: Int // In ticks
+    abstract val cooldown: Long // In millis
     abstract val ammo: Int
-    abstract val reloadTime: Int // In ticks
+    abstract val reloadTime: Long // In millis
     open val freshReload: Boolean = true
     open val shootMidReload: Boolean = false
     open val maxDistance: Double = 10.0
 
     open val burstAmount: Int = 1
-    open val burstInterval: Int = 0 // In ticks
+    open val burstInterval: Long = 0 // In millis
 
     open val sound: Sound? = Sound.sound(SoundEvent.ENTITY_BLAZE_HURT, Sound.Source.PLAYER, 1f, 1f)
 
-    fun getReloadTicks(currentAmmo: Int): Int {
+    fun getReloadMillis(currentAmmo: Int): Long {
         return if (freshReload) {
             reloadTime
         } else {
-            (reloadTime.toFloat() * ((ammo.toFloat() - currentAmmo.toFloat()) / ammo.toFloat())).toInt()
+            (reloadTime.toFloat() * ((ammo.toFloat() - currentAmmo.toFloat()) / ammo.toFloat())).toLong()
         }
     }
 
     open fun shoot(game: LazerTagGame, player: Player): HashMap<Player, Float> {
         sound?.let { game.playSound(it, player.position) }
 
-        val newAmmo = (player.itemInMainHand.meta.getTag(ammoTag) ?: 1) - 1
-        renderAmmo(player, newAmmo)
-        player.itemInMainHand = player.itemInMainHand.and {
-            setTag(ammoTag, newAmmo)
+        if (!game.infiniteAmmo) {
+            val newAmmo = (player.itemInMainHand.meta.getTag(ammoTag) ?: 1) - 1
+            renderAmmo(player, newAmmo)
+            player.itemInMainHand = player.itemInMainHand.and {
+                setTag(ammoTag, newAmmo)
+            }
         }
 
         return gunShot(game, player)
@@ -113,15 +137,15 @@ sealed class Gun(val name: String, private val customMeta: (ItemMetaBuilder) -> 
 
             val direction = eyeDir.spread(spread)//.normalize()
 
-            val raycastResult = RaycastUtil.raycast(instance, eyePos, direction, maxDistance) {
+            val raycastResult = RaycastUtil.raycast(game, eyePos, direction, maxDistance) {
                 it != player && it.entityType == EntityType.PLAYER && (it as Player).gameMode == GameMode.ADVENTURE
             }
 
             instance.showParticle(
                 Particle.particle(
                     type = ParticleType.DUST_COLOR_TRANSITION,
-                    count = 1,
-                    data = OffsetAndSpeed(),
+                    count = 0,
+                    data = OffsetAndSpeed(direction.x.toFloat(), direction.y.toFloat(), direction.z.toFloat(), 1f),
                     extraData = DustTransition(1f, 1f, 0f, 0f, 0f, 0f, 0.7f),
                     longDistance = true
                 ),

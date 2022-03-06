@@ -6,14 +6,14 @@ import net.kyori.adventure.text.format.TextColor
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
 
-object Rifle : Gun("Rifle") {
+object FastRifle : Gun("A Very Fast Rifle", Rarity.RARE) {
 
     override val material: Material = Material.STONE_HOE
-    override val color: TextColor = NamedTextColor.GRAY
+    override val color: TextColor = NamedTextColor.LIGHT_PURPLE
 
-    override val damage = 5f
-    override val cooldown = 300L
-    override val ammo = 15
+    override val damage = 2f
+    override val cooldown = 0L
+    override val ammo = 20
     override val reloadTime = 2500L
     override val maxDistance = 100.0
 

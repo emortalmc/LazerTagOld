@@ -8,7 +8,6 @@ import net.minestom.server.entity.Entity
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
-import net.minestom.server.entity.damage.DamageType
 import net.minestom.server.entity.metadata.animal.BeeMeta
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
@@ -26,12 +25,13 @@ object BeeShotgun : ProjectileGun("Bee Keeper") {
     override val color: TextColor = NamedTextColor.YELLOW
 
     override val damage = 1.25f
-    override val numberOfBullets = 15
+    override val numberOfBullets = 20
     override val spread = 0.12
-    override val cooldown = 15
-    override val ammo = 4
-    override val reloadTime = 30
+    override val cooldown = 350L
+    override val ammo = 6
+    override val reloadTime = 1500L
     override val freshReload = false
+    override val shootMidReload = true
 
     override val sound = Sound.sound(SoundEvent.ENTITY_BEE_HURT, Sound.Source.PLAYER, 1f, 1f)
 
@@ -44,7 +44,7 @@ object BeeShotgun : ProjectileGun("Bee Keeper") {
         projectile.velocity = projectile.velocity.mul(1.02)
     }
 
-    override fun collided(shooter: Player, projectile: Entity) {
+    override fun collided(game: LazerTagGame, shooter: Player, projectile: Entity) {
         shooter.instance!!.showParticle(
             Particle.particle(
                 type = ParticleType.EXPLOSION,
@@ -71,12 +71,12 @@ object BeeShotgun : ProjectileGun("Bee Keeper") {
                     projectile.position
                 )
 
-                loopedPlayer.scheduleNextTick {
-                    loopedPlayer.damage(
-                        DamageType.fromPlayer(shooter),
-                        (damage / (projectile.getDistance(it) / 1.75).toFloat()).coerceAtMost(damage)
-                    )
-                }
+                game.damage(
+                    shooter,
+                    loopedPlayer,
+                    false,
+                    (damage / (projectile.getDistance(loopedPlayer) / 1.75).toFloat()).coerceAtMost(damage)
+                )
             }
     }
 
@@ -86,7 +86,7 @@ object BeeShotgun : ProjectileGun("Bee Keeper") {
         val meta = projectile.entityMeta as BeeMeta
         meta.isBaby = true
 
-        val velocity = shooter.position.direction().spread(spread).mul(24.0)
+        val velocity = shooter.position.direction().spread(spread).mul(30.0)
         projectile.velocity = velocity
 
         projectile.setBoundingBox(0.5, 0.5, 0.5)

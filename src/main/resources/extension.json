@@ -3,6 +3,8 @@
   "name": "${project.name}",
   "version": "${project.version}",
   "dependencies": [
-    "KStom", "Immortal"
+    "KStom",
+    "Immortal",
+    "SlimeLoader"
   ]
 }

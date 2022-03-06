@@ -11,7 +11,8 @@ import world.cepi.kstom.item.and
 import world.cepi.kstom.util.playSound
 import java.time.Duration
 
-sealed class ProjectileGun(name: String, customMeta: (ItemMetaBuilder) -> Unit = {}) : Gun(name, customMeta) {
+sealed class ProjectileGun(name: String, rarity: Rarity = Rarity.COMMON, customMeta: (ItemMetaBuilder) -> Unit = {}) :
+    Gun(name, rarity, customMeta) {
 
     open val maxDuration: Int = 5 * 20
     open val boundingBoxExpand: Vec = Vec.ZERO
@@ -24,6 +25,7 @@ sealed class ProjectileGun(name: String, customMeta: (ItemMetaBuilder) -> Unit =
         tick(game, projectile)
 
         if (projectile.velocity.x == 0.0 || projectile.velocity.y == 0.0 || projectile.velocity.z == 0.0) return collide(
+            game,
             shooter,
             projectile
         )
@@ -34,7 +36,7 @@ sealed class ProjectileGun(name: String, customMeta: (ItemMetaBuilder) -> Unit =
             .filter { if (projectile.aliveTicks < 30) it != shooter else true }
         if (intersectingPlayers.isEmpty()) return
 
-        collideEntity(shooter, projectile, intersectingPlayers)
+        collideEntity(game, shooter, projectile, intersectingPlayers)
     }
 
     open fun tick(game: LazerTagGame, projectile: Entity) {}
@@ -43,10 +45,12 @@ sealed class ProjectileGun(name: String, customMeta: (ItemMetaBuilder) -> Unit =
     override fun shoot(game: LazerTagGame, player: Player): HashMap<Player, Float> {
         sound?.let { game.playSound(it, player.position) }
 
-        val newAmmo = (player.itemInMainHand.meta.getTag(ammoTag) ?: 1) - 1
-        renderAmmo(player, newAmmo)
-        player.itemInMainHand = player.itemInMainHand.and {
-            setTag(ammoTag, newAmmo)
+        if (!game.infiniteAmmo) {
+            val newAmmo = (player.itemInMainHand.meta.getTag(ammoTag) ?: 1) - 1
+            renderAmmo(player, newAmmo)
+            player.itemInMainHand = player.itemInMainHand.and {
+                setTag(ammoTag, newAmmo)
+            }
         }
 
         repeat(numberOfBullets) {
@@ -77,23 +81,28 @@ sealed class ProjectileGun(name: String, customMeta: (ItemMetaBuilder) -> Unit =
 
     abstract fun projectileShot(game: LazerTagGame, player: Player): HashMap<Player, Float>
 
-    fun collide(shooter: Player, projectile: Entity) {
-        collided(shooter, projectile)
+    fun collide(game: LazerTagGame, shooter: Player, projectile: Entity) {
+        collided(game, shooter, projectile)
 
         entityTaskMap[projectile]?.cancel()
         projectile.remove()
     }
 
-    fun collideEntity(shooter: Player, projectile: Entity, hitPlayers: Collection<Player>) {
-        collidedWithEntity(shooter, projectile, hitPlayers)
+    fun collideEntity(game: LazerTagGame, shooter: Player, projectile: Entity, hitPlayers: Collection<Player>) {
+        collidedWithEntity(game, shooter, projectile, hitPlayers)
 
         entityTaskMap[projectile]?.cancel()
         projectile.remove()
     }
 
-    abstract fun collided(shooter: Player, projectile: Entity)
-    open fun collidedWithEntity(shooter: Player, projectile: Entity, hitPlayers: Collection<Player>) {
-        collided(shooter, projectile)
+    abstract fun collided(game: LazerTagGame, shooter: Player, projectile: Entity)
+    open fun collidedWithEntity(
+        game: LazerTagGame,
+        shooter: Player,
+        projectile: Entity,
+        hitPlayers: Collection<Player>
+    ) {
+        collided(game, shooter, projectile)
     }
 
     abstract fun createEntity(shooter: Player): Entity

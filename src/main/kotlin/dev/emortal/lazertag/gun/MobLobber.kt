@@ -9,7 +9,8 @@ import net.minestom.server.entity.Entity
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
-import net.minestom.server.entity.damage.DamageType
+import net.minestom.server.entity.metadata.monster.CreeperMeta
+import net.minestom.server.entity.metadata.water.fish.PufferfishMeta
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
 import world.cepi.kstom.util.eyePosition
@@ -18,8 +19,9 @@ import world.cepi.particle.Particle
 import world.cepi.particle.ParticleType
 import world.cepi.particle.data.OffsetAndSpeed
 import world.cepi.particle.showParticle
+import java.util.concurrent.ThreadLocalRandom
 
-object MobLobber : ProjectileGun("Mob Lobber") {
+object MobLobber : ProjectileGun("Mob Lobber", Rarity.RARE) {
 
     val mobList = listOf(
         EntityType.SHEEP,
@@ -43,10 +45,10 @@ object MobLobber : ProjectileGun("Mob Lobber") {
     override val material: Material = Material.SPAWNER
     override val color: TextColor = NamedTextColor.GREEN
 
-    override val damage: Float = 10f
-    override val ammo: Int = 5
-    override val reloadTime: Int = 3 * 20
-    override val cooldown: Int = 10
+    override val damage = 10f
+    override val ammo = 5
+    override val reloadTime = 3000L
+    override val cooldown = 500L
 
     override val sound = null
 
@@ -56,7 +58,7 @@ object MobLobber : ProjectileGun("Mob Lobber") {
         return damageMap
     }
 
-    override fun collided(shooter: Player, projectile: Entity) {
+    override fun collided(game: LazerTagGame, shooter: Player, projectile: Entity) {
         shooter.instance!!.showParticle(
             Particle.particle(
                 type = ParticleType.EXPLOSION_EMITTER,
@@ -77,13 +79,10 @@ object MobLobber : ProjectileGun("Mob Lobber") {
                 loopedPlayer.velocity =
                     loopedPlayer.position.sub(projectile.position.sub(.0, .5, .0)).asVec().normalize().mul(30.0)
 
-                loopedPlayer.scheduleNextTick {
-                    loopedPlayer.damage(
-                        DamageType.fromPlayer(shooter),
-                        (damage / (projectile.getDistance(loopedPlayer) / 1.75).toFloat())
-                            .coerceAtMost(damage)
-                    )
-                }
+                game.damage(
+                    shooter, loopedPlayer, false, (damage / (projectile.getDistance(loopedPlayer) / 1.75).toFloat())
+                        .coerceAtMost(damage)
+                )
             }
     }
 
@@ -94,6 +93,18 @@ object MobLobber : ProjectileGun("Mob Lobber") {
         val velocity = shooter.position.direction().mul(50.0)
         projectile.velocity = velocity
         projectile.setBoundingBox(1.5, 1.5, 1.5)
+
+        when (entityType) {
+            EntityType.CREEPER -> {
+                val entityMeta = projectile.entityMeta as CreeperMeta
+                entityMeta.isCharged = ThreadLocalRandom.current().nextBoolean()
+                entityMeta.isIgnited = true
+            }
+            EntityType.PUFFERFISH -> {
+                val entityMeta = projectile.entityMeta as PufferfishMeta
+                entityMeta.state = PufferfishMeta.State.FULLY_PUFFED
+            }
+        }
 
         shooter.playSound(
             Sound.sound(
