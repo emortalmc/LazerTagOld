@@ -16,7 +16,7 @@ object SMG : Gun("SMG") {
 
     override val maxDistance = 15.0
 
-    override val burstAmount = 4
+    override val burstAmount = 6
     override val burstInterval = 20L
 
 }

@@ -13,7 +13,7 @@ object LazerMinigun : Gun("Lazer Minigun") {
 
     override val damage = 0.75f
     override val cooldown = 100L
-    override val ammo = 100
+    override val ammo = 70
     override val reloadTime = 5000L
     override val maxDistance = 50.0
 

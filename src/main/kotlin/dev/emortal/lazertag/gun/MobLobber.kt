@@ -68,7 +68,7 @@ object MobLobber : ProjectileGun("Mob Lobber", Rarity.RARE) {
             projectile.position.asVec()
         )
         shooter.instance!!.playSound(
-            Sound.sound(SoundEvent.ENTITY_GENERIC_EXPLODE, Sound.Source.PLAYER, 1f, 1f),
+            Sound.sound(SoundEvent.ENTITY_GENERIC_EXPLODE, Sound.Source.PLAYER, 3f, 1f),
             projectile.position
         )
 
@@ -103,6 +103,9 @@ object MobLobber : ProjectileGun("Mob Lobber", Rarity.RARE) {
             EntityType.PUFFERFISH -> {
                 val entityMeta = projectile.entityMeta as PufferfishMeta
                 entityMeta.state = PufferfishMeta.State.FULLY_PUFFED
+            }
+            else -> {
+
             }
         }
 

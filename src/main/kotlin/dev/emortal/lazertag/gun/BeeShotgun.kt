@@ -62,7 +62,7 @@ object BeeShotgun : ProjectileGun("Bee Keeper") {
 
         shooter.instance!!.players
             .filter { it.gameMode == GameMode.ADVENTURE }
-            .filter { boundingBox.intersect(it.boundingBox) }
+            .filter { boundingBox.intersectEntity(projectile.position, it) }
             .forEach { loopedPlayer ->
                 if (loopedPlayer == shooter) return@forEach
 

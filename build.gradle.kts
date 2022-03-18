@@ -18,9 +18,9 @@ dependencies {
     //compileOnly(kotlin("stdlib"))
     //compileOnly(kotlin("reflect"))
 
-    implementation("com.github.EmortalMC:Rayfast:07d8daf030")
-    compileOnly("com.github.Minestom:Minestom:2e73f00331")
-    compileOnly("com.github.EmortalMC:Immortal:0dc53da88c")
+    //implementation("com.github.EmortalMC:Rayfast:07d8daf030")
+    compileOnly("com.github.Minestom:Minestom:055cc409ed")
+    compileOnly("com.github.EmortalMC:Immortal:1.3.0")
 
     compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
 }

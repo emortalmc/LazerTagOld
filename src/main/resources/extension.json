@@ -4,7 +4,6 @@
   "version": "${project.version}",
   "dependencies": [
     "KStom",
-    "Immortal",
-    "SlimeLoader"
+    "Immortal"
   ]
 }

@@ -1,5 +1,6 @@
 package dev.emortal.lazertag.gun
 
+import dev.emortal.immortal.game.Game
 import dev.emortal.immortal.util.progressBar
 import dev.emortal.lazertag.game.LazerTagGame
 import dev.emortal.lazertag.raycast.RaycastResultType
@@ -186,12 +187,12 @@ sealed class Gun(
 
         }
 
-        shootAfter(player)
+        shootAfter(game, player)
 
         return damageMap
     }
 
-    protected open fun shootAfter(player: Player) {}
+    protected open fun shootAfter(game: Game, player: Player) {}
 
     open fun renderAmmo(
         player: Player,

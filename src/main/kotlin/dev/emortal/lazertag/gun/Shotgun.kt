@@ -1,5 +1,6 @@
 package dev.emortal.lazertag.gun
 
+import dev.emortal.immortal.game.Game
 import dev.emortal.immortal.util.MinestomRunnable
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.format.NamedTextColor
@@ -26,13 +27,15 @@ object Shotgun : Gun("Shotgun") {
 
     override val sound = Sound.sound(SoundEvent.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, Sound.Source.PLAYER, 1.5f, 1f)
 
-    override fun shootAfter(player: Player) {
+    override fun shootAfter(game: Game, player: Player) {
+
         player.velocity = player.position.direction().normalize().mul(-15.0)
 
         object : MinestomRunnable(
             delay = Duration.ofMillis(250),
             repeat = Duration.ofMillis(150),
-            iterations = 2
+            iterations = 2,
+            timer = game.timer
         ) {
             override fun run() {
                 player.playSound(Sound.sound(SoundEvent.ENTITY_IRON_GOLEM_ATTACK, Sound.Source.PLAYER, 1f, 1f))

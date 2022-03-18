@@ -2,6 +2,7 @@ package dev.emortal.lazertag.gun
 
 import dev.emortal.immortal.util.MinestomRunnable
 import dev.emortal.lazertag.game.LazerTagGame
+import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
@@ -32,7 +33,7 @@ sealed class ProjectileGun(name: String, rarity: Rarity = Rarity.COMMON, customM
 
         val expandedBox = projectile.boundingBox.expand(boundingBoxExpand.x, boundingBoxExpand.y, boundingBoxExpand.z)
         val intersectingPlayers = game.players
-            .filter { it.gameMode == GameMode.ADVENTURE && expandedBox.intersect(it.boundingBox) }
+            .filter { it.gameMode == GameMode.ADVENTURE && expandedBox.intersectEntity(projectile.position, it) }
             .filter { if (projectile.aliveTicks < 30) it != shooter else true }
         if (intersectingPlayers.isEmpty()) return
 

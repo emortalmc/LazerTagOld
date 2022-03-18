@@ -65,7 +65,7 @@ object RBG : ProjectileGun("RBG", Rarity.IMPOSSIBLE) {
         )
 
         shooter.instance!!.playSound(
-            Sound.sound(SoundEvent.ENTITY_GENERIC_EXPLODE, Sound.Source.PLAYER, 1f, 1f),
+            Sound.sound(SoundEvent.ENTITY_GENERIC_EXPLODE, Sound.Source.PLAYER, 3f, 1f),
             projectile.position
         )
 
