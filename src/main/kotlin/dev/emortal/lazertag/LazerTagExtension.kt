@@ -1,7 +1,7 @@
 package dev.emortal.lazertag
 
+import dev.emortal.immortal.config.GameOptions
 import dev.emortal.immortal.game.GameManager
-import dev.emortal.immortal.game.GameOptions
 import dev.emortal.immortal.game.WhenToRegisterEvents
 import dev.emortal.lazertag.commands.EventCommand
 import dev.emortal.lazertag.commands.GunCommand
@@ -46,7 +46,6 @@ class LazerTagExtension : Extension() {
         ConfigurationHelper.writeObjectToPath(configPath, config)
 
         GameManager.registerGame<LazerTagGame>(
-            eventNode,
             "lazertag",
             "<gradient:gold:yellow><bold>LazerTag".asMini(),
             showsInSlashPlay = true,

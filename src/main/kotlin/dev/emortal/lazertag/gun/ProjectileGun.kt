@@ -62,9 +62,8 @@ sealed class ProjectileGun(name: String, rarity: Rarity = Rarity.COMMON, customM
             }
 
             entityTaskMap[entity] =
-                object :
-                    MinestomRunnable(repeat = Duration.ofMillis(50), iterations = maxDuration, timer = game.timer) {
-                    override fun run() {
+                object : MinestomRunnable(repeat = Duration.ofMillis(50), iterations = maxDuration, coroutineScope = game.coroutineScope) {
+                    override suspend fun run() {
                         projectileTick(game, entity, player)
                     }
 

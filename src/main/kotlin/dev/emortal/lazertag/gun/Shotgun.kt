@@ -35,9 +35,9 @@ object Shotgun : Gun("Shotgun") {
             delay = Duration.ofMillis(250),
             repeat = Duration.ofMillis(150),
             iterations = 2,
-            timer = game.timer
+            coroutineScope = game.coroutineScope
         ) {
-            override fun run() {
+            override suspend fun run() {
                 player.playSound(Sound.sound(SoundEvent.ENTITY_IRON_GOLEM_ATTACK, Sound.Source.PLAYER, 1f, 1f))
             }
         }

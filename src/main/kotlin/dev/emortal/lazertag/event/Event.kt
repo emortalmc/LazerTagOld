@@ -1,6 +1,8 @@
 package dev.emortal.lazertag.event
 
+import dev.emortal.immortal.util.MinestomRunnable
 import dev.emortal.lazertag.game.LazerTagGame
+import kotlinx.coroutines.coroutineScope
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
@@ -32,12 +34,12 @@ sealed class Event {
 
         game.sendMessage(Component.text().append(prefix).append(startMessage))
 
-        val task = object : TimerTask() {
-            override fun run() {
+        object : MinestomRunnable(delay = duration, coroutineScope = game.coroutineScope) {
+            override suspend fun run() {
                 eventEnded(game)
             }
         }
-        game.timer.schedule(task, duration.toMillis())
+
     }
 
 
