@@ -143,8 +143,8 @@ object RaycastUtil {
 
         // Both entity and block check have collided, time to see which is closer!
 
-        val distanceFromEntity = startPoint.distance(entityRaycast!!.second)
-        val distanceFromBlock = startPoint.distance(blockRaycast!!)
+        val distanceFromEntity = startPoint.distanceSquared(entityRaycast!!.second)
+        val distanceFromBlock = startPoint.distanceSquared(blockRaycast!!)
 
         return if (distanceFromBlock > distanceFromEntity) {
             RaycastResult(RaycastResultType.HIT_ENTITY, entityRaycast.first, entityRaycast.second)
