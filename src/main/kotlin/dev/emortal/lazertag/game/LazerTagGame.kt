@@ -249,7 +249,10 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
             player.showTitle(
                 Title.title(
                     Component.text("YOU DIED", NamedTextColor.RED, TextDecoration.BOLD),
-                    "<gray>Killed by <red><bold>${killer.username}</bold></red>".asMini(),
+                    Component.text()
+                        .append(Component.text("Killed by ", NamedTextColor.GRAY))
+                        .append(Component.text(killer.username, NamedTextColor.RED, TextDecoration.BOLD))
+                        .build(),
                     Title.Times.of(
                         Duration.ZERO, Duration.ofSeconds(1), Duration.ofSeconds(1)
                     )
