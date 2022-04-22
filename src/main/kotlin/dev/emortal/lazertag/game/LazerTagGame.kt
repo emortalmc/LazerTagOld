@@ -1,6 +1,7 @@
 package dev.emortal.lazertag.game
 
 import dev.emortal.immortal.config.GameOptions
+import dev.emortal.immortal.game.GameManager.game
 import dev.emortal.immortal.game.GameState
 import dev.emortal.immortal.game.PvpGame
 import dev.emortal.immortal.util.MinestomRunnable
@@ -42,6 +43,8 @@ import net.minestom.server.event.player.*
 import net.minestom.server.instance.AnvilLoader
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
+import net.minestom.server.item.ItemMeta
+import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.potion.Potion
 import net.minestom.server.potion.PotionEffect
@@ -78,7 +81,7 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
     }
 
     //TODO: Replace with LazerTag game options?
-    val killsToWin = 25
+    private val killsToWin = 25
 
     val respawnTasks = ConcurrentHashMap<Player, MinestomRunnable>()
     val burstTasks = ConcurrentHashMap<Player, MinestomRunnable>()
@@ -219,7 +222,7 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                         .append(Component.text("☠ ", NamedTextColor.RED))
                         .append(Component.text(player.username, NamedTextColor.RED))
                         .build(),
-                    Title.Times.of(Duration.ZERO, Duration.ofSeconds(1), Duration.ofMillis(500))
+                    Title.Times.times(Duration.ZERO, Duration.ofSeconds(1), Duration.ofMillis(500))
                 )
             )
 
@@ -253,13 +256,13 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                         .append(Component.text("Killed by ", NamedTextColor.GRAY))
                         .append(Component.text(killer.username, NamedTextColor.RED, TextDecoration.BOLD))
                         .build(),
-                    Title.Times.of(
+                    Title.Times.times(
                         Duration.ZERO, Duration.ofSeconds(1), Duration.ofSeconds(1)
                     )
                 )
             )
 
-            val coinItem = item(Material.SUNFLOWER)
+            val coinItem = ItemStack.of(Material.SUNFLOWER)
             val random = ThreadLocalRandom.current()
             repeat(10) {
                 val entity = Entity(EntityType.ITEM)
@@ -292,7 +295,7 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                 Title.title(
                     Component.text("YOU DIED", NamedTextColor.RED, TextDecoration.BOLD),
                     "<rainbow>You killed yourself!".asMini(),
-                    Title.Times.of(
+                    Title.Times.times(
                         Duration.ZERO, Duration.ofSeconds(1), Duration.ofSeconds(1)
                     )
                 )
@@ -316,7 +319,7 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                     Title.title(
                         Component.text(3 - currentIteration.get(), NamedTextColor.GOLD, TextDecoration.BOLD),
                         Component.empty(),
-                        Title.Times.of(
+                        Title.Times.times(
                             Duration.ZERO, Duration.ofSeconds(1), Duration.ofMillis(200)
                         )
                     )
@@ -373,21 +376,22 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
             if (hand != Player.Hand.MAIN) return@listenOnly
 
             val heldGun = player.heldGun ?: return@listenOnly
-            val lastShotMs = player.itemInMainHand.meta.getTag(lastShotTag) ?: return@listenOnly
+            val lastShotMs = player.itemInMainHand.meta().getTag(lastShotTag) ?: return@listenOnly
 
             if (heldGun.shootMidReload) {
-                val lastAmmo = player.itemInMainHand.meta.getTag(ammoTag)
+                val lastAmmo = player.itemInMainHand.meta().getTag(ammoTag)
                 reloadTasks[player]?.cancel()
                 reloadTasks.remove(player)
 
-                player.setCooldown(player.itemInMainHand.material, 0, false)
+                player.setCooldown(player.itemInMainHand.material(), 0, false)
 
-                player.itemInMainHand = player.itemInMainHand.and {
-                    removeTag(reloadingTag)
-                    setTag(ammoTag, lastAmmo)
+                player.itemInMainHand = player.itemInMainHand.withMeta {
+                    it.removeTag(reloadingTag)
+                    it.setTag(ammoTag, lastAmmo)
+                    it
                 }
             } else {
-                if (player.itemInMainHand.meta.hasTag(reloadingTag)) return@listenOnly
+                if (player.itemInMainHand.meta().hasTag(reloadingTag)) return@listenOnly
             }
 
 
@@ -398,8 +402,9 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                 return@listenOnly
             }
 
-            player.itemInMainHand = player.itemInMainHand.and {
-                setTag(lastShotTag, System.currentTimeMillis())
+            player.itemInMainHand = player.itemInMainHand.withMeta {
+                it.setTag(lastShotTag, System.currentTimeMillis())
+                it
             }
 
             burstTasks[player] = object : MinestomRunnable(
@@ -408,12 +413,12 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                 coroutineScope = coroutineScope
             ) {
                 override suspend fun run() {
-                    if (!player.itemInMainHand.meta.hasTag(ammoTag)) {
+                    if (!player.itemInMainHand.meta().hasTag(ammoTag)) {
                         cancel()
                         burstTasks.remove(player)
                         return
                     }
-                    if (player.itemInMainHand.meta.getTag(ammoTag)!! <= 0) {
+                    if (player.itemInMainHand.meta().getTag(ammoTag)!! <= 0) {
                         player.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_BREAK, Sound.Source.PLAYER, 0.7f, 1.5f))
                         player.sendActionBar("<red>Press <bold><key:key.swapOffhand></bold> to reload!".asMini())
 
@@ -455,20 +460,21 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
 
             val gun = Gun.registeredMap[offHandItem.getTag(Gun.gunIdTag)] ?: return@listenOnly
 
-            if (player.itemInMainHand.meta.hasTag(reloadingTag) || player.itemInMainHand.meta.getTag(ammoTag) == gun.ammo
+            if (player.itemInMainHand.meta().hasTag(reloadingTag) || player.itemInMainHand.meta().getTag(ammoTag) == gun.ammo
             ) {
                 return@listenOnly
             }
 
             val ammoOnReload = player.itemInMainHand.getTag(ammoTag)!!
             val reloadMillis = gun.getReloadMillis(ammoOnReload)
-            player.setCooldown(player.itemInMainHand.material, (reloadMillis / 50.0).roundToInt(), false)
+            player.setCooldown(player.itemInMainHand.material(), (reloadMillis / 50.0).roundToInt(), false)
 
             val startingAmmo = if (gun.freshReload) 0f else ammoOnReload.toFloat()
 
-            player.itemInMainHand = player.itemInMainHand.and {
-                setTag(ammoTag, startingAmmo.toInt())
-                setTag(reloadingTag, 1)
+            player.itemInMainHand = player.itemInMainHand.withMeta {
+                it.setTag(ammoTag, startingAmmo.toInt())
+                it.setTag(reloadingTag, 1)
+                it
             }
 
             reloadTasks[player] = object : MinestomRunnable(
@@ -488,8 +494,9 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                     gun.renderAmmo(player, roundedAmmo, currentAmmo / gun.ammo.toFloat(), reloading = true)
                     if (roundedAmmo == lastAmmoRounded) return
 
-                    player.itemInMainHand = player.itemInMainHand.and {
-                        this.set(ammoTag, roundedAmmo)
+                    player.itemInMainHand = player.itemInMainHand.withMeta {
+                        it.setTag(ammoTag, roundedAmmo)
+                        it
                     }
 
                     player.playSound(
@@ -512,9 +519,10 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                         )
                     }.delay(Duration.ofMillis(50 * 3L)).schedule()
 
-                    player.itemInMainHand = player.itemInMainHand.and {
-                        set(ammoTag, gun.ammo)
-                        removeTag(reloadingTag)
+                    player.itemInMainHand = player.itemInMainHand.withMeta {
+                        it.setTag(ammoTag, gun.ammo)
+                        it.removeTag(reloadingTag)
+                        it
                     }
 
                     gun.renderAmmo(player, gun.ammo)
@@ -549,7 +557,7 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
         gun.renderAmmo(player, gun.ammo)
     }
 
-    fun damage(damager: Player, target: Player, headshot: Boolean = false, damage: Float) {
+    @Synchronized fun damage(damager: Player, target: Player, headshot: Boolean = false, damage: Float) {
         if (target.hasSpawnProtection) {
             return
         }
@@ -569,7 +577,7 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
 
         damager.playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_HURT, Sound.Source.PLAYER, 0.75f, 1.1f))
 
-        if (target.health - damage <= 0) {
+        if (target.health - damage <= 0 && target.gameMode == GameMode.ADVENTURE) {
             target.health = 20f
 
             watchingPlayerMap[target]?.forEach {

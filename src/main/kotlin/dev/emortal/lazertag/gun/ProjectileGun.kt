@@ -7,12 +7,12 @@ import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
-import net.minestom.server.item.ItemMetaBuilder
+import net.minestom.server.item.ItemMeta
 import world.cepi.kstom.item.and
 import world.cepi.kstom.util.playSound
 import java.time.Duration
 
-sealed class ProjectileGun(name: String, rarity: Rarity = Rarity.COMMON, customMeta: (ItemMetaBuilder) -> Unit = {}) :
+sealed class ProjectileGun(name: String, rarity: Rarity = Rarity.COMMON, customMeta: (ItemMeta.Builder) -> Unit = {}) :
     Gun(name, rarity, customMeta) {
 
     open val maxDuration: Int = 5 * 20
@@ -49,8 +49,8 @@ sealed class ProjectileGun(name: String, rarity: Rarity = Rarity.COMMON, customM
         if (!game.infiniteAmmo) {
             val newAmmo = (player.itemInMainHand.meta.getTag(ammoTag) ?: 1) - 1
             renderAmmo(player, newAmmo)
-            player.itemInMainHand = player.itemInMainHand.and {
-                setTag(ammoTag, newAmmo)
+            player.itemInMainHand = player.itemInMainHand.withMeta {
+                it.set(ammoTag, newAmmo)
             }
         }
 

@@ -19,8 +19,8 @@ dependencies {
     //compileOnly(kotlin("reflect"))
 
     //implementation("com.github.EmortalMC:Rayfast:07d8daf030")
-    compileOnly("com.github.Minestom:Minestom:71b6e8df90")
-    compileOnly("com.github.EmortalMC:Immortal:973225b074")
+    compileOnly("com.github.Minestom:Minestom:c7bb9e14e5")
+    compileOnly("com.github.EmortalMC:Immortal:a9f690cd78")
 
     compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
     compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")

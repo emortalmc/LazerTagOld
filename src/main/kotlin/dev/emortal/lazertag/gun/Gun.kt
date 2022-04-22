@@ -3,6 +3,7 @@ package dev.emortal.lazertag.gun
 import dev.emortal.immortal.game.Game
 import dev.emortal.immortal.util.progressBar
 import dev.emortal.lazertag.game.LazerTagGame
+import dev.emortal.lazertag.gun.Gun.Companion.ammoTag
 import dev.emortal.lazertag.raycast.RaycastResultType
 import dev.emortal.lazertag.raycast.RaycastUtil
 import dev.emortal.lazertag.utils.breakBlock
@@ -15,12 +16,13 @@ import net.kyori.adventure.text.format.TextDecoration
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
-import net.minestom.server.item.ItemMetaBuilder
+import net.minestom.server.item.ItemMeta
 import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
 import world.cepi.kstom.item.and
+import world.cepi.kstom.item.displayName
 import world.cepi.kstom.item.item
 import world.cepi.kstom.util.asVec
 import world.cepi.kstom.util.eyePosition
@@ -38,7 +40,7 @@ import kotlin.collections.set
 sealed class Gun(
     val name: String,
     val rarity: Rarity = Rarity.COMMON,
-    private val customMeta: (ItemMetaBuilder) -> Unit = {}
+    private val customMeta: (ItemMeta.Builder) -> Unit = {}
 ) {
 
     companion object {
@@ -80,14 +82,14 @@ sealed class Gun(
     abstract val color: TextColor
 
     val item by lazy {
-        item(material) {
-            displayName(Component.text(name, color).decoration(TextDecoration.ITALIC, false))
-            set(gunIdTag, name)
-            set(lastShotTag, 0)
-            set(ammoTag, ammo)
-            hideFlag()
-            customMeta.invoke(this)
-        }
+        ItemStack.builder(material).meta {
+            it.displayName(Component.text(name, color).decoration(TextDecoration.ITALIC, false))
+            it.set(gunIdTag, name)
+            it.set(lastShotTag, 0)
+            it.set(ammoTag, ammo)
+            customMeta.invoke(it)
+            it
+        }.build()
     }
 
     abstract val damage: Float // PER BULLET!
@@ -119,8 +121,8 @@ sealed class Gun(
         if (!game.infiniteAmmo) {
             val newAmmo = (player.itemInMainHand.meta.getTag(ammoTag) ?: 1) - 1
             renderAmmo(player, newAmmo)
-            player.itemInMainHand = player.itemInMainHand.and {
-                setTag(ammoTag, newAmmo)
+            player.itemInMainHand = player.itemInMainHand.withMeta {
+                it.set(ammoTag, newAmmo)
             }
         }
 
