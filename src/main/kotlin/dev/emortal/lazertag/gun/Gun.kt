@@ -40,7 +40,7 @@ import kotlin.collections.set
 sealed class Gun(
     val name: String,
     val rarity: Rarity = Rarity.COMMON,
-    private val customMeta: (ItemMeta.Builder) -> Unit = {}
+    val customMeta: (ItemMeta.Builder) -> Unit = {}
 ) {
 
     companion object {
@@ -81,7 +81,7 @@ sealed class Gun(
     abstract val material: Material
     abstract val color: TextColor
 
-    val item by lazy {
+    open val item by lazy {
         ItemStack.builder(material).meta {
             it.displayName(Component.text(name, color).decoration(TextDecoration.ITALIC, false))
             it.set(gunIdTag, name)

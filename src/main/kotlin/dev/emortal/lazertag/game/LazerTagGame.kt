@@ -21,6 +21,7 @@ import dev.emortal.lazertag.gun.Rifle
 import dev.emortal.lazertag.utils.cancel
 import dev.emortal.lazertag.utils.setCooldown
 import net.kyori.adventure.bossbar.BossBar
+import net.kyori.adventure.key.Key
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -204,6 +205,19 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
 
             val gunName = killer.heldGun?.name ?: "nothing apparently"
 
+            if (gunName == "Trumpet") {
+                player.playSound(
+                    Sound.sound(Key.key("entity.roblox.death"), Sound.Source.MASTER, 1f, 1f),
+                    Sound.Emitter.self()
+                )
+                killer.playSound(
+                    Sound.sound(Key.key("entity.roblox.death"), Sound.Source.MASTER, 1f, 1f),
+                    Sound.Emitter.self()
+                )
+            } else {
+                killer.playSound(Sound.sound(SoundEvent.BLOCK_NOTE_BLOCK_PLING, Sound.Source.PLAYER, 1f, 1f))
+            }
+
             sendMessage(
                 Component.text()
                     .append(Component.text("☠", NamedTextColor.RED))
@@ -246,8 +260,6 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
 
                 it.kills++
             }
-
-            killer.playSound(Sound.sound(SoundEvent.BLOCK_NOTE_BLOCK_PLING, Sound.Source.PLAYER, 1f, 1f))
 
             player.showTitle(
                 Title.title(
