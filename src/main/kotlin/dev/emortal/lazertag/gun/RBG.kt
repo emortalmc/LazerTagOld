@@ -42,7 +42,7 @@ object RBG : ProjectileGun("RBG", Rarity.IMPOSSIBLE) {
     }
 
     override fun tick(game: LazerTagGame, projectile: Entity) {
-        projectile.velocity = projectile.velocity.mul(1.02)
+        projectile.velocity = projectile.velocity.mul(1.08, 1.0, 1.08)
 
         game.showParticle(
             Particle.particle(
@@ -103,6 +103,7 @@ object RBG : ProjectileGun("RBG", Rarity.IMPOSSIBLE) {
         projectile.velocity = velocity
 
         projectile.setNoGravity(true)
+        projectile.setGravity(0.0, 0.0)
         projectile.setInstance(shooter.instance!!, shooter.eyePosition())
 
         return projectile

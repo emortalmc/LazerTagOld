@@ -8,6 +8,7 @@ import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.item.ItemMeta
+import org.tinylog.kotlin.Logger
 import world.cepi.kstom.item.and
 import world.cepi.kstom.util.playSound
 import java.time.Duration
@@ -25,7 +26,7 @@ sealed class ProjectileGun(name: String, rarity: Rarity = Rarity.COMMON, customM
     fun projectileTick(game: LazerTagGame, projectile: Entity, shooter: Player) {
         tick(game, projectile)
 
-        if (projectile.velocity.x == 0.0 || projectile.velocity.y == 0.0 || projectile.velocity.z == 0.0) return collide(
+        if (projectile.velocity.x == 0.0 || projectile.velocity.y == 0.0 || projectile.velocity.z == 0.0 || projectile.isOnGround) return collide(
             game,
             shooter,
             projectile
@@ -47,7 +48,7 @@ sealed class ProjectileGun(name: String, rarity: Rarity = Rarity.COMMON, customM
         sound?.let { game.playSound(it, player.position) }
 
         if (!game.infiniteAmmo) {
-            val newAmmo = (player.itemInMainHand.meta.getTag(ammoTag) ?: 1) - 1
+            val newAmmo = (player.itemInMainHand.meta().getTag(ammoTag) ?: 1) - 1
             renderAmmo(player, newAmmo)
             player.itemInMainHand = player.itemInMainHand.withMeta {
                 it.set(ammoTag, newAmmo)

@@ -400,7 +400,6 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                 player.itemInMainHand = player.itemInMainHand.withMeta {
                     it.removeTag(reloadingTag)
                     it.setTag(ammoTag, lastAmmo)
-                    it
                 }
             } else {
                 if (player.itemInMainHand.meta().hasTag(reloadingTag)) return@listenOnly
@@ -416,7 +415,6 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
 
             player.itemInMainHand = player.itemInMainHand.withMeta {
                 it.setTag(lastShotTag, System.currentTimeMillis())
-                it
             }
 
             burstTasks[player] = object : MinestomRunnable(
@@ -486,7 +484,6 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
             player.itemInMainHand = player.itemInMainHand.withMeta {
                 it.setTag(ammoTag, startingAmmo.toInt())
                 it.setTag(reloadingTag, 1)
-                it
             }
 
             reloadTasks[player] = object : MinestomRunnable(
@@ -508,7 +505,6 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
 
                     player.itemInMainHand = player.itemInMainHand.withMeta {
                         it.setTag(ammoTag, roundedAmmo)
-                        it
                     }
 
                     player.playSound(
@@ -534,7 +530,6 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                     player.itemInMainHand = player.itemInMainHand.withMeta {
                         it.setTag(ammoTag, gun.ammo)
                         it.removeTag(reloadingTag)
-                        it
                     }
 
                     gun.renderAmmo(player, gun.ammo)
