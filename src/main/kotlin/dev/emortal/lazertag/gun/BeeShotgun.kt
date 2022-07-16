@@ -11,7 +11,6 @@ import net.minestom.server.entity.Player
 import net.minestom.server.entity.metadata.animal.BeeMeta
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
-import org.tinylog.kotlin.Logger
 import world.cepi.kstom.util.eyePosition
 import world.cepi.kstom.util.playSound
 import world.cepi.kstom.util.spread
@@ -28,11 +27,11 @@ object BeeShotgun : ProjectileGun("Bee Keeper") {
     override val damage = 1.25f
     override val numberOfBullets = 20
     override val spread = 0.12
-    override val cooldown = 350L
+    override val cooldown = 400L
     override val ammo = 6
-    override val reloadTime = 1500L
-    override val freshReload = false
-    override val shootMidReload = true
+    override val reloadTime = 1600L
+    override val freshReload = true
+    override val shootMidReload = false
 
     override val sound = Sound.sound(SoundEvent.ENTITY_BEE_HURT, Sound.Source.PLAYER, 1f, 1f)
 

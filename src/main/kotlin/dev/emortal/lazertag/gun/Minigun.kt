@@ -17,8 +17,8 @@ object Minigun : Gun("Minigun") {
     override val reloadTime = 3000L
     override val maxDistance = 40.0
 
-    override val burstAmount = 5
-    override val burstInterval = 30L
+    override val burstAmount = 4
+    override val burstInterval = 50L
 
     override val spread = 0.025
 

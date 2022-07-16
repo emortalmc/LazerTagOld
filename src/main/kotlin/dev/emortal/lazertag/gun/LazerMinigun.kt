@@ -11,14 +11,14 @@ object LazerMinigun : Gun("Lazer Minigun") {
     override val material: Material = Material.NETHERITE_SHOVEL
     override val color: TextColor = NamedTextColor.AQUA
 
-    override val damage = 0.75f
+    override val damage = 0.69f
     override val cooldown = 100L
     override val ammo = 70
     override val reloadTime = 3500L
     override val maxDistance = 50.0
 
-    override val burstAmount = 4
-    override val burstInterval = 20L
+    override val burstAmount = 3
+    override val burstInterval = 50L
 
     override val spread = 0.0
 

@@ -2,16 +2,13 @@ package dev.emortal.lazertag.gun
 
 import dev.emortal.immortal.util.MinestomRunnable
 import dev.emortal.lazertag.game.LazerTagGame
-import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.item.ItemMeta
-import org.tinylog.kotlin.Logger
-import world.cepi.kstom.item.and
+import net.minestom.server.timer.TaskSchedule
 import world.cepi.kstom.util.playSound
-import java.time.Duration
 
 sealed class ProjectileGun(name: String, rarity: Rarity = Rarity.COMMON, customMeta: (ItemMeta.Builder) -> Unit = {}) :
     Gun(name, rarity, customMeta) {
@@ -63,8 +60,8 @@ sealed class ProjectileGun(name: String, rarity: Rarity = Rarity.COMMON, customM
             }
 
             entityTaskMap[entity] =
-                object : MinestomRunnable(repeat = Duration.ofMillis(50), iterations = maxDuration, coroutineScope = game.coroutineScope) {
-                    override suspend fun run() {
+                object : MinestomRunnable(repeat = TaskSchedule.nextTick(), iterations = maxDuration.toLong(), taskGroup = game.taskGroup) {
+                    override fun run() {
                         projectileTick(game, entity, player)
                     }
 

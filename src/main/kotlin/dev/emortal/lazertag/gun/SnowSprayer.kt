@@ -30,6 +30,8 @@ object SnowSprayer : ProjectileGun("Snow Sprayer") {
     override val burstAmount = 5
     override val burstInterval = 50L
 
+    override val spread = 0.025
+
     override val sound = Sound.sound(SoundEvent.ENTITY_SNOWBALL_THROW, Sound.Source.MASTER, 1f, 1.5f)
 
     override val boundingBoxExpand: Vec = Vec(0.5, 0.5, 0.5)
