@@ -4,6 +4,7 @@ import dev.emortal.immortal.config.GameOptions
 import dev.emortal.immortal.game.GameState
 import dev.emortal.immortal.game.PvpGame
 import dev.emortal.immortal.util.MinestomRunnable
+import dev.emortal.immortal.util.armify
 import dev.emortal.immortal.util.reset
 import dev.emortal.lazertag.LazerTagExtension
 import dev.emortal.lazertag.event.Event
@@ -176,8 +177,6 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
         if (killer != null && killer != player && killer is Player) {
             val kills = ++killer.kills
 
-            if (kills >= killsToWin) return victory(killer)
-
             killer.addEffect(Potion(PotionEffect.REGENERATION, 2, 6 * 20))
 
             scoreboard?.updateLineScore(killer.uuid.toString(), kills)
@@ -271,7 +270,7 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                 )
             )
 
-            val coinItem = ItemStack.of(Material.SUNFLOWER)
+            val coinItem = ItemStack.of(Material.REDSTONE)
             val random = ThreadLocalRandom.current()
             repeat(10) {
                 val entity = Entity(EntityType.ITEM)
@@ -289,6 +288,8 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                 entity.setInstance(instance, player.position.add(0.0, 0.5, 0.0))
                 entity.addViewer(killer)
             }
+
+            if (kills >= killsToWin) return victory(killer)
 
             if (gunRandomizing) setGun(killer)
         } else {
@@ -359,8 +360,30 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
     }
 
     override fun gameWon(winningPlayers: Collection<Player>) {
+        val winningPlayer = winningPlayers.first()
+
         reloadTasks.values.forEach(MinestomRunnable::cancel)
         reloadTasks.clear()
+
+        val message = Component.text()
+            .append(Component.text(" ${" ".repeat(25)}VICTORY", NamedTextColor.GOLD, TextDecoration.BOLD))
+            .append(Component.text("\n\n Winner: ", NamedTextColor.GRAY))
+            .append(Component.text(winningPlayer.username, NamedTextColor.GREEN))
+
+        message.append(Component.newline())
+
+        players.sortedBy { it.kills }.reversed().take(3).forEach { plr ->
+            message.append(
+                Component.text()
+                    .append(Component.newline())
+                    .append(Component.space())
+                    .append(Component.text(plr.username, NamedTextColor.GRAY))
+                    .append(Component.text(" - ", NamedTextColor.DARK_GRAY))
+                    .append(Component.text(plr.kills, NamedTextColor.WHITE))
+            )
+        }
+
+        sendMessage(message.armify())
 
         players.forEach {
             it.inventory.clear()
