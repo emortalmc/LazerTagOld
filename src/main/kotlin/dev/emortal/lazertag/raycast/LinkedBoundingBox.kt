@@ -1,8 +1,5 @@
 package dev.emortal.lazertag.raycast
 
-import net.minestom.server.collision.BoundingBox
-import net.minestom.server.entity.Entity
-
 //private val boundingBoxToLinkedMap = HashMap<BoundingBox, LinkedBoundingBox>()
 //fun BoundingBox.toLinked(entity: Entity): LinkedBoundingBox {
 //    boundingBoxToLinkedMap.computeIfAbsent(this) { LinkedBoundingBox(entity, width(), height(), depth()) }

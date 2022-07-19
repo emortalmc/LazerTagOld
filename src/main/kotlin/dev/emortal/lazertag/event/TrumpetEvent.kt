@@ -1,7 +1,6 @@
 package dev.emortal.lazertag.event
 
 import dev.emortal.lazertag.game.LazerTagGame
-import dev.emortal.lazertag.gun.RBG
 import dev.emortal.lazertag.gun.Rifle
 import dev.emortal.lazertag.gun.Trumpet
 import net.kyori.adventure.key.Key
@@ -9,7 +8,6 @@ import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
-import net.minestom.server.sound.SoundEvent
 import java.time.Duration
 
 class TrumpetEvent : Event() {

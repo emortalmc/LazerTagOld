@@ -2,11 +2,9 @@ package dev.emortal.lazertag.utils
 
 import net.minestom.server.adventure.audience.PacketGroupingAudience
 import net.minestom.server.coordinate.Point
-import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.network.packet.server.play.BlockBreakAnimationPacket
 import net.minestom.server.network.packet.server.play.EffectPacket
-import net.minestom.server.utils.PacketUtils
 import java.util.concurrent.ThreadLocalRandom
 
 fun PacketGroupingAudience.sendBlockDamage(destroyStage: Byte, point: Point) {

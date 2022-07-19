@@ -5,12 +5,9 @@ import net.kyori.adventure.key.Key
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
-import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.item.Material
-import net.minestom.server.network.packet.client.ClientPacketsHandler.Play
-import net.minestom.server.sound.SoundEvent
 import world.cepi.kstom.Manager
 import world.cepi.kstom.util.playSound
 import java.time.Duration
