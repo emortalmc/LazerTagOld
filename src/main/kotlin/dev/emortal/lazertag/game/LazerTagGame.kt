@@ -174,8 +174,20 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
         reloadTasks.remove(player)
         burstTasks.remove(player)
 
+        val previousLeader = players.maxOf { it.kills }
+
         if (killer != null && killer != player && killer is Player) {
             val kills = ++killer.kills
+
+            if (kills > previousLeader) {
+                sendMessage(
+                    Component.text()
+                        .append(Component.text("★", NamedTextColor.YELLOW))
+                        .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
+                        .append(Component.text(killer.username, NamedTextColor.YELLOW))
+                        .append(Component.text(" is now the kill leader!", NamedTextColor.GRAY))
+                )
+            }
 
             killer.addEffect(Potion(PotionEffect.REGENERATION, 2, 6 * 20))
 
@@ -639,53 +651,6 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
         }
 
         if (target == damager) return
-
-        val bossBar = bossbarMap[damager]
-        val watchingBossbar = watchingPlayerMap[target]
-
-        watchingBossbar?.forEach {
-            it.first.progress((target.health - damage) / target.maxHealth)
-        }
-
-        if (bossBar == null || target != bossBar.second) {
-            if (bossBar != null) {
-                damager.hideBossBar(bossBar.first)
-                watchingPlayerMap.remove(bossBar.second)
-            }
-
-            val newBossbar = BossBar.bossBar(
-                Component.text(target.username, NamedTextColor.GRAY),
-                (target.health - damage) / target.maxHealth,
-                BossBar.Color.RED,
-                BossBar.Overlay.NOTCHED_10
-            )
-            var removeTask = Manager.scheduler.buildTask {
-                damager.hideBossBar(newBossbar)
-                watchingPlayerMap.remove(target)
-                bossbarMap.remove(damager)
-            }.delay(Duration.ofSeconds(10)).schedule()
-
-            newBossbar.addListener(
-                object : BossBar.Listener {
-                    override fun bossBarProgressChanged(bar: BossBar, oldProgress: Float, newProgress: Float) {
-                        removeTask.cancel()
-                        removeTask = Manager.scheduler.buildTask {
-                            damager.hideBossBar(newBossbar)
-                            watchingPlayerMap.remove(target)
-                            bossbarMap.remove(damager)
-                        }.delay(Duration.ofSeconds(10)).schedule()
-                    }
-                }
-            )
-
-            bossbarMap[damager] = Pair(newBossbar, target)
-            watchingPlayerMap.computeIfAbsent(target) { mutableListOf() }
-            watchingPlayerMap[target]?.add(Pair(newBossbar, damager))
-
-            damager.showBossBar(newBossbar)
-
-        }
-
 
         val rand = ThreadLocalRandom.current()
         val format = DecimalFormat("0.##")

@@ -3,7 +3,6 @@ package dev.emortal.lazertag.gun
 import dev.emortal.immortal.game.Game
 import dev.emortal.immortal.util.progressBar
 import dev.emortal.lazertag.game.LazerTagGame
-import dev.emortal.lazertag.gun.Gun.Companion.ammoTag
 import dev.emortal.lazertag.raycast.RaycastResultType
 import dev.emortal.lazertag.raycast.RaycastUtil
 import dev.emortal.lazertag.utils.breakBlock
@@ -21,9 +20,6 @@ import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
-import world.cepi.kstom.item.and
-import world.cepi.kstom.item.displayName
-import world.cepi.kstom.item.item
 import world.cepi.kstom.util.asVec
 import world.cepi.kstom.util.eyePosition
 import world.cepi.kstom.util.playSound
@@ -93,6 +89,7 @@ sealed class Gun(
     }
 
     abstract val damage: Float // PER BULLET!
+    open val headshotModifier: Float = 2f
     open val numberOfBullets: Int = 1
     open val spread: Double = 0.0
     abstract val cooldown: Long // In millis
@@ -119,7 +116,7 @@ sealed class Gun(
         sound?.let { game.playSound(it, player.position) }
 
         if (!game.infiniteAmmo) {
-            val newAmmo = (player.itemInMainHand.meta.getTag(ammoTag) ?: 1) - 1
+            val newAmmo = (player.itemInMainHand.meta().getTag(ammoTag) ?: 1) - 1
             renderAmmo(player, newAmmo)
             player.itemInMainHand = player.itemInMainHand.withMeta {
                 it.set(ammoTag, newAmmo)
@@ -171,7 +168,7 @@ sealed class Gun(
                         )
                     }
 
-                    damageMap[hitPlayer] = damageMap.getOrDefault(hitPlayer, 0f) + (damage * (if (headshot) 2f else 1f))
+                    damageMap[hitPlayer] = damageMap.getOrDefault(hitPlayer, 0f) + (damage * (if (headshot) headshotModifier else 1f))
                 }
                 RaycastResultType.HIT_BLOCK -> { // Hit block
                     instance.playSound(
