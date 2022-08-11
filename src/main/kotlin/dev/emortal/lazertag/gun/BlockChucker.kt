@@ -9,8 +9,8 @@ import net.minestom.server.entity.Entity
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
-import net.minestom.server.entity.metadata.monster.CreeperMeta
-import net.minestom.server.entity.metadata.water.fish.PufferfishMeta
+import net.minestom.server.entity.metadata.other.FallingBlockMeta
+import net.minestom.server.instance.block.Block
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
 import world.cepi.kstom.util.eyePosition
@@ -19,31 +19,9 @@ import world.cepi.particle.Particle
 import world.cepi.particle.ParticleType
 import world.cepi.particle.data.OffsetAndSpeed
 import world.cepi.particle.showParticle
-import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ThreadLocalRandom
 
-object MobLobber : ProjectileGun("Mob Lobber", Rarity.RARE) {
-
-    val mobList = listOf(
-        EntityType.SHEEP,
-        EntityType.PIG,
-        EntityType.CHICKEN,
-        EntityType.COW,
-        EntityType.HORSE,
-        EntityType.OCELOT,
-        EntityType.LLAMA,
-        EntityType.PANDA,
-        EntityType.WITCH,
-        EntityType.VILLAGER,
-        EntityType.COD,
-        EntityType.PUFFERFISH,
-        EntityType.TURTLE,
-        EntityType.ZOMBIE,
-        EntityType.SKELETON,
-        EntityType.CREEPER,
-        EntityType.ENDER_DRAGON
-    )
+object BlockChucker : ProjectileGun("Block Chucker", Rarity.RARE) {
 
     override val material: Material = Material.SPAWNER
     override val color: TextColor = NamedTextColor.GREEN
@@ -81,47 +59,29 @@ object MobLobber : ProjectileGun("Mob Lobber", Rarity.RARE) {
                     loopedPlayer.position.sub(projectile.position.sub(.0, .5, .0)).asVec().normalize().mul(30.0)
 
                 game.damage(
-                    shooter, loopedPlayer, false, if (loopedPlayer == shooter) 2.5f else (damage / (projectile.getDistance(loopedPlayer) / 1.75).toFloat())
+                    shooter, loopedPlayer, false, (damage / (projectile.getDistance(loopedPlayer) / 1.75).toFloat())
                         .coerceAtMost(damage)
                 )
             }
     }
 
     override fun createEntity(shooter: Player): Entity {
-        val entityType = mobList.random()
+        val projectile = Entity(EntityType.FALLING_BLOCK)
+        val meta = projectile.entityMeta as FallingBlockMeta
+        meta.block = Block.values().random()
 
-        val projectile = Entity(entityType)
-        projectile.setBoundingBox(1.2, 1.2, 1.2)
-        val velocity = shooter.position.direction().mul(50.0)
-        projectile.velocity = velocity
-        projectile.setBoundingBox(1.5, 1.5, 1.5)
-
-        when (entityType) {
-            EntityType.CREEPER -> {
-                val entityMeta = projectile.entityMeta as CreeperMeta
-                entityMeta.isCharged = ThreadLocalRandom.current().nextBoolean()
-                entityMeta.isIgnited = true
-            }
-            EntityType.PUFFERFISH -> {
-                val entityMeta = projectile.entityMeta as PufferfishMeta
-                entityMeta.state = PufferfishMeta.State.FULLY_PUFFED
-            }
-            else -> {
-
-            }
-        }
+        projectile.velocity = shooter.position.direction().mul(50.0)
 
         shooter.playSound(
             Sound.sound(
-                Key.key("minecraft:entity.${entityType.name().replace("minecraft:", "")}.hurt"),
-                Sound.Source.NEUTRAL,
+                Key.key("minecraft:block.${meta.block.name().replace("minecraft:", "")}.break"),
+                Sound.Source.MASTER,
                 1f,
                 1f
             )
         )
 
         projectile.setInstance(shooter.instance!!, shooter.eyePosition())
-        projectile.scheduleRemove(Duration.ofSeconds(10))
 
         return projectile
     }

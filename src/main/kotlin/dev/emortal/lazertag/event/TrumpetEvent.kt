@@ -1,5 +1,5 @@
 package dev.emortal.lazertag.event
-
+/*
 import dev.emortal.lazertag.game.LazerTagGame
 import dev.emortal.lazertag.gun.Rifle
 import dev.emortal.lazertag.gun.Trumpet
@@ -43,4 +43,4 @@ class TrumpetEvent : Event() {
         }
     }
 
-}
+}*/

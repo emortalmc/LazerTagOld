@@ -21,6 +21,7 @@ import net.minestom.server.instance.block.Block
 object RaycastUtil {
 
     private val boundingBoxToArea3dMap = HashMap<BoundingBox, Area3d>()
+    private const val tolerance: Double = 0.35
 
 
     init {
@@ -28,8 +29,8 @@ object RaycastUtil {
             boundingBoxToArea3dMap.computeIfAbsent(box) { it ->
                 Area3dRectangularPrism.wrapper(
                     it,
-                    { it.minX() }, { it.minY() }, { it.minZ() },
-                    { it.maxX() }, { it.maxY() }, { it.maxZ() }
+                    { it.minX() - tolerance }, { it.minY() - tolerance }, { it.minZ() - tolerance },
+                    { it.maxX() + tolerance }, { it.maxY() + tolerance }, { it.maxZ() + tolerance }
                 )
             }
 
@@ -60,16 +61,18 @@ object RaycastUtil {
             1.0, maxDistance
         )
 
+        val instance = game.instance.get() ?: return null
+
         while (gridIterator.hasNext()) {
             val gridUnit = gridIterator.next()
             val pos = Pos(gridUnit[0], gridUnit[1], gridUnit[2])
 
             try {
-                val hitBlock = game.instance.getBlock(pos)
+                val hitBlock = instance.getBlock(pos)
 
                 if (LazerTagGame.destructableBlocks.contains(hitBlock.id())) {
-                    game.instance.setBlock(pos, Block.AIR)
-                    game.instance.breakBlock(pos, hitBlock)
+                    instance.setBlock(pos, Block.AIR)
+                    instance.breakBlock(pos, hitBlock)
                 }
 
                 if (LazerTagGame.collidableBlocks.contains(hitBlock.id())) {
@@ -92,10 +95,10 @@ object RaycastUtil {
         hitFilter: (Entity) -> Boolean = { true }
     ): Pair<Entity, Pos>? {
         
-        game.instance.entities
-            .filter { hitFilter.invoke(it) }
-            .filter { it.position.distanceSquared(startPoint) <= maxDistance * maxDistance }
-            .forEach {
+        game.instance.get()?.entities
+            ?.filter { hitFilter.invoke(it) }
+            ?.filter { it.position.distanceSquared(startPoint) <= maxDistance * maxDistance }
+            ?.forEach {
                 val area = it.area3d
                 val pos = it.position
 

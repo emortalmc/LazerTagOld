@@ -10,7 +10,7 @@ import world.cepi.kstom.command.kommand.Kommand
 import kotlin.reflect.full.primaryConstructor
 
 object EventCommand : Kommand({
-    onlyPlayers
+    onlyPlayers()
 
     val eventArg = ArgumentType.StringArray("event").suggest {
         Event::class.sealedSubclasses.mapNotNull { it.simpleName }

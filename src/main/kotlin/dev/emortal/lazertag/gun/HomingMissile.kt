@@ -10,6 +10,7 @@ import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
+import net.minestom.server.tag.Tag
 import world.cepi.kstom.util.eyePosition
 import world.cepi.kstom.util.playSound
 import world.cepi.particle.Particle
@@ -19,35 +20,22 @@ import world.cepi.particle.showParticle
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 
-object BeeBlaster : ProjectileGun("Bee Blaster", Rarity.RARE) {
+object HomingMissile : ProjectileGun("Homing Missile", Rarity.IMPOSSIBLE) {
 
-    override val material: Material = Material.HONEYCOMB
-    override val color: TextColor = NamedTextColor.YELLOW
+    private val accuracyTag = Tag.Double("accuracy")
 
-    override val damage = 70f
-    override val ammo = 1
-    override val reloadTime = 2000L
-    override val cooldown = reloadTime
+    override val material: Material = Material.NETHER_STAR
+    override val color: TextColor = NamedTextColor.GOLD
 
-    override val sound = Sound.sound(SoundEvent.ENTITY_BEE_HURT, Sound.Source.PLAYER, 1f, 1f)
+    override val damage = 999f
+    override val ammo = 10
+    override val reloadTime = 0L
+    override val cooldown = 50L
+
+    override val sound = null
 
     override fun projectileShot(game: LazerTagGame, player: Player): ConcurrentHashMap<Player, Float> {
-        val damageMap = ConcurrentHashMap<Player, Float>()
-
-        return damageMap
-    }
-
-    override fun tick(game: LazerTagGame, projectile: Entity, shooter: Player) {
-        projectile.velocity = projectile.velocity.mul(1.08, 1.0, 1.08)
-
-        game.showParticle(
-            Particle.particle(
-                type = ParticleType.LARGE_SMOKE,
-                count = 1,
-                data = OffsetAndSpeed()
-            ),
-            projectile.position.asVec()
-        )
+        return ConcurrentHashMap()
     }
 
     override fun collided(game: LazerTagGame, shooter: Player, projectile: Entity) {
@@ -67,7 +55,7 @@ object BeeBlaster : ProjectileGun("Bee Blaster", Rarity.RARE) {
 
         shooter.instance!!.players
             .filter { it.gameMode == GameMode.ADVENTURE }
-            .filter { it.getDistanceSquared(projectile) < 8 * 8 }
+            .filter { it.getDistanceSquared(projectile) < 2.5 * 2.5 }
             .forEach { loopedPlayer ->
                 loopedPlayer.velocity =
                     loopedPlayer.position.sub(projectile.position.sub(.0, .5, .0)).asVec().normalize().mul(60.0)
@@ -76,24 +64,40 @@ object BeeBlaster : ProjectileGun("Bee Blaster", Rarity.RARE) {
                     shooter,
                     loopedPlayer,
                     false,
-                    if (loopedPlayer == shooter) 5f else (damage / (projectile.getDistance(loopedPlayer)).toFloat())
-                        .coerceAtMost(damage)
+                    if (loopedPlayer == shooter) 2f else damage
                 )
             }
 
         projectile.remove()
     }
 
+    override fun tick(game: LazerTagGame, projectile: Entity, shooter: Player) {
+        val closestPlayer = game.players.filter { it != shooter && it.gameMode == GameMode.ADVENTURE }.minByOrNull { it.getDistanceSquared(projectile) }
+        if (closestPlayer == null) {
+            projectile.setNoGravity(false)
+            projectile.velocity = shooter.position.direction().mul(50.0)
+            return
+        }
+
+        val dirToClosestPlayer = closestPlayer.position.add(0.0, 1.0, 0.0).sub(projectile.position).asVec().normalize()
+
+        val distance = projectile.getDistance(closestPlayer)
+
+        if (distance < 4)
+            projectile.setTag(accuracyTag, projectile.getTag(accuracyTag) + (4 + 1) - distance / 8)
+
+        if (distance < 2.2) collide(game, shooter, projectile)
+
+        projectile.velocity = projectile.velocity.add(dirToClosestPlayer.mul(projectile.getTag(accuracyTag) * 30.0)).normalize().mul(30.0)
+    }
+
     override fun createEntity(shooter: Player): Entity {
-        val projectile = Entity(EntityType.BEE)
-        val velocity = shooter.position.direction().mul(25.0)
+        val projectile = Entity(EntityType.PIG)
 
-        projectile.velocity = velocity
-
+        projectile.setTag(accuracyTag, 0.15)
         projectile.setNoGravity(true)
-        projectile.setGravity(0.0, 0.0)
-        projectile.setInstance(shooter.instance!!, shooter.eyePosition())
         projectile.scheduleRemove(Duration.ofSeconds(10))
+        projectile.setInstance(shooter.instance!!, shooter.eyePosition())
 
         return projectile
     }

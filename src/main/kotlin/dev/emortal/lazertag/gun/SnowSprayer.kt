@@ -1,5 +1,5 @@
 package dev.emortal.lazertag.gun
-
+/*
 import dev.emortal.lazertag.game.LazerTagGame
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.format.NamedTextColor
@@ -75,8 +75,9 @@ object SnowSprayer : ProjectileGun("Snow Sprayer") {
         projectile.setBoundingBox(0.5, 0.5, 0.5)
 
         projectile.setInstance(shooter.instance!!, shooter.eyePosition())
+        projectile.scheduleRemove(Duration.ofSeconds(10))
 
         return projectile
     }
 
-}
+}*/

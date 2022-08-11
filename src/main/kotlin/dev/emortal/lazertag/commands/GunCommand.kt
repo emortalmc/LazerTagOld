@@ -9,7 +9,7 @@ import world.cepi.kstom.command.arguments.suggest
 import world.cepi.kstom.command.kommand.Kommand
 
 object GunCommand : Kommand({
-    onlyPlayers
+    onlyPlayers()
 
     val gunArg = ArgumentType.StringArray("gun").suggest {
         Gun.registeredMap.keys.toList()

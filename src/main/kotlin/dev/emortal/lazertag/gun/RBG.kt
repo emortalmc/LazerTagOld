@@ -20,6 +20,8 @@ import world.cepi.particle.Particle
 import world.cepi.particle.ParticleType
 import world.cepi.particle.data.OffsetAndSpeed
 import world.cepi.particle.showParticle
+import java.time.Duration
+import java.util.concurrent.ConcurrentHashMap
 
 object RBG : ProjectileGun("RBG", Rarity.IMPOSSIBLE) {
 
@@ -35,13 +37,11 @@ object RBG : ProjectileGun("RBG", Rarity.IMPOSSIBLE) {
 
     override val sound = Sound.sound(SoundEvent.ENTITY_BEE_HURT, Sound.Source.PLAYER, 1f, 1f)
 
-    override fun projectileShot(game: LazerTagGame, player: Player): HashMap<Player, Float> {
-        val damageMap = HashMap<Player, Float>()
-
-        return damageMap
+    override fun projectileShot(game: LazerTagGame, player: Player): ConcurrentHashMap<Player, Float> {
+        return ConcurrentHashMap()
     }
 
-    override fun tick(game: LazerTagGame, projectile: Entity) {
+    override fun tick(game: LazerTagGame, projectile: Entity, shooter: Player) {
         projectile.velocity = projectile.velocity.mul(1.08, 1.0, 1.08)
 
         game.showParticle(
@@ -105,6 +105,7 @@ object RBG : ProjectileGun("RBG", Rarity.IMPOSSIBLE) {
         projectile.setNoGravity(true)
         projectile.setGravity(0.0, 0.0)
         projectile.setInstance(shooter.instance!!, shooter.eyePosition())
+        projectile.scheduleRemove(Duration.ofSeconds(10))
 
         return projectile
     }

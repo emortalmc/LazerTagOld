@@ -25,29 +25,31 @@ object Trumpet : Gun("Trumpet", Rarity.IMPOSSIBLE, { it.customModelData(1) }) {
 
     override val sound = Sound.sound(Key.key("item.trumpet.doot"), Sound.Source.MASTER, 1f, 1f)
 
-    override fun shoot(game: LazerTagGame, player: Player): HashMap<Player, Float> {
+    override fun shoot(game: LazerTagGame, player: Player): ConcurrentHashMap<Player, Float> {
         game.playSound(sound, player.position)
 
-        game.instance.getNearbyEntities(player.position, 8.0)
-            .filter { it is Player && it.gameMode == GameMode.ADVENTURE && it != player }
-            .forEach {
+        val instance = game.instance.get()
+
+        instance?.getNearbyEntities(player.position, 8.0)
+            ?.filter { it is Player && it.gameMode == GameMode.ADVENTURE && it != player }
+            ?.forEach {
                 val target = it as Player
 
                 it.velocity = it.position.sub(player.position).asVec().normalize().mul(65.0).withY { 17.0 }
 
-                game.damageMap.putIfAbsent(target, ConcurrentHashMap())
-                game.damageMap[target]!![player]?.second?.cancel()
+                game.damageMap.putIfAbsent(target.uuid, ConcurrentHashMap())
+                game.damageMap[target.uuid]!![player]?.second?.cancel()
 
                 val removalTask = Manager.scheduler.buildTask {
-                    game.damageMap[target]?.remove(player)
+                    game.damageMap[target.uuid]?.remove(player)
                 }.delay(Duration.ofSeconds(6)).schedule()
 
-                game.damageMap[target]!![player] = Pair(game.damageMap[target]!![player]?.first ?: 0f, removalTask)
+                game.damageMap[target.uuid]!![player] = Pair(game.damageMap[target.uuid]!![player]?.first ?: 0f, removalTask)
             }
 
 
 
-        return HashMap()
+        return ConcurrentHashMap()
     }
 
     override fun renderAmmo(player: Player, currentAmmo: Int, percentage: Float, reloading: Boolean) {

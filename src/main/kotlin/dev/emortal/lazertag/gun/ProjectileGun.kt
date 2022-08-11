@@ -9,6 +9,7 @@ import net.minestom.server.entity.Player
 import net.minestom.server.item.ItemMeta
 import net.minestom.server.timer.TaskSchedule
 import world.cepi.kstom.util.playSound
+import java.util.concurrent.ConcurrentHashMap
 
 sealed class ProjectileGun(name: String, rarity: Rarity = Rarity.COMMON, customMeta: (ItemMeta.Builder) -> Unit = {}) :
     Gun(name, rarity, customMeta) {
@@ -21,7 +22,7 @@ sealed class ProjectileGun(name: String, rarity: Rarity = Rarity.COMMON, customM
     }
 
     fun projectileTick(game: LazerTagGame, projectile: Entity, shooter: Player) {
-        tick(game, projectile)
+        tick(game, projectile, shooter)
 
         if (projectile.velocity.x == 0.0 || projectile.velocity.y == 0.0 || projectile.velocity.z == 0.0 || projectile.isOnGround) return collide(
             game,
@@ -38,10 +39,10 @@ sealed class ProjectileGun(name: String, rarity: Rarity = Rarity.COMMON, customM
         collideEntity(game, shooter, projectile, intersectingPlayers)
     }
 
-    open fun tick(game: LazerTagGame, projectile: Entity) {}
+    open fun tick(game: LazerTagGame, projectile: Entity, shooter: Player) {}
 
 
-    override fun shoot(game: LazerTagGame, player: Player): HashMap<Player, Float> {
+    override fun shoot(game: LazerTagGame, player: Player): ConcurrentHashMap<Player, Float> {
         sound?.let { game.playSound(it, player.position) }
 
         if (!game.infiniteAmmo) {
@@ -77,7 +78,7 @@ sealed class ProjectileGun(name: String, rarity: Rarity = Rarity.COMMON, customM
         return projectileShot(game, player)
     }
 
-    abstract fun projectileShot(game: LazerTagGame, player: Player): HashMap<Player, Float>
+    abstract fun projectileShot(game: LazerTagGame, player: Player): ConcurrentHashMap<Player, Float>
 
     fun collide(game: LazerTagGame, shooter: Player, projectile: Entity) {
         collided(game, shooter, projectile)

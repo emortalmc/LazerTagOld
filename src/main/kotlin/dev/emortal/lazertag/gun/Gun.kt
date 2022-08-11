@@ -30,6 +30,7 @@ import world.cepi.particle.data.OffsetAndSpeed
 import world.cepi.particle.extra.DustTransition
 import world.cepi.particle.showParticle
 import world.cepi.particle.util.Vectors
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.collections.set
 
@@ -84,7 +85,6 @@ sealed class Gun(
             it.set(lastShotTag, 0)
             it.set(ammoTag, ammo)
             customMeta.invoke(it)
-            it
         }.build()
     }
 
@@ -112,7 +112,7 @@ sealed class Gun(
         }
     }
 
-    open fun shoot(game: LazerTagGame, player: Player): HashMap<Player, Float> {
+    open fun shoot(game: LazerTagGame, player: Player): ConcurrentHashMap<Player, Float> {
         sound?.let { game.playSound(it, player.position) }
 
         if (!game.infiniteAmmo) {
@@ -126,8 +126,8 @@ sealed class Gun(
         return gunShot(game, player)
     }
 
-    protected open fun gunShot(game: LazerTagGame, player: Player): HashMap<Player, Float> {
-        val damageMap = HashMap<Player, Float>()
+    protected open fun gunShot(game: LazerTagGame, player: Player): ConcurrentHashMap<Player, Float> {
+        val damageMap = ConcurrentHashMap<Player, Float>()
 
         val instance = player.instance!!
         val eyePos = player.eyePosition()
