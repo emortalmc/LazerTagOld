@@ -22,7 +22,7 @@ dependencies {
     compileOnly("com.github.EmortalMC:Immortal:c2e3d4f7c4")
 
     compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2")
-    compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
+    compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.0")
 }
 
 tasks {
