@@ -7,15 +7,11 @@ import net.minestom.server.utils.time.TimeUnit
 import world.cepi.kstom.Manager
 
 fun Player.setCooldown(material: Material, ticks: Int, lagCompensation: Boolean = true) {
-    val packet = SetCooldownPacket(material.id(), ticks)
-
-    this.sendPacket(packet)
+    this.sendPacket(SetCooldownPacket(material.id(), ticks))
 
     if (!lagCompensation) return
 
-    val lagCompensatePacket = SetCooldownPacket(material.id(), 0)
     Manager.scheduler.buildTask {
-
-        this.sendPacket(lagCompensatePacket)
+        this.sendPacket(SetCooldownPacket(material.id(), 0))
     }.delay(ticks.toLong(), TimeUnit.CLIENT_TICK).schedule()
 }

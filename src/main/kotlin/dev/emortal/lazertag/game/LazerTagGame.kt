@@ -3,9 +3,7 @@ package dev.emortal.lazertag.game
 import dev.emortal.immortal.config.GameOptions
 import dev.emortal.immortal.game.GameState
 import dev.emortal.immortal.game.PvpGame
-import dev.emortal.immortal.util.MinestomRunnable
-import dev.emortal.immortal.util.armify
-import dev.emortal.immortal.util.reset
+import dev.emortal.immortal.util.*
 import dev.emortal.lazertag.LazerTagExtension
 import dev.emortal.lazertag.event.Event
 import dev.emortal.lazertag.game.LazerTagPlayerHelper.cleanup
@@ -18,9 +16,8 @@ import dev.emortal.lazertag.gun.Gun.Companion.heldGun
 import dev.emortal.lazertag.gun.Gun.Companion.lastShotTag
 import dev.emortal.lazertag.gun.Gun.Companion.reloadingTag
 import dev.emortal.lazertag.gun.Rifle
-import dev.emortal.lazertag.utils.cancel
+import dev.emortal.lazertag.raycast.RaycastUtil
 import dev.emortal.lazertag.utils.setCooldown
-import net.kyori.adventure.bossbar.BossBar
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.Component
@@ -57,17 +54,13 @@ import org.tinylog.kotlin.Logger
 import world.cepi.kstom.Manager
 import world.cepi.kstom.adventure.asMini
 import world.cepi.kstom.event.listenOnly
-import java.nio.file.Files
-import java.nio.file.Path
 import java.text.DecimalFormat
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ThreadLocalRandom
-import java.util.stream.Collectors
 import kotlin.collections.component1
 import kotlin.collections.component2
-import kotlin.io.path.nameWithoutExtension
 import kotlin.math.floor
 import kotlin.math.roundToInt
 
@@ -92,12 +85,8 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
     val burstTasks = ConcurrentHashMap<UUID, MinestomRunnable>()
     val reloadTasks = ConcurrentHashMap<UUID, MinestomRunnable>()
 
-    val bossbarMap = ConcurrentHashMap<UUID, Pair<BossBar, Player>>()
-    val watchingPlayerMap = ConcurrentHashMap<UUID, MutableList<Pair<BossBar, Player>>>()
-
     var gunRandomizing = true
     var defaultGun: Gun = Rifle
-    var destructible = false
     var infiniteAmmo = false
 
     var eventTask: MinestomRunnable? = null
@@ -105,7 +94,7 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
 
     var mapName: String? = null
 
-    val damageMap = ConcurrentHashMap<UUID, ConcurrentHashMap<Player, Pair<Float, Task>>>()
+    val damageMap = ConcurrentHashMap<UUID, ConcurrentHashMap<UUID, Pair<Float, Task>>>()
 
     override fun playerJoin(player: Player) {
         player.gameMode = GameMode.SPECTATOR
@@ -119,17 +108,22 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
         scoreboard?.removeLine(player.uuid.toString())
 
         reloadTasks[player.uuid]?.cancel()
-        burstTasks[player.uuid]?.cancel()
-        respawnTasks[player.uuid]?.cancel()
         reloadTasks.remove(player.uuid)
+        burstTasks[player.uuid]?.cancel()
         burstTasks.remove(player.uuid)
+        respawnTasks[player.uuid]?.cancel()
         respawnTasks.remove(player.uuid)
-        bossbarMap.remove(player.uuid)
-        watchingPlayerMap.remove(player.uuid)
         damageMap.remove(player.uuid)
+
+        damageMap.forEach {
+            damageMap[it.key]?.remove(player.uuid)
+        }
     }
 
     override fun gameStarted() {
+        // TODO: Remove me
+        Logger.warn("${RaycastUtil.boundingBoxToArea3dMap.size} map size")
+
         scoreboard?.removeLine("infoLine")
         gameState = GameState.PLAYING
 
@@ -167,7 +161,7 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
         if (gameState == GameState.ENDING) return
 
         //player.inventory.clear()
-        player.velocity = Vec(0.0, 0.0, 0.0)
+        player.velocity = Vec.ZERO
         player.gameMode = GameMode.SPECTATOR
         player.isInvisible = true
         player.sendActionBar(Component.empty())
@@ -257,10 +251,12 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                 )
             )
 
-            damageMap[player.uuid]?.keys?.forEach {
-                if (it == killer) return@forEach
+            damageMap[player.uuid]?.keys?.forEach { uuid ->
+                if (uuid == killer.uuid) return@forEach
 
-                it.sendMessage(
+                val player = players.firstOrNull { it.uuid == uuid } ?: return@forEach
+
+                player.sendMessage(
                     Component.text()
                         .append(Component.text("ASSIST", NamedTextColor.RED))
                         .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
@@ -270,12 +266,12 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
                         .append(Component.text(player.username, NamedTextColor.RED))
                 )
 
-                it.playSound(
+                player.playSound(
                     Sound.sound(SoundEvent.ENTITY_EXPERIENCE_ORB_PICKUP, Sound.Source.MASTER, 1f, 1f),
                     Sound.Emitter.self()
                 )
 
-                it.kills++
+                player.kills++
             }
 
             player.showTitle(
@@ -306,7 +302,7 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
 
                 entity.isAutoViewable = false
                 entity.scheduleRemove(Duration.ofSeconds(3))
-                instance.get()?.let { instance -> entity.setInstance(instance, player.position.add(0.0, 0.5, 0.0)) }
+                entity.setInstance(instance, player.position.add(0.0, 0.5, 0.0))
                 entity.addViewer(killer)
             }
 
@@ -334,6 +330,10 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
         }
 
         damageMap.remove(player.uuid)
+
+        damageMap.forEach {
+            damageMap[it.key]?.remove(player.uuid)
+        }
 
         respawnTasks[player.uuid] = object : MinestomRunnable(
             delay = Duration.ofSeconds(2),
@@ -383,8 +383,7 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
     override fun gameWon(winningPlayers: Collection<Player>) {
         val winningPlayer = winningPlayers.first()
 
-        reloadTasks.values.forEach(MinestomRunnable::cancel)
-        reloadTasks.clear()
+        taskGroup.cancel()
 
         val message = Component.text()
             .append(Component.text(" ${" ".repeat(25)}VICTORY", NamedTextColor.GOLD, TextDecoration.BOLD))
@@ -406,22 +405,22 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
 
         sendMessage(message.armify())
 
+        eventTask?.cancel()
+        currentEvent?.eventEnded(this)
+
         players.forEach {
             it.inventory.clear()
         }
-        eventTask?.cancel()
-        currentEvent?.eventEnded(this)
     }
 
     override fun gameDestroyed() {
         reloadTasks.clear()
         burstTasks.clear()
         respawnTasks.clear()
-
-        bossbarMap.clear()
-        watchingPlayerMap.clear()
-
         damageMap.clear()
+
+        eventTask?.cancel()
+        eventTask = null
 
         players.forEach {
             it.cleanup()
@@ -544,8 +543,9 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
 
             if (newPosition.y() < spawnPosition.y - 15.0) {
                 val highestDamager = damageMap[player.uuid]?.maxByOrNull { it.value.first }?.key
+                val player = players.firstOrNull { it.uuid == highestDamager } ?: return@listenOnly
 
-                kill(player, highestDamager)
+                kill(player, player)
             }
         }
     }
@@ -626,37 +626,30 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
     }
 
     @Synchronized fun damage(damager: Player, target: Player, headshot: Boolean = false, damage: Float) {
-        if (target.hasSpawnProtection) {
-            return
-        }
-
+        if (target.hasSpawnProtection) return
         if (damager.hasSpawnProtection) damager.spawnProtectionMillis = null
 
 
         // Assist / Damage credit system
+        // This is horrible.
         damageMap.putIfAbsent(target.uuid, ConcurrentHashMap())
-        damageMap[target.uuid]!![damager]?.second?.cancel()
+        damageMap[target.uuid]!![damager.uuid]?.second?.cancel()
 
         val removalTask = Manager.scheduler.buildTask {
-            damageMap[target.uuid]?.remove(damager)
+            damageMap[target.uuid]?.remove(damager.uuid)
         }.delay(Duration.ofSeconds(6)).schedule()
 
-        damageMap[target.uuid]!![damager] = Pair((damageMap[target.uuid]!![damager]?.first ?: 0f) + damage, removalTask)
+        damageMap[target.uuid]!![damager.uuid] = Pair((damageMap[target.uuid]!![damager.uuid]?.first ?: 0f) + damage, removalTask)
 
         damager.playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_HURT, Sound.Source.PLAYER, 0.75f, 1.1f))
 
         if (target.health - damage <= 0 && target.gameMode == GameMode.ADVENTURE) {
             target.health = 20f
 
-            watchingPlayerMap[target.uuid]?.forEach {
-                it.second.hideBossBar(it.first)
-                bossbarMap.remove(it.second.uuid)
-            }
-            watchingPlayerMap.remove(target.uuid)
-
             val highestDamager = damageMap[target.uuid]?.maxByOrNull { it.value.first }?.key
+            val player = players.firstOrNull { it.uuid == highestDamager } ?: return
 
-            kill(target, highestDamager)
+            kill(target, player)
             return
         }
 
@@ -718,20 +711,15 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
     }
 
     private fun getRandomRespawnPosition(): Pos {
-        Logger.info("Map name: ${mapName}")
         return LazerTagExtension.config.spawnPositions[mapName]!!.random()
     }
 
     override fun instanceCreate(): Instance {
-        val randomMap = Path.of("./maps/lazertag/" + Files.list(Path.of("./maps/lazertag/"))
-            .map { it.nameWithoutExtension }
-            .collect(Collectors.toSet())
-            .random())
+        val randomMap = LazerTagExtension.maps.random()
 
-        mapName = randomMap.nameWithoutExtension
+        mapName = randomMap
 
         val lazertagInstance = Manager.instance.createInstanceContainer()
-
 
         if (mapName == "arena") {
             lazertagInstance.time = 13000

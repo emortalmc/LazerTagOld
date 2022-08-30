@@ -6,5 +6,5 @@ import net.minestom.server.entity.Entity
 data class RaycastResult(
     val resultType: RaycastResultType,
     val hitEntity: Entity?,
-    val hitPosition: Point?,
+    val hitPosition: Point?
 )

@@ -12,6 +12,7 @@ import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
 import net.minestom.server.instance.block.Block
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Class to make Rayfast easier to use with Minestom
@@ -20,7 +21,7 @@ import net.minestom.server.instance.block.Block
  */
 object RaycastUtil {
 
-    private val boundingBoxToArea3dMap = HashMap<BoundingBox, Area3d>()
+    val boundingBoxToArea3dMap = ConcurrentHashMap<BoundingBox, Area3d>()
     private const val tolerance: Double = 0.35
 
 
@@ -38,30 +39,18 @@ object RaycastUtil {
         }
     }
 
-
     val Entity.area3d: Area3d
         get() = Area3d.CONVERTER.from(boundingBox)
 
-//    fun Entity.fastHasLineOfSight(entity: Entity): Boolean {
-//        val (x, y, z) = this
-//
-//        val direction = this.position.asVec().sub(entity.position.asVec()).normalize()
-//
-//        return this.area3d.lineIntersects(
-//            x, y, z,
-//            direction.x(), direction.y(), direction.z()
-//        )
-//    }
-
     @Suppress("INACCESSIBLE_TYPE")
     fun raycastBlock(game: LazerTagGame, startPoint: Point, direction: Vec, maxDistance: Double): Pos? {
+        val instance = game.instance.get() ?: return null
+
         val gridIterator: Iterator<Vector3d> = GridCast.createExactGridIterator(
             startPoint.x(), startPoint.y(), startPoint.z(),
             direction.x(), direction.y(), direction.z(),
             1.0, maxDistance
         )
-
-        val instance = game.instance.get() ?: return null
 
         while (gridIterator.hasNext()) {
             val gridUnit = gridIterator.next()
@@ -132,18 +121,20 @@ object RaycastUtil {
             return RaycastResult(RaycastResultType.HIT_NOTHING, null, null)
         }
 
-        if (entityRaycast == null && blockRaycast != null) {
+        // block raycast is always true when reached
+        if (entityRaycast == null) {
             return RaycastResult(RaycastResultType.HIT_BLOCK, null, blockRaycast)
         }
 
-        if (entityRaycast != null && blockRaycast == null) {
+        // entity raycast is always true when reached
+        if (blockRaycast == null) {
             return RaycastResult(RaycastResultType.HIT_ENTITY, entityRaycast.first, entityRaycast.second)
         }
 
         // Both entity and block check have collided, time to see which is closer!
 
-        val distanceFromEntity = startPoint.distanceSquared(entityRaycast!!.second)
-        val distanceFromBlock = startPoint.distanceSquared(blockRaycast!!)
+        val distanceFromEntity = startPoint.distanceSquared(entityRaycast.second)
+        val distanceFromBlock = startPoint.distanceSquared(blockRaycast)
 
         return if (distanceFromBlock > distanceFromEntity) {
             RaycastResult(RaycastResultType.HIT_ENTITY, entityRaycast.first, entityRaycast.second)

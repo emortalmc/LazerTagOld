@@ -1,7 +1,7 @@
 package dev.emortal.lazertag.gun
 
+import dev.emortal.immortal.util.showFirework
 import dev.emortal.lazertag.game.LazerTagGame
-import dev.emortal.lazertag.utils.showFirework
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
@@ -67,7 +67,7 @@ object Celebration : ProjectileGun("Celebration", Rarity.RARE) {
                 listOf(net.minestom.server.color.Color(Color.HSBtoRGB(random.nextFloat(), 1f, 1f)))
             )
         )
-        shooter.instance!!.showFirework(shooter.instance!!, projectile.position, effects)
+        shooter.instance!!.players.showFirework(shooter.instance!!, projectile.position, effects)
 
         shooter.instance!!.players
             .filter { it.gameMode == GameMode.ADVENTURE }

@@ -35,19 +35,17 @@ object Trumpet : Gun("Trumpet", Rarity.IMPOSSIBLE, { it.customModelData(1) }) {
             ?.forEach {
                 val target = it as Player
 
-                it.velocity = it.position.sub(player.position).asVec().normalize().mul(65.0).withY { 17.0 }
+                it.velocity = it.position.sub(player.position).asVec().normalize().mul(65.0).withY(17.0)
 
                 game.damageMap.putIfAbsent(target.uuid, ConcurrentHashMap())
-                game.damageMap[target.uuid]!![player]?.second?.cancel()
+                game.damageMap[target.uuid]!![player.uuid]?.second?.cancel()
 
                 val removalTask = Manager.scheduler.buildTask {
-                    game.damageMap[target.uuid]?.remove(player)
+                    game.damageMap[target.uuid]?.remove(player.uuid)
                 }.delay(Duration.ofSeconds(6)).schedule()
 
-                game.damageMap[target.uuid]!![player] = Pair(game.damageMap[target.uuid]!![player]?.first ?: 0f, removalTask)
+                game.damageMap[target.uuid]!![player.uuid] = Pair(game.damageMap[target.uuid]!![player.uuid]?.first ?: 0f, removalTask)
             }
-
-
 
         return ConcurrentHashMap()
     }

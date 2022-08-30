@@ -1,8 +1,6 @@
 package dev.emortal.lazertag.gun
 
-import dev.emortal.immortal.game.GameManager.game
 import dev.emortal.lazertag.game.LazerTagGame
-import dev.emortal.lazertag.utils.getPointsInSphere
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
@@ -10,8 +8,6 @@ import net.minestom.server.entity.Entity
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
-import net.minestom.server.instance.batch.AbsoluteBlockBatch
-import net.minestom.server.instance.block.Block
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
 import world.cepi.kstom.util.eyePosition
@@ -84,14 +80,6 @@ object RBG : ProjectileGun("RBG", Rarity.IMPOSSIBLE) {
                         .coerceAtMost(BeeBlaster.damage)
                 )
             }
-
-        if ((shooter.game!! as LazerTagGame).destructible) {
-            val batch = AbsoluteBlockBatch()
-            getPointsInSphere(projectile.position, 3).forEach {
-                batch.setBlock(it, Block.AIR)
-            }
-            batch.apply(shooter.instance!!) {}
-        }
 
         projectile.remove()
     }

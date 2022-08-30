@@ -1,11 +1,11 @@
 package dev.emortal.lazertag
 
+import dev.emortal.immortal.config.ConfigHelper
 import dev.emortal.immortal.config.GameOptions
 import dev.emortal.immortal.game.GameManager
 import dev.emortal.immortal.game.WhenToRegisterEvents
 import dev.emortal.lazertag.commands.EventCommand
 import dev.emortal.lazertag.commands.GunCommand
-import dev.emortal.lazertag.config.ConfigurationHelper
 import dev.emortal.lazertag.config.LazerTagConfig
 import dev.emortal.lazertag.game.LazerTagGame
 import net.minestom.server.coordinate.Pos
@@ -23,7 +23,7 @@ class LazerTagExtension : Extension() {
         val mapsPath = Path.of("./maps/lazertag/").also { it.createDirectories() }
         val maps = mapsPath.listDirectoryEntries().map { it.nameWithoutExtension }
 
-        var config: LazerTagConfig = ConfigurationHelper.initConfigFile(configPath, LazerTagConfig())
+        var config: LazerTagConfig = ConfigHelper.initConfigFile(configPath, LazerTagConfig())
 
         //lateinit var lazertagInstance: InstanceContainer
     }
@@ -43,7 +43,7 @@ class LazerTagExtension : Extension() {
             logger.info("Creating map config for '${it}'")
         }
 
-        ConfigurationHelper.writeObjectToPath(configPath, config)
+        ConfigHelper.writeObjectToPath(configPath, config)
 
         GameManager.registerGame<LazerTagGame>(
             "lazertag",

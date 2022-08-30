@@ -36,5 +36,6 @@ object LazerTagPlayerHelper {
     fun Player.cleanup() {
         removeTag(killsTag)
         removeTag(deathsTag)
+        removeTag(spawnProtectionUntilTag)
     }
 }
