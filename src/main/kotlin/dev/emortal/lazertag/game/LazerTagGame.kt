@@ -128,19 +128,24 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
         gameState = GameState.PLAYING
 
         players.forEach {
-            scoreboard?.createLine(
-                Sidebar.ScoreboardLine(
-                    it.uuid.toString(),
+            try {
+                scoreboard?.createLine(
+                    Sidebar.ScoreboardLine(
+                        it.uuid.toString(),
 
-                    Component.text()
-                        .append(Component.text(it.username, NamedTextColor.GRAY))
-                        .append(Component.text(" - ", NamedTextColor.DARK_GRAY))
-                        .append(Component.text(0, NamedTextColor.GRAY, TextDecoration.BOLD))
-                        .build(),
+                        Component.text()
+                            .append(Component.text(it.username, NamedTextColor.GRAY))
+                            .append(Component.text(" - ", NamedTextColor.DARK_GRAY))
+                            .append(Component.text(0, NamedTextColor.GRAY, TextDecoration.BOLD))
+                            .build(),
 
-                    0
+                        0
+                    )
                 )
-            )
+            } catch (e: Exception) {
+
+            }
+
         }
 
         eventTask =
@@ -177,12 +182,13 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
         reloadTasks.remove(player.uuid)
         burstTasks.remove(player.uuid)
 
-        val previousLeader = players.maxOf { it.kills }
+        val previousLeader = players.maxBy { it.kills }
+        val previousLeadingKills = previousLeader.kills
 
         if (killer != null && killer != player && killer is Player) {
             val kills = ++killer.kills
 
-            if (kills > previousLeader) {
+            if (kills > previousLeadingKills && previousLeader != killer) {
                 sendMessage(
                     Component.text()
                         .append(Component.text("★", NamedTextColor.YELLOW))
@@ -731,7 +737,7 @@ class LazerTagGame(gameOptions: GameOptions) : PvpGame(gameOptions) {
         lazertagInstance.timeRate = 0
         lazertagInstance.timeUpdate = null
 
-        lazertagInstance.chunkLoader = AnvilLoader(randomMap)
+        lazertagInstance.chunkLoader = AnvilLoader("./maps/lazertag/$randomMap")
 
         return lazertagInstance
     }

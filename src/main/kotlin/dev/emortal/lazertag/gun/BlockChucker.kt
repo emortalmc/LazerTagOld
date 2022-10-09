@@ -12,13 +12,11 @@ import net.minestom.server.entity.Player
 import net.minestom.server.entity.metadata.other.FallingBlockMeta
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.Material
-import net.minestom.server.sound.SoundEvent
+import net.minestom.server.network.packet.server.play.ExplosionPacket
+import world.cepi.kstom.util.component1
+import world.cepi.kstom.util.component2
+import world.cepi.kstom.util.component3
 import world.cepi.kstom.util.eyePosition
-import world.cepi.kstom.util.playSound
-import world.cepi.particle.Particle
-import world.cepi.particle.ParticleType
-import world.cepi.particle.data.OffsetAndSpeed
-import world.cepi.particle.showParticle
 import java.util.concurrent.ConcurrentHashMap
 
 object BlockChucker : ProjectileGun("Block Chucker", Rarity.RARE) {
@@ -38,18 +36,8 @@ object BlockChucker : ProjectileGun("Block Chucker", Rarity.RARE) {
     }
 
     override fun collided(game: LazerTagGame, shooter: Player, projectile: Entity) {
-        shooter.instance!!.showParticle(
-            Particle.particle(
-                type = ParticleType.EXPLOSION_EMITTER,
-                count = 1,
-                data = OffsetAndSpeed(),
-            ),
-            projectile.position.asVec()
-        )
-        shooter.instance!!.playSound(
-            Sound.sound(SoundEvent.ENTITY_GENERIC_EXPLODE, Sound.Source.PLAYER, 3f, 1f),
-            projectile.position
-        )
+        val (x, y, z) = projectile.position
+        shooter.instance!!.sendGroupedPacket(ExplosionPacket(x.toFloat(), y.toFloat(), z.toFloat(), 3f, ByteArray(0), 0f, 0f, 0f))
 
         shooter.instance!!.players
             .filter { it.gameMode == GameMode.ADVENTURE }

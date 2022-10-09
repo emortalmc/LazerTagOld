@@ -9,14 +9,11 @@ import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.item.Material
+import net.minestom.server.network.packet.server.play.ExplosionPacket
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
 import world.cepi.kstom.util.eyePosition
 import world.cepi.kstom.util.playSound
-import world.cepi.particle.Particle
-import world.cepi.particle.ParticleType
-import world.cepi.particle.data.OffsetAndSpeed
-import world.cepi.particle.showParticle
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 
@@ -39,14 +36,7 @@ object HomingMissile : ProjectileGun("Homing Missile", Rarity.IMPOSSIBLE) {
     }
 
     override fun collided(game: LazerTagGame, shooter: Player, projectile: Entity) {
-        shooter.instance!!.showParticle(
-            Particle.particle(
-                type = ParticleType.EXPLOSION_EMITTER,
-                count = 1,
-                data = OffsetAndSpeed(),
-            ),
-            projectile.position.asVec()
-        )
+        shooter.instance!!.sendGroupedPacket(ExplosionPacket(projectile.position.x().toFloat(), projectile.position.y().toFloat(), projectile.position.z().toFloat(), 3f, ByteArray(0), 0f, 0f, 0f))
 
         shooter.instance!!.playSound(
             Sound.sound(SoundEvent.ENTITY_GENERIC_EXPLODE, Sound.Source.PLAYER, 3f, 1f),

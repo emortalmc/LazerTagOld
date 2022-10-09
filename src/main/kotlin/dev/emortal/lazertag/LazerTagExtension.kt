@@ -52,7 +52,7 @@ class LazerTagExtension : Extension() {
             canSpectate = true,
             WhenToRegisterEvents.GAME_START,
             GameOptions(
-                maxPlayers = 15,
+                maxPlayers = 30,
                 minPlayers = 2,
                 canJoinDuringGame = false,
                 showScoreboard = true
