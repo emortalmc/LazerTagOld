@@ -29,9 +29,9 @@ object RBG : ProjectileGun("RBG", Rarity.IMPOSSIBLE) {
 
     override val damage = 1f
     override val ammo = 50
-    override val reloadTime = 2000L
-    override val cooldown = 80L
-    override val burstInterval = 50L
+    override val reloadTime: Int = 2000
+    override val cooldown: Int = 80
+    override val burstInterval: Int = 50
     override val burstAmount = 4
 
     override val sound = Sound.sound(SoundEvent.ENTITY_BEE_HURT, Sound.Source.PLAYER, 1f, 1f)

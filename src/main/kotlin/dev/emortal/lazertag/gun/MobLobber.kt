@@ -48,8 +48,8 @@ object MobLobber : ProjectileGun("Mob Lobber", Rarity.RARE) {
 
     override val damage = 10f
     override val ammo = 5
-    override val reloadTime = 3000L
-    override val cooldown = 500L
+    override val reloadTime: Int = 3000
+    override val cooldown: Int = 500
 
     override val sound = null
 

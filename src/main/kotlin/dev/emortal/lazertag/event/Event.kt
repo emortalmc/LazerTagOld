@@ -32,7 +32,7 @@ sealed class Event {
 
         game.sendMessage(Component.text().append(prefix).append(startMessage))
 
-        object : MinestomRunnable(delay = duration, taskGroup = game.taskGroup) {
+        object : MinestomRunnable(delay = duration) {
             override fun run() {
                 eventEnded(game)
             }

@@ -8,7 +8,7 @@ import net.kyori.adventure.text.format.TextColor
 import net.minestom.server.entity.Player
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
-import net.minestom.server.timer.TaskSchedule
+import java.time.Duration
 
 object Shotgun : Gun("Shotgun") {
 
@@ -18,9 +18,9 @@ object Shotgun : Gun("Shotgun") {
     override val damage = 1.25f
     override val numberOfBullets = 20
     override val spread = 0.13
-    override val cooldown = 400L
+    override val cooldown: Int = 400
     override val ammo = 6
-    override val reloadTime = 3300L
+    override val reloadTime: Int = 3300
     override val freshReload = false
     override val shootMidReload = false
     override val maxDistance = 25.0
@@ -32,10 +32,9 @@ object Shotgun : Gun("Shotgun") {
         player.velocity = player.position.direction().normalize().mul(-15.0)
 
         object : MinestomRunnable(
-            delay = TaskSchedule.tick(5),
-            repeat = TaskSchedule.tick(3),
-            iterations = 2,
-            taskGroup = game.taskGroup
+            delay = Duration.ofMillis(5 * 50),
+            repeat = Duration.ofMillis(3 * 50),
+            iterations = 2
         ) {
             override fun run() {
                 player.playSound(Sound.sound(SoundEvent.ENTITY_IRON_GOLEM_ATTACK, Sound.Source.PLAYER, 1f, 1f))

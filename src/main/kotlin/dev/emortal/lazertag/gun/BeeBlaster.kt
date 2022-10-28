@@ -29,8 +29,8 @@ object BeeBlaster : ProjectileGun("Bee Blaster", Rarity.RARE) {
 
     override val damage = 70f
     override val ammo = 1
-    override val reloadTime = 2000L
-    override val cooldown = reloadTime
+    override val reloadTime: Int = 2000
+    override val cooldown: Int = reloadTime
 
     override val sound = Sound.sound(SoundEvent.ENTITY_BEE_HURT, Sound.Source.PLAYER, 1f, 1f)
 

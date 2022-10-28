@@ -12,7 +12,6 @@ import net.minestom.server.entity.metadata.animal.BeeMeta
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
 import world.cepi.kstom.util.eyePosition
-import world.cepi.kstom.util.playSound
 import world.cepi.kstom.util.spread
 import world.cepi.particle.Particle
 import world.cepi.particle.ParticleType
@@ -29,9 +28,9 @@ object BeeShotgun : ProjectileGun("Bee Keeper") {
     override val damage = 1.25f
     override val numberOfBullets = 20
     override val spread = 0.12
-    override val cooldown = 400L
+    override val cooldown: Int = 400
     override val ammo = 6
-    override val reloadTime = 1600L
+    override val reloadTime: Int = 1600
     override val freshReload = true
     override val shootMidReload = false
 

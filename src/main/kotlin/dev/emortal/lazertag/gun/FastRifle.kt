@@ -12,9 +12,9 @@ object FastRifle : Gun("A Very Fast Rifle", Rarity.RARE) {
     override val color: TextColor = NamedTextColor.LIGHT_PURPLE
 
     override val damage = 2f
-    override val cooldown = 0L
+    override val cooldown: Int = 0
     override val ammo = 20
-    override val reloadTime = 2500L
+    override val reloadTime: Int = 2500
     override val maxDistance = 100.0
 
     override val sound = Sound.sound(SoundEvent.ENTITY_PLAYER_BIG_FALL, Sound.Source.PLAYER, 1f, 0.75f)

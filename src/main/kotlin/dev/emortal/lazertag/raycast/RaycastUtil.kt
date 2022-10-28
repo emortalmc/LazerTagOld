@@ -44,7 +44,7 @@ object RaycastUtil {
 
     @Suppress("INACCESSIBLE_TYPE")
     fun raycastBlock(game: LazerTagGame, startPoint: Point, direction: Vec, maxDistance: Double): Pos? {
-        val instance = game.instance.get() ?: return null
+        val instance = game.instance
 
         val gridIterator: Iterator<Vector3d> = GridCast.createExactGridIterator(
             startPoint.x(), startPoint.y(), startPoint.z(),
@@ -84,10 +84,10 @@ object RaycastUtil {
         hitFilter: (Entity) -> Boolean = { true }
     ): Pair<Entity, Pos>? {
         
-        game.instance.get()?.entities
-            ?.filter { hitFilter.invoke(it) }
-            ?.filter { it.position.distanceSquared(startPoint) <= maxDistance * maxDistance }
-            ?.forEach {
+        game.instance.entities
+            .filter { hitFilter.invoke(it) }
+            .filter { it.position.distanceSquared(startPoint) <= maxDistance * maxDistance }
+            .forEach {
                 val area = it.area3d
                 val pos = it.position
 

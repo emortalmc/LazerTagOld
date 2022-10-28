@@ -31,8 +31,8 @@ object Celebration : ProjectileGun("Celebration", Rarity.RARE) {
 
     override val damage = 7f
     override val ammo = 10
-    override val reloadTime = 3500L
-    override val cooldown = 300L
+    override val reloadTime: Int = 3500
+    override val cooldown: Int = 300
 
     override val boundingBoxExpand = Vec(0.2, 0.2, 0.2)
 

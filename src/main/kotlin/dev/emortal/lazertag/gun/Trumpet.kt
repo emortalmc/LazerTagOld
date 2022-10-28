@@ -9,7 +9,6 @@ import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.item.Material
 import world.cepi.kstom.Manager
-import world.cepi.kstom.util.playSound
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 
@@ -20,19 +19,19 @@ object Trumpet : Gun("Trumpet", Rarity.IMPOSSIBLE, { it.customModelData(1) }) {
 
     override val damage = 0f
     override val ammo = Integer.MAX_VALUE
-    override val reloadTime = 0L
-    override val cooldown = 60L
+    override val reloadTime: Int = 0
+    override val cooldown: Int = 60
 
     override val sound = Sound.sound(Key.key("item.trumpet.doot"), Sound.Source.MASTER, 1f, 1f)
 
     override fun shoot(game: LazerTagGame, player: Player): ConcurrentHashMap<Player, Float> {
         game.playSound(sound, player.position)
 
-        val instance = game.instance.get()
+        val instance = game.instance
 
-        instance?.getNearbyEntities(player.position, 8.0)
-            ?.filter { it is Player && it.gameMode == GameMode.ADVENTURE && it != player }
-            ?.forEach {
+        instance.getNearbyEntities(player.position, 8.0)
+            .filter { it is Player && it.gameMode == GameMode.ADVENTURE && it != player }
+            .forEach {
                 val target = it as Player
 
                 it.velocity = it.position.sub(player.position).asVec().normalize().mul(65.0).withY(17.0)

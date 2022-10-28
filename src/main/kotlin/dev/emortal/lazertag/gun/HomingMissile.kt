@@ -13,7 +13,6 @@ import net.minestom.server.network.packet.server.play.ExplosionPacket
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
 import world.cepi.kstom.util.eyePosition
-import world.cepi.kstom.util.playSound
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 
@@ -26,8 +25,8 @@ object HomingMissile : ProjectileGun("Homing Missile", Rarity.IMPOSSIBLE) {
 
     override val damage = 999f
     override val ammo = 10
-    override val reloadTime = 0L
-    override val cooldown = 50L
+    override val reloadTime: Int = 0
+    override val cooldown: Int = 50
 
     override val sound = null
 

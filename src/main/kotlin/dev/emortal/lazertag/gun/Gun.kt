@@ -22,7 +22,6 @@ import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
 import world.cepi.kstom.util.asVec
 import world.cepi.kstom.util.eyePosition
-import world.cepi.kstom.util.playSound
 import world.cepi.kstom.util.spread
 import world.cepi.particle.Particle
 import world.cepi.particle.ParticleType
@@ -92,23 +91,23 @@ sealed class Gun(
     open val headshotModifier: Float = 2f
     open val numberOfBullets: Int = 1
     open val spread: Double = 0.0
-    abstract val cooldown: Long // In millis
+    abstract val cooldown: Int // In millis
     abstract val ammo: Int
-    abstract val reloadTime: Long // In millis
+    abstract val reloadTime: Int // In millis
     open val freshReload: Boolean = true
     open val shootMidReload: Boolean = false
     open val maxDistance: Double = 10.0
 
     open val burstAmount: Int = 1
-    open val burstInterval: Long = 0 // In millis
+    open val burstInterval: Int = 0 // In millis
 
     open val sound: Sound? = Sound.sound(SoundEvent.ENTITY_BLAZE_HURT, Sound.Source.PLAYER, 1f, 1f)
 
-    fun getReloadMillis(currentAmmo: Int): Long {
+    fun getReloadMillis(currentAmmo: Int): Int {
         return if (freshReload) {
             reloadTime
         } else {
-            (reloadTime.toFloat() * ((ammo.toFloat() - currentAmmo.toFloat()) / ammo.toFloat())).toLong()
+            (reloadTime.toFloat() * ((ammo.toFloat() - currentAmmo.toFloat()) / ammo.toFloat())).toInt()
         }
     }
 

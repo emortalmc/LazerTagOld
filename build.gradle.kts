@@ -1,8 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.7.10"
-    kotlin("plugin.serialization") version "1.7.10"
+    id("org.jetbrains.kotlin.jvm") version "1.7.20"
+    kotlin("plugin.serialization") version "1.7.20"
     id("com.github.johnrengelman.shadow") version "7.1.2"
 
     java
@@ -10,6 +10,7 @@ plugins {
 
 repositories {
     mavenCentral()
+    mavenLocal()
     maven(url = "https://jitpack.io")
 }
 
@@ -18,11 +19,12 @@ dependencies {
     //compileOnly(kotlin("reflect"))
 
     //implementation("com.github.EmortalMC:Rayfast:07d8daf030")
-    compileOnly("com.github.Minestom:Minestom:08f37400b0")
-    compileOnly("com.github.EmortalMC:Immortal:caa1b430f7")
+    compileOnly("com.github.Minestom:Minestom:b4af87b8a4")
+//    compileOnly("com.github.EmortalMC:Immortal:29cfc5b6be")
+    compileOnly("dev.emortal.immortal:Immortal:3.0.0")
 
     compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
-    compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.0")
+    compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
 }
 
 tasks {

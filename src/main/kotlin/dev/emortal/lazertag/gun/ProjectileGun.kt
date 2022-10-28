@@ -7,8 +7,7 @@ import net.minestom.server.entity.Entity
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.item.ItemMeta
-import net.minestom.server.timer.TaskSchedule
-import world.cepi.kstom.util.playSound
+import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 
 sealed class ProjectileGun(name: String, rarity: Rarity = Rarity.COMMON, customMeta: (ItemMeta.Builder) -> Unit = {}) :
@@ -61,7 +60,7 @@ sealed class ProjectileGun(name: String, rarity: Rarity = Rarity.COMMON, customM
             }
 
             entityTaskMap[entity] =
-                object : MinestomRunnable(repeat = TaskSchedule.nextTick(), iterations = maxDuration.toLong(), taskGroup = game.taskGroup) {
+                object : MinestomRunnable(repeat = Duration.ofMillis(50), iterations = maxDuration) {
                     override fun run() {
                         projectileTick(game, entity, player)
                     }
