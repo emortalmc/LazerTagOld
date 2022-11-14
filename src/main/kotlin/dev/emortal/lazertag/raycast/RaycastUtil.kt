@@ -57,7 +57,7 @@ object RaycastUtil {
             val pos = Pos(gridUnit[0], gridUnit[1], gridUnit[2])
 
             try {
-                val hitBlock = instance.getBlock(pos)
+                val hitBlock = instance!!.getBlock(pos)
 
                 if (LazerTagGame.destructableBlocks.contains(hitBlock.id())) {
                     instance.setBlock(pos, Block.AIR)
@@ -84,7 +84,7 @@ object RaycastUtil {
         hitFilter: (Entity) -> Boolean = { true }
     ): Pair<Entity, Pos>? {
         
-        game.instance.entities
+        game.instance!!.entities
             .filter { hitFilter.invoke(it) }
             .filter { it.position.distanceSquared(startPoint) <= maxDistance * maxDistance }
             .forEach {

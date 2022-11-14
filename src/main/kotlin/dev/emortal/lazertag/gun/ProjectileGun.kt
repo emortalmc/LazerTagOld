@@ -17,7 +17,7 @@ sealed class ProjectileGun(name: String, rarity: Rarity = Rarity.COMMON, customM
     open val boundingBoxExpand: Vec = Vec.ZERO
 
     companion object {
-        private val entityTaskMap = hashMapOf<Entity, MinestomRunnable>()
+        private val entityTaskMap = ConcurrentHashMap<Entity, MinestomRunnable>()
     }
 
     fun projectileTick(game: LazerTagGame, projectile: Entity, shooter: Player) {
@@ -60,7 +60,7 @@ sealed class ProjectileGun(name: String, rarity: Rarity = Rarity.COMMON, customM
             }
 
             entityTaskMap[entity] =
-                object : MinestomRunnable(repeat = Duration.ofMillis(50), iterations = maxDuration) {
+                object : MinestomRunnable(repeat = Duration.ofMillis(50), iterations = maxDuration, group = game.runnableGroup) {
                     override fun run() {
                         projectileTick(game, entity, player)
                     }

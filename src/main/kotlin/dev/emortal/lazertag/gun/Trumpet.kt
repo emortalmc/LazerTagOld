@@ -29,7 +29,7 @@ object Trumpet : Gun("Trumpet", Rarity.IMPOSSIBLE, { it.customModelData(1) }) {
 
         val instance = game.instance
 
-        instance.getNearbyEntities(player.position, 8.0)
+        instance!!.getNearbyEntities(player.position, 8.0)
             .filter { it is Player && it.gameMode == GameMode.ADVENTURE && it != player }
             .forEach {
                 val target = it as Player

@@ -6,6 +6,6 @@ import world.cepi.kstom.serializer.PositionSerializer
 
 @Serializable
 class LazerTagConfig(
-    var spawnPositions: HashMap<String, Array<@Serializable(with = PositionSerializer::class) Pos>> = hashMapOf()
+    var spawnPositions: MutableMap<String, Array<@Serializable(with = PositionSerializer::class) Pos>> = mutableMapOf()
 
 )

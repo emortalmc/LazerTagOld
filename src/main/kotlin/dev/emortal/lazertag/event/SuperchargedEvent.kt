@@ -28,7 +28,7 @@ class SuperchargedEvent : Event() {
 
     override fun eventStarted(game: LazerTagGame) {
         game.players.forEach {
-            strikeLightning(game.instance, it.position)
+            strikeLightning(game.instance!!, it.position)
 
             it.getAttribute(Attribute.MOVEMENT_SPEED).baseValue = 0.3f
             it.addEffect(Potion(PotionEffect.JUMP_BOOST, 5, (duration.toMillis() / 50).toInt()))

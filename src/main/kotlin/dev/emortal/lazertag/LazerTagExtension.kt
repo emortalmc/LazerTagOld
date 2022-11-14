@@ -1,9 +1,7 @@
 package dev.emortal.lazertag
 
 import dev.emortal.immortal.config.ConfigHelper
-import dev.emortal.immortal.config.GameOptions
 import dev.emortal.immortal.game.GameManager
-import dev.emortal.immortal.game.WhenToRegisterEvents
 import dev.emortal.lazertag.commands.EventCommand
 import dev.emortal.lazertag.commands.GunCommand
 import dev.emortal.lazertag.config.LazerTagConfig
@@ -48,15 +46,7 @@ class LazerTagExtension : Extension() {
         GameManager.registerGame<LazerTagGame>(
             "lazertag",
             "<gradient:gold:yellow><bold>LazerTag".asMini(),
-            showsInSlashPlay = true,
-            canSpectate = true,
-            WhenToRegisterEvents.GAME_START,
-            GameOptions(
-                maxPlayers = 30,
-                minPlayers = 2,
-                canJoinDuringGame = false,
-                showScoreboard = true
-            )
+            showsInSlashPlay = true
         )
 
         GunCommand.register()

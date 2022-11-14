@@ -34,7 +34,8 @@ object Shotgun : Gun("Shotgun") {
         object : MinestomRunnable(
             delay = Duration.ofMillis(5 * 50),
             repeat = Duration.ofMillis(3 * 50),
-            iterations = 2
+            iterations = 2,
+            group = game.runnableGroup
         ) {
             override fun run() {
                 player.playSound(Sound.sound(SoundEvent.ENTITY_IRON_GOLEM_ATTACK, Sound.Source.PLAYER, 1f, 1f))
