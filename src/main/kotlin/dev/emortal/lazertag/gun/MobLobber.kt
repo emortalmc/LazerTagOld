@@ -1,6 +1,7 @@
 package dev.emortal.lazertag.gun
 
 import dev.emortal.lazertag.game.LazerTagGame
+import dev.emortal.lazertag.game.LazerTagPlayerHelper.hasSpawnProtection
 import net.kyori.adventure.key.Key
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.format.NamedTextColor
@@ -62,8 +63,8 @@ object MobLobber : ProjectileGun("Mob Lobber", Rarity.RARE) {
         shooter.instance!!.sendGroupedPacket(ExplosionPacket(x.toFloat(), y.toFloat(), z.toFloat(), 3f, ByteArray(0), 0f, 0f, 0f))
 
         shooter.instance!!.players
-            .filter { it.gameMode == GameMode.ADVENTURE }
-            .filter { it.getDistance(projectile) < 7 }
+            .filter { it.gameMode == GameMode.ADVENTURE && !it.hasSpawnProtection }
+            .filter { it.getDistanceSquared(projectile) < 7*7 }
             .forEach { loopedPlayer ->
                 loopedPlayer.velocity =
                     loopedPlayer.position.sub(projectile.position.sub(.0, .5, .0)).asVec().normalize().mul(30.0)

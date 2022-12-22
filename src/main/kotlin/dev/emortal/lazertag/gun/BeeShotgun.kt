@@ -25,9 +25,9 @@ object BeeShotgun : ProjectileGun("Bee Keeper") {
     override val material: Material = Material.BEEHIVE
     override val color: TextColor = NamedTextColor.YELLOW
 
-    override val damage = 1.25f
+    override val damage = 1.0f
     override val numberOfBullets = 20
-    override val spread = 0.12
+    override val spread = 0.09
     override val cooldown: Int = 400
     override val ammo = 6
     override val reloadTime: Int = 1600
@@ -41,7 +41,6 @@ object BeeShotgun : ProjectileGun("Bee Keeper") {
     }
 
     override fun tick(game: LazerTagGame, projectile: Entity, shooter: Player) {
-        projectile.velocity = projectile.velocity.mul(1.12, 1.0, 1.12)
     }
 
     override fun collided(game: LazerTagGame, shooter: Player, projectile: Entity) {
@@ -81,12 +80,12 @@ object BeeShotgun : ProjectileGun("Bee Keeper") {
     }
 
     override fun createEntity(shooter: Player): Entity {
-        val projectile = Entity(EntityType.BEE)
+        val projectile = NoDragEntity(EntityType.BEE)
 
         val meta = projectile.entityMeta as BeeMeta
         meta.isBaby = true
 
-        val velocity = shooter.position.direction().spread(spread).mul(30.0)
+        val velocity = shooter.position.direction().spread(spread).mul(40.0)
         projectile.velocity = velocity
 
         projectile.setBoundingBox(0.5, 0.5, 0.5)

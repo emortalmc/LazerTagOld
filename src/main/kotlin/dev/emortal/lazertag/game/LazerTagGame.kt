@@ -43,6 +43,7 @@ import net.minestom.server.event.item.ItemDropEvent
 import net.minestom.server.event.player.*
 import net.minestom.server.event.trait.InstanceEvent
 import net.minestom.server.instance.AnvilLoader
+import net.minestom.server.instance.Chunk
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
@@ -51,6 +52,7 @@ import net.minestom.server.potion.Potion
 import net.minestom.server.potion.PotionEffect
 import net.minestom.server.scoreboard.Sidebar
 import net.minestom.server.sound.SoundEvent
+import net.minestom.server.tag.Tag
 import net.minestom.server.timer.ExecutionType
 import net.minestom.server.timer.Task
 import org.tinylog.kotlin.Logger
@@ -437,15 +439,15 @@ class LazerTagGame : PvpGame() {
 
     override fun gameEnded() {
         reloadTasks.values.forEach {
-            it.cancelImmediate()
+            it.cancel()
         }
         reloadTasks.clear()
         burstTasks.values.forEach {
-            it.cancelImmediate()
+            it.cancel()
         }
         burstTasks.clear()
         respawnTasks.values.forEach {
-            it.cancelImmediate()
+            it.cancel()
         }
         respawnTasks.clear()
         damageMap.clear()
@@ -509,7 +511,7 @@ class LazerTagGame : PvpGame() {
                         return
                     }
 
-//                    if (player.itemInMainHand.meta().getTag(ammoTag)!! <= 0) {
+//                    if (player.itemInMainHand.meta().getTag(ammoTag) <= 0) {
 //                        player.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_BREAK, Sound.Source.PLAYER, 0.7f, 1.5f))
 //                        //player.sendActionBar("<red>Press <bold><key:key.swapOffhand></bold> to reload!".asMini())
 //
@@ -528,7 +530,7 @@ class LazerTagGame : PvpGame() {
                         damage(player, hitEntity, false, damage)
                     }
 
-                    if (player.itemInMainHand.meta().getTag(ammoTag)!! == 0) {
+                    if (player.itemInMainHand.meta().getTag(ammoTag) == 0) {
                         // AUTO RELOADLOELDEOKROIJETROIJEOTLJSRGHRLGMlrejkgdklthirlthyi
 
                         val gun = Gun.registeredMap[player.itemInMainHand.getTag(Gun.gunIdTag)] ?: return
@@ -572,11 +574,11 @@ class LazerTagGame : PvpGame() {
         eventNode.listenOnly<PlayerMoveEvent> {
             if (player.gameMode != GameMode.ADVENTURE) return@listenOnly
 
-            if (newPosition.y() < spawnPosition!!.y - 15.0) {
+            if (newPosition.y < -7) {
                 val highestDamager = damageMap[player.uuid]?.maxByOrNull { it.value.first }?.key
-                val player = players.firstOrNull { it.uuid == highestDamager } ?: return@listenOnly
+                val killer = players.firstOrNull { it.uuid == highestDamager }
 
-                kill(player, player)
+                kill(player, killer)
             }
         }
     }
@@ -584,7 +586,7 @@ class LazerTagGame : PvpGame() {
     fun reload(player: Player, gun: Gun) {
         if (player.itemInMainHand.meta().hasTag(reloadingTag) || player.itemInMainHand.meta().getTag(ammoTag) == gun.ammo) return
 
-        val ammoOnReload = player.itemInMainHand.getTag(ammoTag)!!
+        val ammoOnReload = player.itemInMainHand.getTag(ammoTag) ?: return
         val reloadMillis = gun.getReloadMillis(ammoOnReload)
         player.setCooldown(player.itemInMainHand.material(), (reloadMillis / 50.0).roundToInt(), false)
 
@@ -665,13 +667,13 @@ class LazerTagGame : PvpGame() {
         // This is horrible.
         if (damager != target) {
             damageMap.putIfAbsent(target.uuid, ConcurrentHashMap())
-            damageMap[target.uuid]!![damager.uuid]?.second?.cancel()
+            damageMap[target.uuid]?.get(damager.uuid)?.second?.cancel()
 
             val removalTask = Manager.scheduler.buildTask {
                 damageMap[target.uuid]?.remove(damager.uuid)
             }.delay(Duration.ofSeconds(6)).schedule()
 
-            damageMap[target.uuid]!![damager.uuid] = Pair((damageMap[target.uuid]!![damager.uuid]?.first ?: 0f) + damage, removalTask)
+            damageMap[target.uuid]?.set(damager.uuid, Pair((damageMap[target.uuid]?.get(damager.uuid)?.first ?: 0f) + damage, removalTask))
         }
 
 
@@ -749,14 +751,11 @@ class LazerTagGame : PvpGame() {
     }
 
     override fun instanceCreate(): CompletableFuture<Instance> {
-        println("waiting for chunks to load before completing $id")
-
-//        val instanceFuture = CompletableFuture<Instance>()
-
         val randomMap = LazerTagExtension.maps.random()
 
         mapName = randomMap
 
+        val instanceFuture = CompletableFuture<Instance>()
         val lazertagInstance = Manager.instance.createInstanceContainer()
 
         if (mapName == "arena") {
@@ -770,23 +769,22 @@ class LazerTagGame : PvpGame() {
         lazertagInstance.timeUpdate = null
 
         lazertagInstance.chunkLoader = AnvilLoader("./maps/lazertag/$randomMap")
-//        lazertagInstance.setTag(Tag.Boolean("doNotAutoUnloadChunk"), true)
-//        lazertagInstance.enableAutoChunkLoad(false)
+        lazertagInstance.setTag(Tag.Boolean("doNotAutoUnloadChunk"), true)
+        lazertagInstance.enableAutoChunkLoad(false)
 
-//        val radius = 5
-//        val chunkFutures = mutableListOf<CompletableFuture<Chunk>>()
-//        for (x in -radius..radius) {
-//            for (z in -radius..radius) {
-//                chunkFutures.add(lazertagInstance.loadChunk(x, z))
-//            }
-//        }
-//
-//        CompletableFuture.allOf(*chunkFutures.toTypedArray()).thenRun {
-//            instanceFuture.complete(lazertagInstance)
-//            println("loaded chunks $id")
-//        }
+        val radius = 5
+        val chunkFutures = mutableListOf<CompletableFuture<Chunk>>()
+        for (x in -radius..radius) {
+            for (z in -radius..radius) {
+                chunkFutures.add(lazertagInstance.loadChunk(x, z))
+            }
+        }
 
-        return CompletableFuture.completedFuture(lazertagInstance)
+        CompletableFuture.allOf(*chunkFutures.toTypedArray()).thenRun {
+            instanceFuture.complete(lazertagInstance)
+        }
+
+        return instanceFuture
     }
 
 }

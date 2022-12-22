@@ -1,6 +1,7 @@
 package dev.emortal.lazertag.gun
 
 import dev.emortal.lazertag.game.LazerTagGame
+import dev.emortal.lazertag.game.LazerTagPlayerHelper.hasSpawnProtection
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
@@ -41,8 +42,6 @@ object RBG : ProjectileGun("RBG", Rarity.IMPOSSIBLE) {
     }
 
     override fun tick(game: LazerTagGame, projectile: Entity, shooter: Player) {
-        projectile.velocity = projectile.velocity.mul(1.08, 1.0, 1.08)
-
         game.showParticle(
             Particle.particle(
                 type = ParticleType.LARGE_SMOKE,
@@ -58,7 +57,7 @@ object RBG : ProjectileGun("RBG", Rarity.IMPOSSIBLE) {
         shooter.instance!!.sendGroupedPacket(ExplosionPacket(x.toFloat(), y.toFloat(), z.toFloat(), 3f, ByteArray(0), 0f, 0f, 0f))
 
         shooter.instance!!.players
-            .filter { it.gameMode == GameMode.ADVENTURE }
+            .filter { it.gameMode == GameMode.ADVENTURE && !it.hasSpawnProtection }
             .filter { it.getDistanceSquared(projectile) < 8 * 8 }
             .forEach { loopedPlayer ->
                 loopedPlayer.velocity =
@@ -77,7 +76,7 @@ object RBG : ProjectileGun("RBG", Rarity.IMPOSSIBLE) {
     }
 
     override fun createEntity(shooter: Player): Entity {
-        val projectile = Entity(EntityType.BEE)
+        val projectile = NoDragEntity(EntityType.BEE)
         val velocity = shooter.position.direction().mul(25.0)
 
         projectile.velocity = velocity

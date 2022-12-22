@@ -2,6 +2,7 @@ package dev.emortal.lazertag.gun
 
 import dev.emortal.immortal.util.showFirework
 import dev.emortal.lazertag.game.LazerTagGame
+import dev.emortal.lazertag.game.LazerTagPlayerHelper.hasSpawnProtection
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
@@ -70,7 +71,7 @@ object Celebration : ProjectileGun("Celebration", Rarity.RARE) {
         shooter.instance!!.players.showFirework(shooter.instance!!, projectile.position, effects)
 
         shooter.instance!!.players
-            .filter { it.gameMode == GameMode.ADVENTURE }
+            .filter { it.gameMode == GameMode.ADVENTURE && !it.hasSpawnProtection }
             .filter { it.getDistanceSquared(projectile) < 5 * 5 }
             .forEach { loopedPlayer ->
                 loopedPlayer.velocity =
