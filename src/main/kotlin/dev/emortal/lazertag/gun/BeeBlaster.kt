@@ -12,10 +12,6 @@ import net.minestom.server.entity.Player
 import net.minestom.server.item.Material
 import net.minestom.server.network.packet.server.play.ExplosionPacket
 import net.minestom.server.sound.SoundEvent
-import world.cepi.kstom.util.component1
-import world.cepi.kstom.util.component2
-import world.cepi.kstom.util.component3
-import world.cepi.kstom.util.eyePosition
 import world.cepi.particle.Particle
 import world.cepi.particle.ParticleType
 import world.cepi.particle.data.OffsetAndSpeed
@@ -53,8 +49,7 @@ object BeeBlaster : ProjectileGun("Bee Blaster", Rarity.RARE) {
     }
 
     override fun collided(game: LazerTagGame, shooter: Player, projectile: Entity) {
-        val (x, y, z) = projectile.position
-        shooter.instance!!.sendGroupedPacket(ExplosionPacket(x.toFloat(), y.toFloat(), z.toFloat(), 3f, ByteArray(0), 0f, 0f, 0f))
+        shooter.instance!!.sendGroupedPacket(ExplosionPacket(projectile.position.x, projectile.position.y, projectile.position.z, 3f, ByteArray(0), 0f, 0f, 0f))
 
         shooter.instance!!.players
             .filter { it.gameMode == GameMode.ADVENTURE && !it.hasSpawnProtection }
@@ -83,7 +78,7 @@ object BeeBlaster : ProjectileGun("Bee Blaster", Rarity.RARE) {
 
         projectile.setNoGravity(true)
         projectile.setGravity(0.0, 0.0)
-        projectile.setInstance(shooter.instance!!, shooter.eyePosition())
+        projectile.setInstance(shooter.instance!!, shooter.position.add(0.0, shooter.eyeHeight, 0.0))
         projectile.scheduleRemove(Duration.ofSeconds(10))
 
         return projectile

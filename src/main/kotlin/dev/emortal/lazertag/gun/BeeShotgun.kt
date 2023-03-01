@@ -11,14 +11,13 @@ import net.minestom.server.entity.Player
 import net.minestom.server.entity.metadata.animal.BeeMeta
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
-import world.cepi.kstom.util.eyePosition
-import world.cepi.kstom.util.spread
 import world.cepi.particle.Particle
 import world.cepi.particle.ParticleType
 import world.cepi.particle.data.OffsetAndSpeed
 import world.cepi.particle.showParticle
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ThreadLocalRandom
 
 object BeeShotgun : ProjectileGun("Bee Keeper") {
 
@@ -85,14 +84,19 @@ object BeeShotgun : ProjectileGun("Bee Keeper") {
         val meta = projectile.entityMeta as BeeMeta
         meta.isBaby = true
 
-        val velocity = shooter.position.direction().spread(spread).mul(40.0)
+        val random = ThreadLocalRandom.current()
+        val lookDir = shooter.position.direction()
+        val velocity = lookDir
+            .rotateAroundAxis(lookDir.rotateAroundZ(Math.PI / 2), random.nextDouble(-spread, spread))
+            .rotateAroundAxis(lookDir, random.nextDouble(Math.PI * 2))
+            .mul(40.0)
         projectile.velocity = velocity
 
         projectile.setBoundingBox(0.5, 0.5, 0.5)
 
         projectile.setGravity(0.0, 0.0)
         projectile.setNoGravity(true)
-        projectile.setInstance(shooter.instance!!, shooter.eyePosition())
+        projectile.setInstance(shooter.instance!!, shooter.position.add(0.0, shooter.eyeHeight, 0.0))
         projectile.scheduleRemove(Duration.ofSeconds(10))
 
         return projectile

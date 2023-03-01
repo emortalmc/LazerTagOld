@@ -15,7 +15,6 @@ import net.minestom.server.item.Material
 import net.minestom.server.item.firework.FireworkEffect
 import net.minestom.server.item.firework.FireworkEffectType
 import net.minestom.server.sound.SoundEvent
-import world.cepi.kstom.util.eyePosition
 import world.cepi.particle.Particle
 import world.cepi.particle.ParticleType
 import world.cepi.particle.data.OffsetAndSpeed
@@ -96,7 +95,7 @@ object Celebration : ProjectileGun("Celebration", Rarity.RARE) {
         projectile.velocity = velocity
 
         projectile.setNoGravity(true)
-        projectile.setInstance(shooter.instance!!, shooter.eyePosition())
+        projectile.setInstance(shooter.instance!!, shooter.position.add(0.0, shooter.eyeHeight, 0.0))
         projectile.scheduleRemove(Duration.ofSeconds(10))
 
         return projectile

@@ -8,7 +8,6 @@ import net.kyori.adventure.text.format.TextColor
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.item.Material
-import world.cepi.kstom.Manager
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 
@@ -39,7 +38,7 @@ object Trumpet : Gun("Trumpet", Rarity.IMPOSSIBLE, { it.customModelData(1) }) {
                 game.damageMap.putIfAbsent(target.uuid, ConcurrentHashMap())
                 game.damageMap[target.uuid]!![player.uuid]?.second?.cancel()
 
-                val removalTask = Manager.scheduler.buildTask {
+                val removalTask = target.scheduler().buildTask {
                     game.damageMap[target.uuid]?.remove(player.uuid)
                 }.delay(Duration.ofSeconds(6)).schedule()
 

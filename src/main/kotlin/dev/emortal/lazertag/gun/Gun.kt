@@ -1,6 +1,7 @@
 package dev.emortal.lazertag.gun
 
 import dev.emortal.immortal.game.Game
+import dev.emortal.immortal.util.asVec
 import dev.emortal.immortal.util.progressBar
 import dev.emortal.lazertag.game.LazerTagGame
 import dev.emortal.lazertag.raycast.RaycastResultType
@@ -20,9 +21,6 @@ import net.minestom.server.item.ItemStack
 import net.minestom.server.item.Material
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
-import world.cepi.kstom.util.asVec
-import world.cepi.kstom.util.eyePosition
-import world.cepi.kstom.util.spread
 import world.cepi.particle.Particle
 import world.cepi.particle.ParticleType
 import world.cepi.particle.data.OffsetAndSpeed
@@ -129,12 +127,15 @@ sealed class Gun(
         val damageMap = ConcurrentHashMap<Player, Float>()
 
         val instance = player.instance!!
-        val eyePos = player.eyePosition()
+        val eyePos = player.position.add(0.0, player.eyeHeight, 0.0)
         val eyeDir = player.position.direction()
+        val random = ThreadLocalRandom.current()
 
         repeat(numberOfBullets) {
 
-            val direction = eyeDir.spread(spread)//.normalize()
+            val direction = eyeDir
+                .rotateAroundAxis(eyeDir.rotateAroundZ(Math.PI / 2), random.nextDouble(-spread, spread))
+                .rotateAroundAxis(eyeDir, random.nextDouble(Math.PI * 2))
 
             val raycastResult = RaycastUtil.raycast(game, eyePos, direction, maxDistance) {
                 it != player && it.entityType == EntityType.PLAYER && (it as Player).gameMode == GameMode.ADVENTURE

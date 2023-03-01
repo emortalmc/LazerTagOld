@@ -14,10 +14,6 @@ import net.minestom.server.entity.metadata.other.FallingBlockMeta
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.Material
 import net.minestom.server.network.packet.server.play.ExplosionPacket
-import world.cepi.kstom.util.component1
-import world.cepi.kstom.util.component2
-import world.cepi.kstom.util.component3
-import world.cepi.kstom.util.eyePosition
 import java.util.concurrent.ConcurrentHashMap
 
 object BlockChucker : ProjectileGun("Block Chucker", Rarity.RARE) {
@@ -37,8 +33,7 @@ object BlockChucker : ProjectileGun("Block Chucker", Rarity.RARE) {
     }
 
     override fun collided(game: LazerTagGame, shooter: Player, projectile: Entity) {
-        val (x, y, z) = projectile.position
-        shooter.instance!!.sendGroupedPacket(ExplosionPacket(x.toFloat(), y.toFloat(), z.toFloat(), 3f, ByteArray(0), 0f, 0f, 0f))
+        shooter.instance!!.sendGroupedPacket(ExplosionPacket(projectile.position.x, projectile.position.y, projectile.position.z, 3f, ByteArray(0), 0f, 0f, 0f))
 
         shooter.instance!!.players
             .filter { it.gameMode == GameMode.ADVENTURE && !it.hasSpawnProtection }
@@ -70,7 +65,7 @@ object BlockChucker : ProjectileGun("Block Chucker", Rarity.RARE) {
             )
         )
 
-        projectile.setInstance(shooter.instance!!, shooter.eyePosition())
+        projectile.setInstance(shooter.instance!!, shooter.position.add(0.0, shooter.eyeHeight, 0.0))
 
         return projectile
     }

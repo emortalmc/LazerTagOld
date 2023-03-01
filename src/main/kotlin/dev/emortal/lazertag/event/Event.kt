@@ -1,6 +1,5 @@
 package dev.emortal.lazertag.event
 
-import dev.emortal.immortal.util.MinestomRunnable
 import dev.emortal.lazertag.game.LazerTagGame
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -21,23 +20,17 @@ sealed class Event {
             .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
     }
 
-    var running = false
-
     abstract val duration: Duration
     abstract val startMessage: Component
 
     fun performEvent(game: LazerTagGame) {
-        running = true
         eventStarted(game)
 
         game.sendMessage(Component.text().append(prefix).append(startMessage))
 
-        object : MinestomRunnable(delay = duration, group = game.runnableGroup) {
-            override fun run() {
-                eventEnded(game)
-            }
-        }
-
+        game.instance!!.scheduler().buildTask {
+            eventEnded(game)
+        }.delay(duration).schedule()
     }
 
 
