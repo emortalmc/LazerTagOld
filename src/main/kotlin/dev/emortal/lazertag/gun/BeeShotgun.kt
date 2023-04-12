@@ -89,8 +89,9 @@ object BeeShotgun : ProjectileGun("Bee Keeper") {
         var velocity = lookDir
             .mul(40.0)
         if (spread > 0.0) {
-            velocity = velocity.rotateAroundAxis(lookDir.rotateAroundZ(Math.PI / 2), random.nextDouble(-spread, spread))
-                .rotateAroundAxis(lookDir, random.nextDouble(Math.PI * 2))
+            velocity = velocity.rotateAroundX(random.nextDouble(-spread, spread))
+                .rotateAroundY(random.nextDouble(-spread, spread))
+                .rotateAroundZ(random.nextDouble(-spread, spread))
         }
 
         projectile.velocity = velocity
