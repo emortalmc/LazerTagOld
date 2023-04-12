@@ -52,7 +52,7 @@ object RaycastUtil {
 
         while (gridIterator.hasNext()) {
             val gridUnit = gridIterator.next()
-            val pos = Pos(gridUnit[0], gridUnit[1], gridUnit[2])
+            val pos = Pos(gridUnit.x(), gridUnit.y(), gridUnit.z())
 
             try {
                 val hitBlock = instance!!.getBlock(pos)
@@ -96,7 +96,7 @@ object RaycastUtil {
                     Vector3d.of(direction.x(), direction.y(), direction.z())
                 )
                 if (intersection != null) {
-                    return Pair(it, Pos(intersection[0] + pos.x, intersection[1] + pos.y, intersection[2] + pos.z))
+                    return Pair(it, Pos(intersection.x() + pos.x, intersection.y() + pos.y, intersection.z() + pos.z))
                 }
             }
 
