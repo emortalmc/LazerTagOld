@@ -6,10 +6,7 @@ import net.kyori.adventure.key.Key
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
-import net.minestom.server.entity.Entity
-import net.minestom.server.entity.EntityType
-import net.minestom.server.entity.GameMode
-import net.minestom.server.entity.Player
+import net.minestom.server.entity.*
 import net.minestom.server.entity.metadata.monster.CreeperMeta
 import net.minestom.server.entity.metadata.water.fish.PufferfishMeta
 import net.minestom.server.item.Material
@@ -50,8 +47,8 @@ object MobLobber : ProjectileGun("Mob Lobber", Rarity.RARE) {
 
     override val sound = null
 
-    override fun projectileShot(game: LazerTagGame, player: Player): ConcurrentHashMap<Player, Float> {
-        return ConcurrentHashMap()
+    override fun projectileShot(game: LazerTagGame, player: Player): Map<Player, Float> {
+        return emptyMap()
     }
 
     override fun collided(game: LazerTagGame, shooter: Player, projectile: Entity) {
@@ -74,7 +71,7 @@ object MobLobber : ProjectileGun("Mob Lobber", Rarity.RARE) {
     override fun createEntity(shooter: Player): Entity {
         val entityType = mobList.random()
 
-        val projectile = Entity(entityType)
+        val projectile = EntityProjectile(shooter, entityType)
         projectile.setBoundingBox(1.2, 1.2, 1.2)
         val velocity = shooter.position.direction().mul(50.0)
         projectile.velocity = velocity

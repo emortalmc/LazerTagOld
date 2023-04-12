@@ -23,7 +23,7 @@ object Trumpet : Gun("Trumpet", Rarity.IMPOSSIBLE, { it.customModelData(1) }) {
 
     override val sound = Sound.sound(Key.key("item.trumpet.doot"), Sound.Source.MASTER, 1f, 1f)
 
-    override fun shoot(game: LazerTagGame, player: Player): ConcurrentHashMap<Player, Float> {
+    override fun shoot(game: LazerTagGame, player: Player): Map<Player, Float> {
         game.playSound(sound, player.position)
 
         val instance = game.instance
@@ -45,7 +45,7 @@ object Trumpet : Gun("Trumpet", Rarity.IMPOSSIBLE, { it.customModelData(1) }) {
                 game.damageMap[target.uuid]!![player.uuid] = Pair(game.damageMap[target.uuid]!![player.uuid]?.first ?: 0f, removalTask)
             }
 
-        return ConcurrentHashMap()
+        return emptyMap()
     }
 
     override fun renderAmmo(player: Player, currentAmmo: Int, percentage: Float, reloading: Boolean) {

@@ -1,4 +1,4 @@
-package dev.emortal.lazertag.gun
+package dev.emortal.lazertag.entity
 
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos

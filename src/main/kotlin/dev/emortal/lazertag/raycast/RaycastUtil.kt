@@ -12,7 +12,6 @@ import net.minestom.server.coordinate.Pos
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
 import net.minestom.server.instance.block.Block
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Class to make Rayfast easier to use with Minestom
@@ -21,17 +20,16 @@ import java.util.concurrent.ConcurrentHashMap
  */
 object RaycastUtil {
 
-    val boundingBoxToArea3dMap = ConcurrentHashMap<BoundingBox, Area3d>()
+    val boundingBoxToArea3dMap: MutableMap<BoundingBox, Area3d> = HashMap()
     private const val tolerance: Double = 0.35
 
 
     init {
         Area3d.CONVERTER.register(BoundingBox::class.java) { box ->
             boundingBoxToArea3dMap.computeIfAbsent(box) { it ->
-                Area3dRectangularPrism.wrapper(
-                    it,
-                    { it.minX() - tolerance }, { it.minY() - tolerance }, { it.minZ() - tolerance },
-                    { it.maxX() + tolerance }, { it.maxY() + tolerance }, { it.maxZ() + tolerance }
+                Area3dRectangularPrism.of(
+                    it.minX() - tolerance, it.minY() - tolerance, it.minZ() - tolerance,
+                    it.maxX() + tolerance, it.maxY() + tolerance, it.maxZ() + tolerance
                 )
             }
 

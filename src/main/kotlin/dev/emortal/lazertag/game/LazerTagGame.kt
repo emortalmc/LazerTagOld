@@ -15,6 +15,7 @@ import dev.emortal.lazertag.gun.Gun.Companion.ammoTag
 import dev.emortal.lazertag.gun.Gun.Companion.heldGun
 import dev.emortal.lazertag.gun.Gun.Companion.lastShotTag
 import dev.emortal.lazertag.gun.Gun.Companion.reloadingTag
+import dev.emortal.lazertag.gun.ProjectileGun
 import dev.emortal.lazertag.gun.Rifle
 import dev.emortal.lazertag.raycast.RaycastUtil
 import dev.emortal.lazertag.utils.setCooldown
@@ -38,6 +39,8 @@ import net.minestom.server.entity.metadata.item.ItemEntityMeta
 import net.minestom.server.entity.metadata.other.ArmorStandMeta
 import net.minestom.server.event.EventNode
 import net.minestom.server.event.entity.EntityDamageEvent
+import net.minestom.server.event.entity.projectile.ProjectileCollideWithBlockEvent
+import net.minestom.server.event.entity.projectile.ProjectileCollideWithEntityEvent
 import net.minestom.server.event.inventory.InventoryPreClickEvent
 import net.minestom.server.event.item.ItemDropEvent
 import net.minestom.server.event.player.*
@@ -97,8 +100,8 @@ class LazerTagGame : PvpGame() {
     //TODO: Replace with LazerTag game options?
     private val killsToWin = 25
 
-    val burstTasks = ConcurrentHashMap<UUID, Task>()
-    val reloadTasks = ConcurrentHashMap<UUID, Task>()
+    val burstTasks: MutableMap<UUID, Task> = ConcurrentHashMap<UUID, Task>()
+    val reloadTasks: MutableMap<UUID, Task> = ConcurrentHashMap<UUID, Task>()
 
     var gunRandomizing = true
     var defaultGun: Gun = Rifle
@@ -109,7 +112,7 @@ class LazerTagGame : PvpGame() {
 
     var mapName: String? = null
 
-    val damageMap = ConcurrentHashMap<UUID, ConcurrentHashMap<UUID, Pair<Float, Task>>>()
+    val damageMap: MutableMap<UUID, MutableMap<UUID, Pair<Float, Task>>> = ConcurrentHashMap<UUID, MutableMap<UUID, Pair<Float, Task>>>()
 
     var spawnPosition: Pos? = null
 
@@ -385,6 +388,8 @@ class LazerTagGame : PvpGame() {
                         )
                     )
                 )
+
+                secondsLeft--;
                 
                 return TaskSchedule.seconds(1)
             }
@@ -459,6 +464,29 @@ class LazerTagGame : PvpGame() {
     }
 
     override fun registerEvents(eventNode: EventNode<InstanceEvent>) {
+        eventNode.addListener(ProjectileCollideWithBlockEvent::class.java) { e ->
+            val gunId = e.entity.getTag(Gun.gunIdTag) ?: return@addListener
+            val shooterUUID = e.entity.getTag(Gun.shooterTag) ?: return@addListener
+            val gunClass = Gun.registeredMap[gunId] as? ProjectileGun ?: return@addListener
+
+            val shooter = players.firstOrNull { it.uuid == shooterUUID } ?: return@addListener
+            gunClass.collided(this, shooter, e.entity)
+            e.entity.remove()
+        }
+
+        eventNode.addListener(ProjectileCollideWithEntityEvent::class.java) { e ->
+            val gunId = e.entity.getTag(Gun.gunIdTag) ?: return@addListener
+            val shooterUUID = e.entity.getTag(Gun.shooterTag) ?: return@addListener
+            val gunClass = Gun.registeredMap[gunId] as? ProjectileGun ?: return@addListener
+
+            val playerTarget = e.target as? Player ?: return@addListener
+            val shooter = players.firstOrNull { it.uuid == shooterUUID } ?: return@addListener
+            if (shooter == playerTarget) return@addListener
+
+            gunClass.collidedWithEntity(this, shooter, e.entity, listOf(playerTarget))
+            e.entity.remove()
+        }
+
         eventNode.addListener(PlayerUseItemEvent::class.java) { e ->
             val player = e.player
             
@@ -502,8 +530,11 @@ class LazerTagGame : PvpGame() {
                 var burst = heldGun.burstAmount
 
                 override fun get(): TaskSchedule {
+                    if (burst == 0) {
+                        return TaskSchedule.stop()
+                    }
+
                     if (!player.itemInMainHand.meta().hasTag(ammoTag)) {
-                        burstTasks.remove(player.uuid)
                         return TaskSchedule.stop()
                     }
 
@@ -519,6 +550,8 @@ class LazerTagGame : PvpGame() {
                         val gun = Gun.registeredMap[player.itemInMainHand.getTag(Gun.gunIdTag)] ?: return taskSchedule
                         reload(player, gun)
                     }
+
+                    burst--;
 
                     return taskSchedule
                 }
@@ -617,6 +650,8 @@ class LazerTagGame : PvpGame() {
 
                     return TaskSchedule.stop()
                 }
+
+                reloadIter--
 
                 val lastAmmo = currentAmmo
                 currentAmmo += (gun.ammo.toFloat() - startingAmmo) / (reloadMillis / 50).toFloat()

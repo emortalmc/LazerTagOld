@@ -16,7 +16,7 @@ repositories {
 
 dependencies {
     implementation("com.github.hollow-cube:Minestom:e6d4a2cc91")
-    implementation("com.github.EmortalMC:Immortal:bb0a38dc47")
+    implementation("com.github.EmortalMC:Immortal:f31101193e")
 
     compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
     compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")

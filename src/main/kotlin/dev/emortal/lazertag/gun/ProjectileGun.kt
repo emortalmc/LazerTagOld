@@ -1,40 +1,16 @@
 package dev.emortal.lazertag.gun
 
 import dev.emortal.lazertag.game.LazerTagGame
-import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
-import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
 import net.minestom.server.item.ItemMeta
-import java.util.concurrent.ConcurrentHashMap
+import net.minestom.server.timer.TaskSchedule
 
-sealed class ProjectileGun(name: String, rarity: Rarity = Rarity.COMMON, customMeta: (ItemMeta.Builder) -> Unit = {}) :
-    Gun(name, rarity, customMeta) {
-
-    open val boundingBoxExpand: Vec = Vec.ZERO
-
-    fun projectileTick(game: LazerTagGame, projectile: Entity, shooter: Player) {
-        tick(game, projectile, shooter)
-
-        if (projectile.velocity.x == 0.0 || projectile.velocity.y == 0.0 || projectile.velocity.z == 0.0 || projectile.isOnGround) return collide(
-            game,
-            shooter,
-            projectile
-        )
-
-        val expandedBox = projectile.boundingBox.expand(boundingBoxExpand.x, boundingBoxExpand.y, boundingBoxExpand.z)
-        val intersectingPlayers = game.players
-            .filter { it.gameMode == GameMode.ADVENTURE && expandedBox.intersectEntity(projectile.position, it) }
-            .filter { if (projectile.aliveTicks < 30) it != shooter else true }
-        if (intersectingPlayers.isEmpty()) return
-
-        collideEntity(game, shooter, projectile, intersectingPlayers)
-    }
+sealed class ProjectileGun(name: String, rarity: Rarity = Rarity.COMMON, customMeta: (ItemMeta.Builder) -> Unit = {}) : Gun(name, rarity, customMeta) {
 
     open fun tick(game: LazerTagGame, projectile: Entity, shooter: Player) {}
 
-
-    override fun shoot(game: LazerTagGame, player: Player): ConcurrentHashMap<Player, Float> {
+    override fun shoot(game: LazerTagGame, player: Player): Map<Player, Float> {
         sound?.let { game.playSound(it, player.position) }
 
         if (!game.infiniteAmmo) {
@@ -47,16 +23,19 @@ sealed class ProjectileGun(name: String, rarity: Rarity = Rarity.COMMON, customM
 
         repeat(numberOfBullets) {
             createEntity(player).also {
-                //it.setTag(playerUUIDLeastTag, player.uuid.leastSignificantBits)
-                //it.setTag(playerUUIDMostTag, player.uuid.mostSignificantBits)
+                it.setTag(shooterTag, player.uuid)
                 it.setTag(gunIdTag, this.name)
+
+                it.scheduler().buildTask {
+                    tick(game, it, player)
+                }.repeat(TaskSchedule.nextTick()).schedule()
             }
         }
 
         return projectileShot(game, player)
     }
 
-    abstract fun projectileShot(game: LazerTagGame, player: Player): ConcurrentHashMap<Player, Float>
+    abstract fun projectileShot(game: LazerTagGame, player: Player): Map<Player, Float>
 
     fun collide(game: LazerTagGame, shooter: Player, projectile: Entity) {
         collided(game, shooter, projectile)

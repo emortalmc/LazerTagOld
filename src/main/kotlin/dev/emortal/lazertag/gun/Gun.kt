@@ -38,8 +38,8 @@ sealed class Gun(
 ) {
 
     companion object {
+        val shooterTag = Tag.UUID("shooter")
         val gunIdTag = Tag.String("gunID")
-        val taskIdTag = Tag.Integer("taskID")
         val lastShotTag = Tag.Long("lastShot")
         val reloadingTag = Tag.Byte("reloading")
         val ammoTag = Tag.Integer("ammo")
@@ -109,7 +109,7 @@ sealed class Gun(
         }
     }
 
-    open fun shoot(game: LazerTagGame, player: Player): ConcurrentHashMap<Player, Float> {
+    open fun shoot(game: LazerTagGame, player: Player): Map<Player, Float> {
         sound?.let { game.playSound(it, player.position) }
 
         if (!game.infiniteAmmo) {
@@ -123,7 +123,7 @@ sealed class Gun(
         return gunShot(game, player)
     }
 
-    protected open fun gunShot(game: LazerTagGame, player: Player): ConcurrentHashMap<Player, Float> {
+    protected open fun gunShot(game: LazerTagGame, player: Player): Map<Player, Float> {
         val damageMap = ConcurrentHashMap<Player, Float>()
 
         val instance = player.instance!!
@@ -133,9 +133,13 @@ sealed class Gun(
 
         repeat(numberOfBullets) {
 
-            val direction = eyeDir
-                .rotateAroundAxis(eyeDir.rotateAroundZ(Math.PI / 2), random.nextDouble(-spread, spread))
-                .rotateAroundAxis(eyeDir, random.nextDouble(Math.PI * 2))
+            var direction = eyeDir
+            if (spread > 0.0) {
+                direction = direction
+                    .rotateAroundX(random.nextDouble(-spread, spread))
+                    .rotateAroundY(random.nextDouble(-spread, spread))
+                    .rotateAroundZ(random.nextDouble(-spread, spread))
+            }
 
             val raycastResult = RaycastUtil.raycast(game, eyePos, direction, maxDistance) {
                 it != player && it.entityType == EntityType.PLAYER && (it as Player).gameMode == GameMode.ADVENTURE

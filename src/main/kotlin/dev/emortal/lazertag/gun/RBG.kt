@@ -1,5 +1,6 @@
 package dev.emortal.lazertag.gun
 
+import dev.emortal.lazertag.entity.NoDragEntityProjectile
 import dev.emortal.lazertag.game.LazerTagGame
 import dev.emortal.lazertag.game.LazerTagPlayerHelper.hasSpawnProtection
 import net.kyori.adventure.sound.Sound
@@ -17,7 +18,6 @@ import world.cepi.particle.ParticleType
 import world.cepi.particle.data.OffsetAndSpeed
 import world.cepi.particle.showParticle
 import java.time.Duration
-import java.util.concurrent.ConcurrentHashMap
 
 object RBG : ProjectileGun("RBG", Rarity.IMPOSSIBLE) {
 
@@ -33,8 +33,8 @@ object RBG : ProjectileGun("RBG", Rarity.IMPOSSIBLE) {
 
     override val sound = Sound.sound(SoundEvent.ENTITY_BEE_HURT, Sound.Source.PLAYER, 1f, 1f)
 
-    override fun projectileShot(game: LazerTagGame, player: Player): ConcurrentHashMap<Player, Float> {
-        return ConcurrentHashMap()
+    override fun projectileShot(game: LazerTagGame, player: Player): Map<Player, Float> {
+        return emptyMap()
     }
 
     override fun tick(game: LazerTagGame, projectile: Entity, shooter: Player) {
@@ -71,13 +71,12 @@ object RBG : ProjectileGun("RBG", Rarity.IMPOSSIBLE) {
     }
 
     override fun createEntity(shooter: Player): Entity {
-        val projectile = NoDragEntity(EntityType.BEE)
+        val projectile = NoDragEntityProjectile(shooter, EntityType.BEE)
         val velocity = shooter.position.direction().mul(25.0)
 
         projectile.velocity = velocity
 
         projectile.setNoGravity(true)
-        projectile.setGravity(0.0, 0.0)
         projectile.setInstance(shooter.instance!!, shooter.position.add(0.0, shooter.eyeHeight, 0.0))
         projectile.scheduleRemove(Duration.ofSeconds(10))
 

@@ -1,5 +1,6 @@
 package dev.emortal.lazertag.gun
 
+import dev.emortal.lazertag.entity.NoDragEntityProjectile
 import dev.emortal.lazertag.game.LazerTagGame
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.format.NamedTextColor
@@ -13,7 +14,6 @@ import net.minestom.server.network.packet.server.play.ExplosionPacket
 import net.minestom.server.sound.SoundEvent
 import net.minestom.server.tag.Tag
 import java.time.Duration
-import java.util.concurrent.ConcurrentHashMap
 
 object HomingMissile : ProjectileGun("Homing Missile", Rarity.IMPOSSIBLE) {
 
@@ -29,8 +29,8 @@ object HomingMissile : ProjectileGun("Homing Missile", Rarity.IMPOSSIBLE) {
 
     override val sound = null
 
-    override fun projectileShot(game: LazerTagGame, player: Player): ConcurrentHashMap<Player, Float> {
-        return ConcurrentHashMap()
+    override fun projectileShot(game: LazerTagGame, player: Player): Map<Player, Float> {
+        return emptyMap()
     }
 
     override fun collided(game: LazerTagGame, shooter: Player, projectile: Entity) {
@@ -80,7 +80,7 @@ object HomingMissile : ProjectileGun("Homing Missile", Rarity.IMPOSSIBLE) {
     }
 
     override fun createEntity(shooter: Player): Entity {
-        val projectile = Entity(EntityType.PIG)
+        val projectile = NoDragEntityProjectile(shooter, EntityType.PIG)
 
         projectile.setTag(accuracyTag, 0.15)
         projectile.setNoGravity(true)

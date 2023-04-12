@@ -1,12 +1,12 @@
 package dev.emortal.lazertag.gun
 
 import dev.emortal.immortal.util.showFirework
+import dev.emortal.lazertag.entity.NoDragEntityProjectile
 import dev.emortal.lazertag.game.LazerTagGame
 import dev.emortal.lazertag.game.LazerTagPlayerHelper.hasSpawnProtection
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
-import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
@@ -21,7 +21,6 @@ import world.cepi.particle.data.OffsetAndSpeed
 import world.cepi.particle.showParticle
 import java.awt.Color
 import java.time.Duration
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ThreadLocalRandom
 
 object Celebration : ProjectileGun("Celebration", Rarity.RARE) {
@@ -34,17 +33,13 @@ object Celebration : ProjectileGun("Celebration", Rarity.RARE) {
     override val reloadTime: Int = 3500
     override val cooldown: Int = 300
 
-    override val boundingBoxExpand = Vec(0.2, 0.2, 0.2)
-
     override val sound = Sound.sound(SoundEvent.ENTITY_FIREWORK_ROCKET_LAUNCH, Sound.Source.PLAYER, 1f, 1f)
 
-    override fun projectileShot(game: LazerTagGame, player: Player): ConcurrentHashMap<Player, Float> {
-        return ConcurrentHashMap()
+    override fun projectileShot(game: LazerTagGame, player: Player): Map<Player, Float> {
+        return emptyMap()
     }
 
     override fun tick(game: LazerTagGame, projectile: Entity, shooter: Player) {
-        projectile.velocity = projectile.velocity.mul(1.02)
-
         game.showParticle(
             Particle.particle(
                 type = ParticleType.CLOUD,
@@ -89,7 +84,7 @@ object Celebration : ProjectileGun("Celebration", Rarity.RARE) {
     }
 
     override fun createEntity(shooter: Player): Entity {
-        val projectile = Entity(EntityType.FIREWORK_ROCKET)
+        val projectile = NoDragEntityProjectile(shooter, EntityType.FIREWORK_ROCKET)
         val velocity = shooter.position.direction().mul(40.0)
 
         projectile.velocity = velocity

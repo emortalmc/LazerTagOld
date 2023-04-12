@@ -1,5 +1,6 @@
 package dev.emortal.lazertag.gun
 
+import dev.emortal.lazertag.entity.NoDragEntityProjectile
 import dev.emortal.lazertag.game.LazerTagGame
 import net.kyori.adventure.sound.Sound
 import net.kyori.adventure.text.format.NamedTextColor
@@ -16,7 +17,6 @@ import world.cepi.particle.ParticleType
 import world.cepi.particle.data.OffsetAndSpeed
 import world.cepi.particle.showParticle
 import java.time.Duration
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ThreadLocalRandom
 
 object BeeShotgun : ProjectileGun("Bee Keeper") {
@@ -35,8 +35,8 @@ object BeeShotgun : ProjectileGun("Bee Keeper") {
 
     override val sound = Sound.sound(SoundEvent.ENTITY_BEE_HURT, Sound.Source.PLAYER, 1f, 1f)
 
-    override fun projectileShot(game: LazerTagGame, player: Player): ConcurrentHashMap<Player, Float> {
-        return ConcurrentHashMap()
+    override fun projectileShot(game: LazerTagGame, player: Player): Map<Player, Float> {
+        return emptyMap()
     }
 
     override fun tick(game: LazerTagGame, projectile: Entity, shooter: Player) {
@@ -79,22 +79,24 @@ object BeeShotgun : ProjectileGun("Bee Keeper") {
     }
 
     override fun createEntity(shooter: Player): Entity {
-        val projectile = NoDragEntity(EntityType.BEE)
+        val projectile = NoDragEntityProjectile(shooter, EntityType.BEE)
 
         val meta = projectile.entityMeta as BeeMeta
         meta.isBaby = true
 
         val random = ThreadLocalRandom.current()
         val lookDir = shooter.position.direction()
-        val velocity = lookDir
-            .rotateAroundAxis(lookDir.rotateAroundZ(Math.PI / 2), random.nextDouble(-spread, spread))
-            .rotateAroundAxis(lookDir, random.nextDouble(Math.PI * 2))
+        var velocity = lookDir
             .mul(40.0)
+        if (spread > 0.0) {
+            velocity = velocity.rotateAroundAxis(lookDir.rotateAroundZ(Math.PI / 2), random.nextDouble(-spread, spread))
+                .rotateAroundAxis(lookDir, random.nextDouble(Math.PI * 2))
+        }
+
         projectile.velocity = velocity
 
         projectile.setBoundingBox(0.5, 0.5, 0.5)
 
-        projectile.setGravity(0.0, 0.0)
         projectile.setNoGravity(true)
         projectile.setInstance(shooter.instance!!, shooter.position.add(0.0, shooter.eyeHeight, 0.0))
         projectile.scheduleRemove(Duration.ofSeconds(10))
