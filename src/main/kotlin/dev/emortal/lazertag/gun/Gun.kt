@@ -1,7 +1,6 @@
 package dev.emortal.lazertag.gun
 
 import dev.emortal.immortal.game.Game
-import dev.emortal.immortal.util.asVec
 import dev.emortal.immortal.util.progressBar
 import dev.emortal.lazertag.game.LazerTagGame
 import dev.emortal.lazertag.raycast.RaycastResultType
@@ -13,6 +12,7 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
 import net.kyori.adventure.text.format.TextDecoration
+import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.EntityType
 import net.minestom.server.entity.GameMode
 import net.minestom.server.entity.Player
@@ -155,7 +155,7 @@ sealed class Gun(
                 ),
                 Vectors(
                     eyePos.asVec(),
-                    (raycastResult.hitPosition ?: eyePos.add(direction.mul(maxDistance))).asVec(),
+                    Vec.fromPoint(raycastResult.hitPosition ?: eyePos.add(direction.mul(maxDistance))),
                     1.5
                 )
             )
